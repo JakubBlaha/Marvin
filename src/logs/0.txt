@@ -1,0 +1,4 @@
+[INFO    ] [Client  ] Initializing client
+[INFO    ] [Client  ] Logged on as freefbot#3056
+Ignoring exception in command None:
+discord.ext.commands.errors.CommandNotFound: Command "lel" is not found
