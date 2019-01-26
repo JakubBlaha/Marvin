@@ -1,2 +1,0 @@
-[INFO    ] [Client  ] Initializing client
-[INFO    ] [Client  ] Logged on as freefbot#3056
