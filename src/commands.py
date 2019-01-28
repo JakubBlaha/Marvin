@@ -107,7 +107,9 @@ class Commands:
 
         # TODO expire downloaded pdf
         await ctx.trigger_typing()
-        await ctx.send(suplovani(target, Config.username, Config.password))
+        await ctx.send(
+            suplovani(target, Config.username, Config.password,
+                      Config.chromedriver))
 
     @command()
     async def log(self, ctx):

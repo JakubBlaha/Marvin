@@ -12,6 +12,7 @@ selenium = "*"
 simpleeval = "*"
 
 [dev-packages]
+yapf = "*"
 
 [requires]
 python_version = "3.7"
