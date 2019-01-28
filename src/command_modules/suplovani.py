@@ -128,7 +128,7 @@ def wait_for_download(dir_name, interval=.1):
             completed = True
 
 
-def download_pdf(username, password):
+def download_pdf(username, password, chromedriver_path=''):
     ''' Downloads the last pdf from moodle. Return pdf filename. '''
     # make download dir
     os.makedirs(DOWNLOAD_PATH, exist_ok=True)
@@ -143,8 +143,7 @@ def download_pdf(username, password):
         })
 
     # setup browser
-    browser = webdriver.Chrome(
-        '/chromedriver/chromedriver.exe', options=options)
+    browser = webdriver.Chrome(chromedriver_path, options=options)
     # browser.get(get_pdf_url())
     browser.get(BASE_URL)
 
@@ -170,8 +169,8 @@ def download_pdf(username, password):
 
 
 # main function
-def suplovani(target, username, password):
+def suplovani(target, username, password, chromedriver_path=''):
     ''' Returns suplovani for the current / following day. '''
-    fname = download_pdf(username, password)
+    fname = download_pdf(username, password, chromedriver_path)
 
     return pdf_to_string(f'{DOWNLOAD_PATH}/{fname}', target)
