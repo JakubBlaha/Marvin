@@ -141,6 +141,8 @@ def download_pdf(username, password, chromedriver_path=''):
             'download.prompt_for_download': False,
             'download.directory_upgrade': True,
         })
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
 
     # setup browser
     browser = webdriver.Chrome(chromedriver_path, options=options)
