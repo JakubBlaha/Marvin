@@ -4,12 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-discord-py = {ref = "rewrite", git = "https://github.com/Rapptz/discord.py"}
+discord-py = {git = "https://github.com/Rapptz/discord.py",ref = "rewrite"}
 pyyaml = "*"
 tabula-py = "*"
 tabulate = "*"
 selenium = "*"
 simpleeval = "*"
+pandas = "*"
 
 [dev-packages]
 
