@@ -1,4 +1,4 @@
-import os
+import os, sys
 import tabula
 import tabulate
 from time import sleep
@@ -7,9 +7,20 @@ from selenium.webdriver.chrome.options import Options
 from datetime import datetime
 from operator import itemgetter
 
-URL = 'https://moodle3.gvid.cz/pluginfile.php/274/mod_forum/attachment/{}/{}'
+sys.path.insert(0, os.path.abspath(
+    os.path.join(__file__, os.pardir, os.pardir)))
+from logger import Logger
+
 BASE_URL = 'https://moodle3.gvid.cz/course/view.php?id=3'
 DOWNLOAD_PATH = os.path.join(os.path.dirname(__file__), 'downloads/')
+
+# Selenium
+EXPERIMENTAL_OPTIONS = ('prefs', {
+    'download.default_directory': DOWNLOAD_PATH,
+    'download.prompt_for_download': False,
+    'download.directory_upgrade': True,
+})
+OPTIONS = ('--headless', '--disable-gpu')
 
 # Table
 COLS = (0, 1, 3, 4, 5)
@@ -106,16 +117,6 @@ def _expand_classes(rows):
     return rows
 
 
-def get_pdf_url():
-    today = datetime.today()
-    return URL.format(17 if today.weekday() % 2 else 14, get_pdf_fname())
-
-
-def get_pdf_fname():
-    today = datetime.today()
-    return f'{today.day:02d}{today.month:02d}{today.year % 2000}.pdf'
-
-
 def wait_for_download(dir_name, interval=.1):
     completed = False
     WAIT_EXTS = ('.tmp', '.crdownload')
@@ -129,42 +130,48 @@ def wait_for_download(dir_name, interval=.1):
 
 
 def download_pdf(username, password, chromedriver_path=''):
-    ''' Downloads the last pdf from moodle. Return pdf filename. '''
+    ''' Downloads the last pdf from moodle. Return the pdf filename. '''
     # make download dir
     os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
     # specify options
+    Logger.info('Selenium: Generating options..\nExperimental options: '
+                f'{EXPERIMENTAL_OPTIONS}\nOptions: {OPTIONS}')
     options = Options()
-    options.add_experimental_option(
-        'prefs', {
-            'download.default_directory': DOWNLOAD_PATH,
-            'download.prompt_for_download': False,
-            'download.directory_upgrade': True,
-        })
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
+    options.add_experimental_option(*EXPERIMENTAL_OPTIONS)
+    for opt in OPTIONS:
+        options.add_argument(opt)
 
     # setup browser
+    Logger.info('Selenium: Initializing browser..')
+    Logger.info(f'Selenium: Chromedriver path: {chromedriver_path}')
     browser = webdriver.Chrome(chromedriver_path, options=options)
-    # browser.get(get_pdf_url())
+
+    # Load page
+    Logger.info(f'Selenium: Loading initial page.. {BASE_URL}')
     browser.get(BASE_URL)
 
     # get elements
+    Logger.info(f'Selenium: Getting page elements..')
     username_form = browser.find_element_by_id('username')
     password_form = browser.find_element_by_id('password')
     login_btn = browser.find_element_by_id('loginbtn')
 
     # login
+    Logger.info(f'Selenium: Logging in..')
     username_form.send_keys(username)
     password_form.send_keys(password)
     login_btn.click()
 
     # click first pdf
+    Logger.info('Selenium: Finding the last posted pdf..')
     link = browser.find_element_by_partial_link_text('.pdf')
+    Logger.info(f'Selenium: Found link with href {link.get_attribute("href")}')
     if link.text not in os.listdir(DOWNLOAD_PATH):
         link.click()
 
     # wait for download
+    Logger.info(f'Selenium: Waiting for {link.text} to download..')
     wait_for_download(DOWNLOAD_PATH)
 
     return link.text
