@@ -1,11 +1,14 @@
 import os, sys
 import shutil
-from datetime import datetime
+
+from config import Config
 
 
 class LoggerMeta(type):
     LOG_DIR = 'logs'
     MAX_LOG_FILE_COUNT = 10
+
+    client = None
 
     def __init__(cls, *args, **kw):
         super().__init__(*args, **kw)
@@ -29,13 +32,23 @@ class LoggerMeta(type):
         cls.log.close()
         sys.stdout = cls.terminal
 
-    @staticmethod
-    def _log(level, string):
+    def _log(cls, level, string):
         if not ':' in string:
             string = ':' + string
 
         category, message = [i.strip() for i in string.split(':', 1)]
-        print(f'[{level.ljust(8)}] [{category.ljust(8)}] {message}')
+        _string = f'[{level.ljust(8)}] [{category.ljust(8)}] {message}'
+        print(_string)
+        if cls.client:
+            cls.client.loop.create_task(cls._alog(_string))
+
+    async def _alog(cls, string):
+        for ch in cls.client.get_all_channels():
+            if ch.name == Config.log_channel:
+                break
+        else:
+            return
+        await ch.send(f'```python\n{string}```')
 
     def debug(cls, msg):
         cls._log('DEBUG', msg)
