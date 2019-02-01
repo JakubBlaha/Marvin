@@ -13,7 +13,7 @@ from simpleeval import simple_eval
 import yaml
 
 
-async def send_channel_text_history(ctx, channel_name, no_history):
+async def send_channel_history(ctx, channel_name, no_history):
     ''' Send all channel history to the current context. '''
     for channel in ctx.bot.get_all_channels():
         if channel.name == channel_name:
@@ -22,9 +22,13 @@ async def send_channel_text_history(ctx, channel_name, no_history):
     else:
         await ctx.send(f':warning: Channel `{ch_name}` not found :warning:')
 
-    contents = [msg.content async for msg in target_channel.history()]
-    if contents:
-        await ctx.send('\n\n'.join(contents))
+    msgs = [msg async for msg in target_channel.history()]
+    if msgs:
+        for msg in msgs:
+            if msg.content:
+                await ctx.send(msg.content)
+            for embed in msg.embeds:
+                await ctx.send(embed=embed)
     else:
         await ctx.send(no_history)
 
@@ -85,13 +89,13 @@ class Commands:
     @command()
     async def test(self, ctx):
         ''' Outputs exams from the *testy* channel. '''
-        await send_channel_text_history(ctx, 'testy',
+        await send_channel_history(ctx, 'testy',
                                         '**O žádném testu se neví.**')
 
     @command()
     async def ukol(self, ctx):
         ''' Outputs homeworks from the *úkoly* channel. '''
-        await send_channel_text_history(ctx, 'úkoly',
+        await send_channel_history(ctx, 'úkoly',
                                         '**O žádném úkolu se neví.**')
 
     @command()
@@ -143,6 +147,9 @@ class Commands:
         color: green
         --------------------------------------------------
 
+        If channel in omitted, the embed will be sent to the channel the
+        command was invoked from.
+
         The supported colors are:
          - default
          - teal
@@ -174,15 +181,13 @@ class Commands:
         yaml_ = yaml_.replace('`', '')
 
         data = yaml.load(yaml_)
-        channel_name = data.pop('channel')
+        channel_name = data.pop('channel', None)
 
         for channel in self.bot.get_all_channels():
             if channel.name == channel_name:
                 break
         else:
-            await ctx.send(
-                '**Could not find a single channel with the specified channel '
-                'name!**')
+            channel = ctx
 
         # get things from yaml
         fields = data.pop('fields', ())
