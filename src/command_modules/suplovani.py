@@ -6,13 +6,14 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from datetime import datetime
 from operator import itemgetter
+from tempfile import gettempdir
 
 sys.path.insert(0, os.path.abspath(
     os.path.join(__file__, os.pardir, os.pardir)))
 from logger import Logger
 
 BASE_URL = 'https://moodle3.gvid.cz/course/view.php?id=3'
-DOWNLOAD_PATH = os.path.join(os.path.dirname(__file__), 'downloads/')
+DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/freefbot')
 
 # Selenium
 EXPERIMENTAL_OPTIONS = ('prefs', {
@@ -39,13 +40,24 @@ TO_REPLACE = {
     '->': '>',
     'Odpadlo': 'odp.'
 }
+MAX_COL = max(COLS)
 
 
 def pdf_to_string(path: str, target: str = '') -> str:
+    # read pdf
+    Logger.info(f'Command: Reading {path}..')
     data = tabula.read_pdf(path, 'json')[0]['data']
+
+    # fix data
+    for index, row in enumerate(data):
+        if MAX_COL > len(row):
+            data.pop(index)
+            Logger.warning(f'!supl: Invalid data at index {index}')
+
     data = [[col['text'] for col in itemgetter(*COLS)(row)] for row in data]
 
     # shorten, replace names
+    Logger.info('Command: Replacing strings..')
     for row in data:
         for index, col in enumerate(row):
             for key, value in TO_REPLACE.items():
@@ -53,13 +65,16 @@ def pdf_to_string(path: str, target: str = '') -> str:
             row[index] = col
 
     # expand classes
+    Logger.info('Command: Trying to match classes..')
     data = _expand_classes(data)
 
     # delete empty rows
+    Logger.info('Command: Deleting empty rows..')
     data = [row for row in data if row[1]]
 
     # only target
     if target and target != 'all':
+        Logger.info(f'Command: Extracting {target} substitutions..')
         data = [data[0][1:]
                 ] + [row[1:] for row in _extract_target(data[1:], target)]
 
@@ -70,8 +85,10 @@ def pdf_to_string(path: str, target: str = '') -> str:
     #         row[1] += '.'
 
     if not data[1:]:
+        Logger.info('Command: No matching substitutions found')
         string = '**Žádné suply** :frowning:'
     else:
+        Logger.info('Command: Found substitutions')
         string = f'```fix\n{tabulate.tabulate(data[1:], headers=data[0])}```'
     return string
 
@@ -117,16 +134,12 @@ def _expand_classes(rows):
     return rows
 
 
-def wait_for_download(dir_name, interval=.1):
-    completed = False
-    WAIT_EXTS = ('.tmp', '.crdownload')
-    while not completed:
-        for fname in os.listdir(dir_name):
-            if os.path.splitext(fname)[1] in WAIT_EXTS:
-                sleep(interval)
-                break
-        else:
-            completed = True
+def wait_for_download(path, interval=.1):
+    ''' Wait for file to be created. Return the file path. '''
+    while not os.path.isfile(path):
+        sleep(interval)
+
+    return path
 
 
 def download_pdf(username, password, chromedriver_path=''):
@@ -163,6 +176,18 @@ def download_pdf(username, password, chromedriver_path=''):
     password_form.send_keys(password)
     login_btn.click()
 
+    # setup download
+    browser.command_executor._commands["send_command"] = (
+        "POST", '/session/$sessionId/chromium/send_command')
+    params = {
+        'cmd': 'Page.setDownloadBehavior',
+        'params': {
+            'behavior': 'allow',
+            'downloadPath': DOWNLOAD_PATH
+        }
+    }
+    browser.execute("send_command", params)
+
     # click first pdf
     Logger.info('Selenium: Finding the last posted pdf..')
     link = browser.find_element_by_partial_link_text('.pdf')
@@ -172,7 +197,8 @@ def download_pdf(username, password, chromedriver_path=''):
 
     # wait for download
     Logger.info(f'Selenium: Waiting for {link.text} to download..')
-    wait_for_download(DOWNLOAD_PATH)
+    ret = wait_for_download(os.path.join(DOWNLOAD_PATH, link.text))
+    Logger.info(f'Command: Found {ret}')
 
     return link.text
 

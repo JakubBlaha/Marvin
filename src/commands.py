@@ -1,5 +1,5 @@
 from discord.ext.commands import Bot, command
-from discord import File, Message
+from discord import File, Message, Embed, Color
 from time import sleep
 from traceback import format_exc
 
@@ -10,9 +10,10 @@ from logger import Logger
 from command_modules.get_subjects import get_subjects
 from command_modules.suplovani import suplovani
 from simpleeval import simple_eval
+import yaml
 
 
-async def send_channel_text_history(ctx, channel_name, no_history):
+async def send_channel_history(ctx, channel_name, no_history):
     ''' Send all channel history to the current context. '''
     for channel in ctx.bot.get_all_channels():
         if channel.name == channel_name:
@@ -21,11 +22,19 @@ async def send_channel_text_history(ctx, channel_name, no_history):
     else:
         await ctx.send(f':warning: Channel `{ch_name}` not found :warning:')
 
-    contents = [msg.content async for msg in target_channel.history()]
-    if contents:
-        await ctx.send('\n\n'.join(contents))
+    msgs = [msg async for msg in target_channel.history()]
+    if msgs:
+        for msg in msgs:
+            if msg.content:
+                await ctx.send(msg.content)
+            for embed in msg.embeds:
+                await ctx.send(embed=embed)
     else:
         await ctx.send(no_history)
+
+
+class Break(Exception):
+    pass
 
 
 class Commands:
@@ -84,14 +93,12 @@ class Commands:
     @command()
     async def test(self, ctx):
         ''' Outputs exams from the *testy* channel. '''
-        await send_channel_text_history(ctx, 'testy',
-                                        '**O žádném testu se neví.**')
+        await send_channel_history(ctx, 'testy', '**O žádném testu se neví.**')
 
     @command()
     async def ukol(self, ctx):
         ''' Outputs homeworks from the *úkoly* channel. '''
-        await send_channel_text_history(ctx, 'úkoly',
-                                        '**O žádném úkolu se neví.**')
+        await send_channel_history(ctx, 'úkoly', '**O žádném úkolu se neví.**')
 
     @command()
     async def supl(self, ctx, target='3.F'):
@@ -120,6 +127,135 @@ class Commands:
         '''
 
         await ctx.send(f'```python\n{Logger.get_log()[-1980:]}```')
+
+    @command()
+    async def embed(self, ctx, *, yaml_: str):
+        '''
+        Produces a discord embed.
+
+        This command takes only one argument. This argument is a string
+        formatted as yaml. The yaml can look like the following. The command
+        deletes the message afterwards.
+
+        --------------------------------------------------
+        channel: bot-testing
+        title: title
+        url: https://example.com
+        description: description
+        fields: [
+        {name: 'field 1 name', value: 'field 1 value'},
+        {name: 'field 2 name', value: 'field 2 value'}
+        ]
+        footer: footer
+        color: green
+        --------------------------------------------------
+
+        If channel in omitted, the embed will be sent to the channel the
+        command was invoked from.
+
+        If there is an embed with the same title in the given channel, then the
+        embed will be edited instead of creating a new one. If fields are
+        given, then the fields will be added to the existing ones rather then
+        replacing the existing ones. Optionally remove_fields list of indexes
+        can be passed in in order to delete fields at the matching indexes.
+
+        The supported colors are:
+         - default
+         - teal
+         - dark_teal
+         - green
+         - dark_green
+         - blue
+         - dark_blue
+         - purple
+         - dark_purple
+         - magenta
+         - dark_magenta
+         - gold
+         - dark_gold
+         - orange
+         - dark_orange
+         - red
+         - dark_red
+         - lighter_grey
+         - dark_grey
+         - light_grey
+         - darker_grey
+         - blurple
+         - greyple
+        '''
+
+        # fix string
+        yaml_ = yaml_.replace('`yaml', '')
+        yaml_ = yaml_.replace('`', '')
+
+        data = yaml.load(yaml_)
+        channel_name = data.pop('channel', None)
+
+        # get the channel
+        for channel in self.bot.get_all_channels():
+            if channel.name == channel_name:
+                break
+        else:
+            channel = ctx.channel
+
+        # get things from yaml
+        title = data.get('title')
+
+        fields = data.pop('fields', ())
+        remove_fields = data.pop('remove_fields', ())
+        footer_text = data.pop('footer', '')
+        color = getattr(Color, data.pop('color', ''), Color.orange)()
+
+        # get embed
+        try:
+            async for msg in channel.history():
+                for embed in msg.embeds:
+                    if embed.title == title:
+                        Logger.info(
+                            f'Command: Found an embed with title {embed.title}'
+                        )
+                        raise Break
+        except Break:
+            for key, value in data.items():
+                setattr(embed, key, value)
+            
+        else:
+            msg = None
+            embed = Embed(**data)
+
+        # set color
+        embed.color = color
+
+        # clear fields
+        for index in remove_fields:
+            embed.remove_field(index)
+
+        # add fields
+        for field in fields:
+            embed.add_field(
+                name=field.get('name', '...'), value=field.get('value', '...'))
+
+        # set footer
+        if footer_text:
+            embed.set_footer(text=footer_text)
+
+        # send/edit message
+        if msg:
+            await msg.edit(embed=embed)
+        else:
+            await channel.send(embed=embed)
+        
+        # delete user message
+        await ctx.message.delete()
+
+    @command()
+    async def emoji(self, ctx):
+        ''' List all customly added emojis. '''
+        s = ''
+        for emoji in ctx.guild.emojis:
+            s += f'<:{emoji.name}:{emoji.id}>'
+        await ctx.send(s)
 
 
 def setup(bot):

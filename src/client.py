@@ -24,4 +24,5 @@ sys.stdout = Logger
 
 # Client
 client = FreefClient(command_prefix='!')
+Logger.client = client
 client.run(Config.token)

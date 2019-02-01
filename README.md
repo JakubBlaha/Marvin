@@ -23,5 +23,6 @@ token: TokenGoesHere    # Discord bot token
 username: MyUsername01  # moodle3.gvid.cz username
 password: Password123   # moodle3.gvid.cz password
 chromedriver: '*.exe'   # the path to chromedriver.exe required for the !supl command
+log_channel: logs       # the name of the channel to where all logs should be sent
 ```
 The [moodle](https://moodle3.gvid.cz) credentials are used for the `!supl` command which gives you substitutions for the current/following day depending on the document presence as they are needed to login in the course.
