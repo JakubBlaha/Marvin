@@ -1,5 +1,5 @@
 from discord.ext.commands import Bot, command
-from discord import File, Message
+from discord import File, Message, Embed, Color
 from time import sleep
 from traceback import format_exc
 
@@ -10,6 +10,7 @@ from logger import Logger
 from command_modules.get_subjects import get_subjects
 from command_modules.suplovani import suplovani
 from simpleeval import simple_eval
+import yaml
 
 
 async def send_channel_text_history(ctx, channel_name, no_history):
@@ -120,6 +121,90 @@ class Commands:
         '''
 
         await ctx.send(f'```python\n{Logger.get_log()[-1980:]}```')
+
+    @command()
+    async def embed(self, ctx, *, yaml_: str):
+        '''
+        Produces a discord embed.
+
+        This command takes only one argument. This argument is a string
+        formatted as yaml. The full command can look like the following.
+
+        !embed ```yaml
+        channel: bot-testing
+        title: title
+        url: https://example.com
+        description: description
+        fields: [
+        {name: 'field 1 name', value: 'field 1 value'},
+        {name: 'field 2 name', value: 'field 2 value'}
+        ]
+        footer: footer
+        color: green
+        ```
+
+        The supported colors are:
+         - default
+         - teal
+         - dark_teal
+         - green
+         - dark_green
+         - blue
+         - dark_blue
+         - purple
+         - dark_purple
+         - magenta
+         - dark_magenta
+         - gold
+         - dark_gold
+         - orange
+         - dark_orange
+         - red
+         - dark_red
+         - lighter_grey
+         - dark_grey
+         - light_grey
+         - darker_grey
+         - blurple
+         - greyple
+        '''
+
+        # fix string
+        yaml_ = yaml_.replace('`yaml', '')
+        yaml_ = yaml_.replace('`', '')
+
+        data = yaml.load(yaml_)
+        channel_name = data.pop('channel')
+
+        for channel in self.bot.get_all_channels():
+            if channel.name == channel_name:
+                break
+        else:
+            await ctx.send(
+                '**Could not find a single channel with the specified channel '
+                'name!**')
+
+        # get things from yaml
+        fields = data.pop('fields', ())
+        footer_text = data.pop('footer', '')
+        color = data.pop('color', '')
+        color = getattr(Color, color, Color.orange)()
+
+        # create embed
+        embed = Embed(**data)
+
+        # set color
+        embed.color = color
+
+        # add fields
+        for field in fields:
+            embed.add_field(name=field['name'], value=field['value'])
+
+        # set footer
+        if footer_text:
+            embed.set_footer(text=footer_text)
+
+        await channel.send(embed=embed)
 
 
 def setup(bot):
