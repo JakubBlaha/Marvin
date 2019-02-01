@@ -128,9 +128,9 @@ class Commands:
         Produces a discord embed.
 
         This command takes only one argument. This argument is a string
-        formatted as yaml. The full command can look like the following.
+        formatted as yaml. The yaml can look like the following.
 
-        !embed ```yaml
+        --------------------------------------------------
         channel: bot-testing
         title: title
         url: https://example.com
@@ -141,7 +141,7 @@ class Commands:
         ]
         footer: footer
         color: green
-        ```
+        --------------------------------------------------
 
         The supported colors are:
          - default
