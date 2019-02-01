@@ -89,14 +89,12 @@ class Commands:
     @command()
     async def test(self, ctx):
         ''' Outputs exams from the *testy* channel. '''
-        await send_channel_history(ctx, 'testy',
-                                        '**O žádném testu se neví.**')
+        await send_channel_history(ctx, 'testy', '**O žádném testu se neví.**')
 
     @command()
     async def ukol(self, ctx):
         ''' Outputs homeworks from the *úkoly* channel. '''
-        await send_channel_history(ctx, 'úkoly',
-                                        '**O žádném úkolu se neví.**')
+        await send_channel_history(ctx, 'úkoly', '**O žádném úkolu se neví.**')
 
     @command()
     async def supl(self, ctx, target='3.F'):
@@ -132,7 +130,8 @@ class Commands:
         Produces a discord embed.
 
         This command takes only one argument. This argument is a string
-        formatted as yaml. The yaml can look like the following.
+        formatted as yaml. The yaml can look like the following. The command
+        deletes the message afterwards.
 
         --------------------------------------------------
         channel: bot-testing
@@ -203,13 +202,23 @@ class Commands:
 
         # add fields
         for field in fields:
-            embed.add_field(name=field['name'], value=field['value'])
+            embed.add_field(
+                name=field.get('name', '...'), value=field.get('value', '...'))
 
         # set footer
         if footer_text:
             embed.set_footer(text=footer_text)
 
         await channel.send(embed=embed)
+        await ctx.message.delete()
+
+    @command()
+    async def emoji(self, ctx):
+        ''' List all customly added emojis. '''
+        s = ''
+        for emoji in ctx.guild.emojis:
+            s += f'<:{emoji.name}:{emoji.id}>'
+        await ctx.send(s)
 
 
 def setup(bot):
