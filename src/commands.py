@@ -33,6 +33,10 @@ async def send_channel_history(ctx, channel_name, no_history):
         await ctx.send(no_history)
 
 
+class Break(Exception):
+    pass
+
+
 class Commands:
     def __init__(self, bot):
         self.bot = bot
@@ -149,6 +153,12 @@ class Commands:
         If channel in omitted, the embed will be sent to the channel the
         command was invoked from.
 
+        If there is an embed with the same title in the given channel, then the
+        embed will be edited instead of creating a new one. If fields are
+        given, then the fields will be added to the existing ones rather then
+        replacing the existing ones. Optionally remove_fields list of indexes
+        can be passed in in order to delete fields at the matching indexes.
+
         The supported colors are:
          - default
          - teal
@@ -182,23 +192,44 @@ class Commands:
         data = yaml.load(yaml_)
         channel_name = data.pop('channel', None)
 
+        # get the channel
         for channel in self.bot.get_all_channels():
             if channel.name == channel_name:
                 break
         else:
-            channel = ctx
+            channel = ctx.channel
 
         # get things from yaml
-        fields = data.pop('fields', ())
-        footer_text = data.pop('footer', '')
-        color = data.pop('color', '')
-        color = getattr(Color, color, Color.orange)()
+        title = data.get('title')
 
-        # create embed
-        embed = Embed(**data)
+        fields = data.pop('fields', ())
+        remove_fields = data.pop('remove_fields', ())
+        footer_text = data.pop('footer', '')
+        color = getattr(Color, data.pop('color', ''), Color.orange)()
+
+        # get embed
+        try:
+            async for msg in channel.history():
+                for embed in msg.embeds:
+                    if embed.title == title:
+                        Logger.info(
+                            f'Command: Found an embed with title {embed.title}'
+                        )
+                        raise Break
+        except Break:
+            for key, value in data.items():
+                setattr(embed, key, value)
+            
+        else:
+            msg = None
+            embed = Embed(**data)
 
         # set color
         embed.color = color
+
+        # clear fields
+        for index in remove_fields:
+            embed.remove_field(index)
 
         # add fields
         for field in fields:
@@ -209,7 +240,13 @@ class Commands:
         if footer_text:
             embed.set_footer(text=footer_text)
 
-        await channel.send(embed=embed)
+        # send/edit message
+        if msg:
+            await msg.edit(embed=embed)
+        else:
+            await channel.send(embed=embed)
+        
+        # delete user message
         await ctx.message.delete()
 
     @command()
