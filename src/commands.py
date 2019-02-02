@@ -10,6 +10,7 @@ from logger import Logger
 from command_modules.get_subjects import get_subjects
 from command_modules.suplovani import suplovani
 from simpleeval import simple_eval
+from emojis import Emojis
 import yaml
 
 
@@ -46,7 +47,7 @@ class Commands:
         '''
         Repeats the given string.
         
-        Repeats the given string \ emote n times.:
+        Repeats the given string\emote n times. Maximum is 50.
         '''
 
         n = min(n, 50)
@@ -140,12 +141,11 @@ class Commands:
         --------------------------------------------------
         channel: bot-testing
         title: title
-        url: https://example.com
         description: description
-        fields: [
-        {name: 'field 1 name', value: 'field 1 value'},
-        {name: 'field 2 name', value: 'field 2 value'}
-        ]
+        fields: {
+            name1: value1,
+            name2: value2
+        }
         footer: footer
         color: green
         --------------------------------------------------
@@ -189,10 +189,15 @@ class Commands:
         yaml_ = yaml_.replace('`yaml', '')
         yaml_ = yaml_.replace('`', '')
 
-        data = yaml.load(yaml_)
-        channel_name = data.pop('channel', None)
+        try:
+            data = yaml.load(yaml_)
+        except Exception:
+            Logger.error(f'Command: Failed to read {yaml_}')
+            await ctx.send(f'```python\n{format_exc()[-1980:]}```')
+            return
 
         # get the channel
+        channel_name = data.pop('channel', None)
         for channel in self.bot.get_all_channels():
             if channel.name == channel_name:
                 break
@@ -202,7 +207,7 @@ class Commands:
         # get things from yaml
         title = data.get('title')
 
-        fields = data.pop('fields', ())
+        fields = data.pop('fields', {})
         remove_fields = data.pop('remove_fields', ())
         footer_text = data.pop('footer', '')
         color = getattr(Color, data.pop('color', ''), Color.orange)()
@@ -219,7 +224,7 @@ class Commands:
         except Break:
             for key, value in data.items():
                 setattr(embed, key, value)
-            
+
         else:
             msg = None
             embed = Embed(**data)
@@ -232,9 +237,8 @@ class Commands:
             embed.remove_field(index)
 
         # add fields
-        for field in fields:
-            embed.add_field(
-                name=field.get('name', '...'), value=field.get('value', '...'))
+        for name, value in fields.items():
+            embed.add_field(name=name, value=value)
 
         # set footer
         if footer_text:
@@ -245,17 +249,37 @@ class Commands:
             await msg.edit(embed=embed)
         else:
             await channel.send(embed=embed)
-        
+
         # delete user message
         await ctx.message.delete()
 
     @command()
     async def emoji(self, ctx):
         ''' List all customly added emojis. '''
-        s = ''
+        names, ids = [], []
         for emoji in ctx.guild.emojis:
-            s += f'<:{emoji.name}:{emoji.id}>'
-        await ctx.send(s)
+            names.append(emoji.name)
+            ids.append(emoji.id)
+        emojis = [(name, id_) for name, id_ in zip(names, ids)]
+
+        Logger.info('Command: Listing emojis:\n' +
+                    '\n'.join([f'{name}: {id_}' for name, id_ in emojis]))
+
+        await ctx.send(''.join([f'<:{name}:{id_}>' for name, id_ in emojis]))
+
+    @command()
+    async def squid(self, ctx, n: int = 10):
+        '''
+        Send sequence of the squid emojis.
+        
+        Max length of the squid is 70.
+        '''
+
+        n = min(n, 70)
+
+        await ctx.send(
+            f'{Emojis.Squid1}{Emojis.Squid2 * (n - 3)}{Emojis.Squid3}'
+            f'{Emojis.Squid4}')
 
 
 def setup(bot):
