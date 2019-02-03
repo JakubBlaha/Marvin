@@ -2,6 +2,9 @@ from discord.ext.commands import Bot, command
 from discord import File, Message, Embed, Color
 from time import sleep
 from traceback import format_exc
+from time import sleep
+import yaml
+import re
 
 from config import Config
 from logger import Logger
@@ -11,7 +14,6 @@ from command_modules.get_subjects import get_subjects
 from command_modules.suplovani import suplovani
 from simpleeval import simple_eval
 from emojis import Emojis
-import yaml
 
 
 async def send_channel_history(ctx, channel_name, no_history):
@@ -32,6 +34,27 @@ async def send_channel_history(ctx, channel_name, no_history):
                 await ctx.send(embed=embed)
     else:
         await ctx.send(no_history)
+
+
+async def request_input(ctx, message, regex='', mention=True):
+    bot_message = (await
+                   ctx.send(ctx.author.mention * mention + ' ' + message +
+                            ('\n' + f'**Regex**: `{regex}`') * bool(regex)))
+    await bot_message.add_reaction('\u2b07')
+
+    def check(msg):
+        return msg.channel == ctx.channel and msg.author == ctx.author
+
+    msg_ok = False
+    while not msg_ok:
+        user_msg = await ctx.bot.wait_for('message', check=check)
+        msg_ok = re.match(regex, user_msg.content)
+        await user_msg.add_reaction('\u2705' if msg_ok else '\u274c')
+        sleep(1)
+        await user_msg.delete()
+
+    await bot_message.delete()
+    return user_msg.content
 
 
 class Break(Exception):
@@ -254,6 +277,48 @@ class Commands:
         await ctx.message.delete()
 
     @command()
+    async def spira_embed(self, ctx):
+        '''
+        An idiot-proof embed builder...
+        '''
+        await ctx.message.delete()
+
+        title = await request_input(ctx, 'Please specify the `title`:')
+        description = await request_input(ctx,
+                                          'Please specify the `description`:')
+
+        PATTERN = '^(red|orange|green){1}$'
+        color = await request_input(ctx, f'Please specify the `color`:',
+                                    PATTERN)
+
+        footer = await request_input(ctx, 'Please specify the `footer`:')
+
+        fields = {}
+        TERMINATOR = '👌'
+        while True:
+            field_name = await request_input(
+                ctx, f'Please specify a `field name`.\nType {TERMINATOR}'
+                'when finished.')
+
+            if field_name.strip() == TERMINATOR:
+                break
+
+            field_value = await request_input(
+                ctx, f'Please specify the `{field_name}` value:')
+
+            fields[field_name] = field_value
+
+        embed = Embed(
+            title=title,
+            description=description,
+            color=getattr(Color, color)())
+        embed.set_footer(text=footer)
+        for key, value in fields.items():
+            embed.add_field(name=key, value=value)
+
+        await ctx.send(embed=embed)
+
+    @command()
     async def emoji(self, ctx):
         ''' List all customly added emojis. '''
         names, ids = [], []
@@ -268,18 +333,30 @@ class Commands:
         await ctx.send(''.join([f'<:{name}:{id_}>' for name, id_ in emojis]))
 
     @command()
-    async def squid(self, ctx, n: int = 10):
+    async def squid(self, ctx, n1: int = 5, n2: int = 5):
         '''
         Send sequence of the squid emojis.
         
+        n1 - before the squid head
+        n2 - after the squid head
         Max length of the squid is 70.
         '''
 
-        n = min(n, 70)
+        n1 = min(n1, 33)
+        n2 = min(n2, 34)
 
-        await ctx.send(
-            f'{Emojis.Squid1}{Emojis.Squid2 * (n - 3)}{Emojis.Squid3}'
-            f'{Emojis.Squid4}')
+        await ctx.send(f'{Emojis.Squid1}{Emojis.Squid2 * n1}{Emojis.Squid3}'
+                       f'{Emojis.Squid2 * n2}{Emojis.Squid4}')
+
+    @command()
+    async def anim_squid(self, ctx):
+        LEN = 8
+        msg = await ctx.send('...')
+        for i in (*range(LEN + 1), *range(LEN - 1, -1, -1)):
+            await msg.edit(
+                content=f'{Emojis.Squid1}{Emojis.Squid2 * i}{Emojis.Squid3}'
+                f'{Emojis.Squid2 * (LEN - i)}{Emojis.Squid4}')
+            sleep(1)
 
 
 def setup(bot):
