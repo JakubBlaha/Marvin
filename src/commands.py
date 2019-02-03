@@ -356,7 +356,7 @@ class Commands:
             await msg.edit(
                 content=f'{Emojis.Squid1}{Emojis.Squid2 * i}{Emojis.Squid3}'
                 f'{Emojis.Squid2 * (LEN - i)}{Emojis.Squid4}')
-            sleep(1)
+            sleep(.1)
 
 
 def setup(bot):
