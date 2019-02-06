@@ -15,17 +15,28 @@ class LoggerMeta(type):
 
         cls.terminal = sys.stdout
 
-        os.makedirs(cls.LOG_DIR, exist_ok=True)
+        cls._ensure_dir()
+
+        # get the log filename
         fnames = os.listdir(cls.LOG_DIR)
         for i in range(cls.MAX_LOG_FILE_COUNT):
-            cls.fname = f'{i}.txt'
-            if cls.fname not in fnames:
+            _fname = f'{i}.txt'
+            if _fname not in fnames:
+                cls.fname = _fname
                 break
-        else:
+
+        # when max logs count, purge
+        if not hasattr(cls, 'fname'):
             shutil.rmtree(cls.LOG_DIR)
+            cls._ensure_dir()
             cls.fname = '0.txt'
 
         cls.log = open(os.path.join(cls.LOG_DIR, cls.fname), 'w')
+
+        cls.info(f'Logger: Purged `{cls.LOG_DIR}`')
+
+    def _ensure_dir(cls):
+        os.makedirs(cls.LOG_DIR, exist_ok=True)
 
     def __del__(cls):
         cls.flush()
