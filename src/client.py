@@ -1,5 +1,5 @@
 import sys
-from discord import Game
+from discord import Game, Status
 from discord.ext.commands import Bot
 
 from logger import Logger
@@ -15,7 +15,9 @@ class FreefClient(Bot):
 
     async def on_ready(self):
         Logger.info(f'Client: Logged on as {self.user}')
-        presence = Game('⚠ Under construction ⚠')
+        await self.change_presence(
+            activity=Game(Config.get('presence', 'Hello world!')),
+            status=getattr(Status, str(Config.status)))
 
 
 # Logger

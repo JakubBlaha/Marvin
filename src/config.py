@@ -35,6 +35,10 @@ class ConfigMeta(type):
         with open(cls._FILENAME, 'w') as f:
             yaml.dump(cls._store, f)
 
+    def get(cls, name, default):
+        ''' Use instead of `getattr`. '''
+        return cls._store.get(name, default)
+
 
 class Config(metaclass=ConfigMeta):
     pass
