@@ -151,6 +151,7 @@ class Commands:
         '''
 
         await ctx.send(f'```python\n{Logger.get_log()[-1980:]}```')
+        Logger.info(f'Command: Sent logs to `{ctx.channel.name}` channel')
 
     @command()
     async def embed(self, ctx, *, yaml_: str):
