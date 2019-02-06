@@ -50,15 +50,20 @@ class LoggerMeta(type):
         category, message = [i.strip() for i in string.split(':', 1)]
         _string = f'[{level.ljust(8)}] [{category.ljust(8)}] {message}'
         print(_string)
-        if cls.client:
-            cls.client.loop.create_task(cls._alog(_string))
 
     async def _alog(cls, string):
+        # return if string empty
+        if not string.strip():
+            return
+
+        # search for corresponding channel
         for ch in cls.client.get_all_channels():
             if ch.name == Config.log_channel:
                 break
         else:
             return
+
+        # actual log
         await ch.send(f'```python\n{string}```')
 
     def debug(cls, msg):
@@ -77,6 +82,10 @@ class LoggerMeta(type):
         cls.terminal.write(msg)
         cls.log.write(msg)
         cls.log.flush()
+
+        # write to discord logs channel
+        if cls.client:
+            cls.client.loop.create_task(cls._alog(msg))
 
     def flush(cls):
         cls.terminal.flush()
