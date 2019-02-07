@@ -17,7 +17,7 @@ class FreefClient(Bot):
         Logger.info(f'Client: Logged on as {self.user}')
         await self.change_presence(
             activity=Game(Config.get('presence', 'Hello world!')),
-            status=getattr(Status, str(Config.status)))
+            status=getattr(Status, str(Config.status), Status.online))
 
 
 # Logger
