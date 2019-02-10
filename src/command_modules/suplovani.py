@@ -57,6 +57,10 @@ def pdf_to_string(path: str, target: str = '') -> str:
 
     data = [[col['text'] for col in itemgetter(*COLS)(row)] for row in data]
 
+    # ensure headers
+    if data[0] != HEADERS:
+        data.insert(0, HEADERS)
+
     # shorten, replace names
     Logger.info('Command: Replacing strings..')
     for row in data:
@@ -86,10 +90,6 @@ def pdf_to_string(path: str, target: str = '') -> str:
         Logger.info(f'Command: Extracting {target} substitutions..')
         data = [data[0][1:]
                 ] + [row[1:] for row in _extract_target(data[1:], target)]
-
-    # ensure headers
-    if row[0] != HEADERS:
-        data.insert(0, HEADERS)
 
     if not data[1:]:
         Logger.info('Command: No matching substitutions found')
@@ -222,4 +222,12 @@ def suplovani(target, username, password, chromedriver_path=''):
     ''' Returns suplovani for the current / following day. '''
     fname = download_pdf(username, password, chromedriver_path)
 
-    return pdf_to_string(f'{DOWNLOAD_PATH}/{fname}', target)
+    # extract date
+    _date_enc = os.path.splitext(fname)[0]
+    day, month, year = _date_enc[:2], _date_enc[2:4], _date_enc[4:]
+
+    # get table
+    s = pdf_to_string(f'{DOWNLOAD_PATH}/{fname}', target)
+
+    # join date and table
+    return f'*{day}. {month}. 20{year}*\n' + s
