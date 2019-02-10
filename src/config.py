@@ -1,6 +1,8 @@
 import os
 import yaml
 
+REQUIRED_ENTRIES = ['token']
+
 
 class ConfigMeta(type):
     _FILENAME = 'config.yaml'
@@ -8,7 +10,7 @@ class ConfigMeta(type):
 
     def __init__(cls, *args, **kw):
         super().__init__(*args, **kw)
-        
+
         cls.ensure_file()
         cls.reload()
 
@@ -19,9 +21,18 @@ class ConfigMeta(type):
         if cls._store is None:
             cls._store = {}
 
+        cls._data_ok()
+
+    def _data_ok(cls):
+        local_keys = cls._store.keys()
+
+        for entry in REQUIRED_ENTRIES:
+            if not entry in local_keys:
+                raise ValueError(f'{entry} not present in {cls._FILENAME}')
+
     def ensure_file(cls):
         if not os.path.isfile(cls._FILENAME):
-            open(cls._FILENAME, 'w').close()
+            raise FileNotFoundError(f'{cls._FILENAME} not found! Exiting..')
 
     def __getattr__(cls, name: str):
         return cls._store.get(name)

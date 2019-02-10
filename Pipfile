@@ -11,6 +11,7 @@ tabulate = "*"
 selenium = "*"
 simpleeval = "*"
 pandas = "*"
+yapf = "*"
 
 [dev-packages]
 yapf = "*"
