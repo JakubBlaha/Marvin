@@ -41,6 +41,7 @@ TO_REPLACE = {
     'Odpadlo': 'odp.'
 }
 MAX_COL = max(COLS)
+HEADERS = ['Třída', 'Hodina', 'Předmět', 'Kdo supluje', 'Učebna']
 
 
 def pdf_to_string(path: str, target: str = '') -> str:
@@ -68,6 +69,14 @@ def pdf_to_string(path: str, target: str = '') -> str:
     Logger.info('Command: Trying to match classes..')
     data = _expand_classes(data)
 
+    # remove redundant
+    _last = None
+    for row in data:
+        if row[0] == _last:
+            row[0] = ''
+        else:
+            _last = row[0]
+
     # delete empty rows
     Logger.info('Command: Deleting empty rows..')
     data = [row for row in data if row[1]]
@@ -78,11 +87,9 @@ def pdf_to_string(path: str, target: str = '') -> str:
         data = [data[0][1:]
                 ] + [row[1:] for row in _extract_target(data[1:], target)]
 
-    # TODO
-    # add dots
-    # for row in data:
-    #     if row[1].isdigit():
-    #         row[1] += '.'
+    # ensure headers
+    if row[0] != HEADERS:
+        data.insert(0, HEADERS)
 
     if not data[1:]:
         Logger.info('Command: No matching substitutions found')
@@ -110,26 +117,33 @@ def _extract_target(data, target):
 
 def _expand_classes(rows):
     ''' Expands classes to other rows. `rows` is list. Return expanded. '''
-    # expand classes up and down
-    for i, row in enumerate(rows):
-        if not row[0]:
-            if i != len(rows) - 1:
-                row[0] = rows[i + 1][0]
-            elif i != 0:
-                row[0] = rows[i - 1][0]
 
-    # end condition
-    for c in rows:
-        if not c:
-            rows = _expand_classes(rows)
+    able_rows = [
+        i + 1 for i in range(len(rows) - 2)
+        if rows[i + 1] and not(rows[i][0] or rows[i + 2][0])
+    ]
+
+    index_add = 1
+    while True:
+        # exit condition
+        for row in rows:
+            if not row[0] and index_add < len(rows):
+                break
         else:
-            # clean duplicates
-            last = None
-            for row in rows:
-                if row[0] == last:
-                    row[0] = ''
-                else:
-                    last = row[0]
+            # exit
+            break
+
+        # expand rows[0]
+        for i, row in enumerate(rows):
+            if i in able_rows:
+                if rows[i + index_add][0]:
+                    continue
+                if rows[i - index_add][0]:
+                    continue
+                rows[i + index_add][0] = row[0]
+                rows[i - index_add][0] = row[0]
+
+        index_add += 1
 
     return rows
 

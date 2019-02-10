@@ -25,6 +25,7 @@ class ConfigMeta(type):
 
     def _data_ok(cls):
         local_keys = cls._store.keys()
+        print(local_keys)
 
         for entry in REQUIRED_ENTRIES:
             if not entry in local_keys:

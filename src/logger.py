@@ -1,14 +1,13 @@
 import os, sys
 import shutil
 
-from config import Config
-
 
 class LoggerMeta(type):
     LOG_DIR = 'logs'
     MAX_LOG_FILE_COUNT = 10
 
     client = None
+    log_channel = None
 
     def __init__(cls, *args, **kw):
         super().__init__(*args, **kw)
@@ -58,7 +57,7 @@ class LoggerMeta(type):
 
         # search for corresponding channel
         for ch in cls.client.get_all_channels():
-            if ch.name == Config.log_channel:
+            if ch.name == cls.log_channel:
                 break
         else:
             return
