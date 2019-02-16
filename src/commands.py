@@ -4,6 +4,7 @@ from time import sleep
 from traceback import format_exc
 from time import sleep
 from asyncio import TimeoutError
+from random import random, randint
 import yaml
 import re
 
@@ -365,6 +366,27 @@ class Commands:
                 f'{Emojis.Squid2 * (LEN - i)}{Emojis.Squid4}')
             sleep(.1)
 
+    @command()
+    async def random(self, ctx, arg1: int = None, arg2: int = None):
+        '''
+        Gives a random number depending on the arguments.
+
+        Up to two arguments can be passed into this function. If both arguments
+        are omitted, the given number will be in a range from 0 to 1. If one
+        argument is given, the given number will be in a range from 0 to arg1.
+        If both arguments are given, the given number will be in a range from
+        arg1 to arg2.
+        '''
+
+        if not (arg1 is None or arg2 is None):
+            res = randint(arg1, arg2)
+        elif arg1 is not None:
+            res = randint(0, arg1)
+        else:
+            res = random()
+
+        await ctx.send(f'{ctx.author.mention} {res}')
+
 
 class MessageFixer(Client):
     async def on_message(self, msg):
@@ -372,6 +394,10 @@ class MessageFixer(Client):
 
         # don't fix own messages
         if msg.author == self.user:
+            return
+
+        # don't fix commands
+        if msg.content.startswith(self.command_prefix):
             return
 
         fixed_content = fix_content(msg.content)
