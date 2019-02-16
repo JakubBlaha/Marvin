@@ -7,7 +7,7 @@ import commands
 from config import Config
 
 
-class FreefClient(Bot):
+class FreefClient(commands.MessageFixer, Bot):
     def __init__(self, *args, **kw):
         Logger.info('Client: Initializing client')
         super().__init__(*args, **kw)

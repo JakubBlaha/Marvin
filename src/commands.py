@@ -1,8 +1,9 @@
 from discord.ext.commands import Bot, command
-from discord import File, Message, Embed, Color
+from discord import File, Message, Embed, Color, Client
 from time import sleep
 from traceback import format_exc
 from time import sleep
+from asyncio import TimeoutError
 import yaml
 import re
 
@@ -12,6 +13,7 @@ from logger import Logger
 # command modules
 from command_modules.get_subjects import get_subjects
 from command_modules.suplovani import suplovani
+from command_modules.cz import fix_content
 from simpleeval import simple_eval
 from emojis import Emojis
 
@@ -351,6 +353,10 @@ class Commands:
 
     @command()
     async def anim_squid(self, ctx):
+        '''
+        Posts an animated squid made of custom emojis.
+        '''
+
         LEN = 8
         msg = await ctx.send('...')
         for i in (*range(LEN + 1), *range(LEN - 1, -1, -1)):
@@ -358,6 +364,37 @@ class Commands:
                 content=f'{Emojis.Squid1}{Emojis.Squid2 * i}{Emojis.Squid3}'
                 f'{Emojis.Squid2 * (LEN - i)}{Emojis.Squid4}')
             sleep(.1)
+
+
+class MessageFixer(Client):
+    async def on_message(self, msg):
+        await super().on_message(msg)
+
+        # don't fix own messages
+        if msg.author == self.user:
+            return
+
+        fixed_content = fix_content(msg.content)
+        # nothing to fix
+        if msg.content == fixed_content:
+            return
+
+        REACTION = '\u274c'
+
+        await msg.add_reaction(REACTION)
+
+        def check(reaction, user):
+            return (reaction.message == msg and reaction.emoji == REACTION
+                    and user != self.user)
+
+        try:
+            reaction, user = await self.wait_for(
+                'reaction_add', timeout=10, check=check)
+        except TimeoutError:
+            await msg.remove_reaction(REACTION, self.user)
+        else:
+            await msg.channel.send(
+                f'*from* {msg.author.mention}\n{fixed_content}')
 
 
 def setup(bot):
