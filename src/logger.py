@@ -29,10 +29,9 @@ class LoggerMeta(type):
             shutil.rmtree(cls.LOG_DIR)
             cls._ensure_dir()
             cls.fname = '0.txt'
+            cls.info(f'Logger: Purged `{cls.LOG_DIR}`')
 
         cls.log = open(os.path.join(cls.LOG_DIR, cls.fname), 'w')
-
-        cls.info(f'Logger: Purged `{cls.LOG_DIR}`')
 
     def _ensure_dir(cls):
         os.makedirs(cls.LOG_DIR, exist_ok=True)

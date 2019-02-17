@@ -17,4 +17,3 @@ def get_subjects() -> str:
 
     subjs = sorted(list(set(TIMETABLE[day_index]) - set('-')))
     return f'{DAYS[day_index]}: {", ".join(subjs)}'
-
