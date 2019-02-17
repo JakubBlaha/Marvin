@@ -13,12 +13,8 @@ with open(TIMETABLE_PATH, encoding='utf-8') as f:
 
 def get_subjects() -> str:
     day_index = datetime.today().weekday()
-    now = datetime.now()
-    day_index = (day_index + (now.hour > 12)) % 6
+    day_index = (day_index + (datetime.now().hour > 12)) % 7
 
     subjs = sorted(list(set(TIMETABLE[day_index]) - set('-')))
     return f'{DAYS[day_index]}: {", ".join(subjs)}'
 
-
-if __name__ == '__main__':
-    print(get_subjects())
