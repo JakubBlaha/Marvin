@@ -39,10 +39,17 @@ async def send_channel_history(ctx, channel_name, no_history):
         await ctx.send(no_history)
 
 
-async def request_input(ctx, message, regex='', mention=True):
-    bot_message = (await
-                   ctx.send(ctx.author.mention * mention + ' ' + message +
-                            ('\n' + f'**Regex**: `{regex}`') * bool(regex)))
+async def request_input(ctx, message, regex='', mention=True, allowed=[]):
+    # create regex from allowed
+    if allowed and not regex:
+        regex = f'({"|".join(allowed)}){{1}}'
+    elif allowed and regex:
+        Logger.warning(
+            f'Input: Given `allowed` {allowed} but also `regex` {regex}')
+
+    bot_message = (await ctx.send(
+        ctx.author.mention * mention + ' ' + message +
+        ('\n' + f'*Allowed values: {", ".join(allowed)}*') * bool(regex)))
     await bot_message.add_reaction('\u2b07')
 
     def check(msg):
@@ -291,11 +298,10 @@ class Commands:
         description = await request_input(ctx,
                                           'Please specify the `description`:')
 
-        PATTERN = '^(red|orange|green){1}$'
-        color = await request_input(ctx, f'Please specify the `color`:',
-                                    PATTERN)
-
-        footer = await request_input(ctx, 'Please specify the `footer`:')
+        color = await request_input(
+            ctx,
+            f'Please specify the `color`:',
+            allowed=['red', 'orange', 'green'])
 
         fields = {}
         TERMINATOR = '👌'
@@ -310,13 +316,15 @@ class Commands:
             field_value = await request_input(
                 ctx, f'Please specify the `{field_name}` value:')
 
+            if field_value.strip() == '...':
+                field_value = '\u200b'
+
             fields[field_name] = field_value
 
         embed = Embed(
             title=title,
             description=description,
             color=getattr(Color, color)())
-        embed.set_footer(text=footer)
         for key, value in fields.items():
             embed.add_field(name=key, value=value)
 
