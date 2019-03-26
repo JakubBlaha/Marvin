@@ -18,6 +18,15 @@ from command_modules.cz import fix_content
 from simpleeval import simple_eval
 from emojis import Emojis
 
+DEFAULT_EMBED = {
+    'title': '\u200b',
+    'description': '\u200b',
+    'footer': None,
+    'fields': {},
+    'del_fields': (),
+    'color': Embed.Empty
+}
+
 
 async def send_channel_history(ctx, channel_name, no_history):
     ''' Send all channel history to the current context. '''
@@ -124,17 +133,17 @@ class Commands:
                    f'```python\n{format_exc()}```')
         await ctx.send(f'<@{ctx.author.id}> {ret}')
 
-    @command()
+    @command(aliases=['testy'])
     async def test(self, ctx):
         ''' Outputs exams from the *testy* channel. '''
         await send_channel_history(ctx, 'testy', '**O žádném testu se neví.**')
 
-    @command()
+    @command(aliases=['ukoly'])
     async def ukol(self, ctx):
         ''' Outputs homeworks from the *úkoly* channel. '''
         await send_channel_history(ctx, 'úkoly', '**O žádném úkolu se neví.**')
 
-    @command()
+    @command(aliases=['suply'])
     async def supl(self, ctx, target='3.F'):
         '''
         Outputs the substitutions.
@@ -173,19 +182,16 @@ class Commands:
         deletes the message afterwards.
 
         --------------------------------------------------
-        channel: bot-testing
         title: title
         description: description
         fields: {
             name1: value1,
             name2: value2
         }
+        del_fields: [0, 1]
         footer: footer
         color: green
         --------------------------------------------------
-
-        If channel in omitted, the embed will be sent to the channel the
-        command was invoked from.
 
         If there is an embed with the same title in the given channel, then the
         embed will be edited instead of creating a new one. If fields are
@@ -219,70 +225,63 @@ class Commands:
          - greyple
         '''
 
-        # fix string
-        yaml_ = yaml_.replace('`yaml', '')
-        yaml_ = yaml_.replace('`', '')
-
         try:
-            data = yaml.load(yaml_)
+            new_data = yaml.load(yaml_)
         except Exception:
             Logger.error(f'Command: Failed to read {yaml_}')
             await ctx.send(f'```python\n{format_exc()[-1980:]}```')
             return
 
-        # get the channel
-        channel_name = data.pop('channel', None)
-        for channel in self.bot.get_all_channels():
-            if channel.name == channel_name:
+        # search for an embed in the history
+        msg = None
+        old_data = {}
+        async for _msg in ctx.channel.history():
+            if not _msg.embeds:
+                continue
+            embed = _msg.embeds[0]
+            if embed.title == new_data.get('title', None):
+                Logger.info(
+                    f'Command: Found an embed with title {embed.title}')
+                old_data = embed.to_dict()
+                msg = _msg
                 break
-        else:
-            channel = ctx.channel
 
-        # get things from yaml
-        title = data.get('title')
+        # combine fields
+        _fields = old_data.get('fields', [])
+        _fields = [
+            field for index, field in enumerate(_fields)
+            if not index in new_data.get('del_fields', [])
+        ]
+        _fields += [
+            {
+                'inline': True,
+                'name': name,
+                'value': value
+            }
+            for name, value in new_data.get('fields', {}).items()
+        ]
 
-        fields = data.pop('fields', {})
-        remove_fields = data.pop('remove_fields', ())
-        footer_text = data.pop('footer', '')
-        color = getattr(Color, data.pop('color', ''), Color.orange)()
+        # fix color data
+        if isinstance(new_data.get('color', None), str):
+            try:
+                new_data['color'] = getattr(Color, new_data['color'])()
+            except AttributeError:
+                new_data['color'] = Color.lighter_grey()
+        if 'color' in new_data:
+            new_data['color'] = new_data['color'].value
 
-        # get embed
-        try:
-            async for msg in channel.history():
-                for embed in msg.embeds:
-                    if embed.title == title:
-                        Logger.info(
-                            f'Command: Found an embed with title {embed.title}'
-                        )
-                        raise Break
-        except Break:
-            for key, value in data.items():
-                setattr(embed, key, value)
+        # Fix footer data
+        if 'footer' in new_data and not isinstance(new_data['footer'], dict):
+            new_data['footer'] = {'text': str(new_data['footer'])}
 
-        else:
-            msg = None
-            embed = Embed(**data)
-
-        # set color
-        embed.color = color
-
-        # clear fields
-        for index in remove_fields:
-            embed.remove_field(index)
-
-        # add fields
-        for name, value in fields.items():
-            embed.add_field(name=name, value=value)
-
-        # set footer
-        if footer_text:
-            embed.set_footer(text=footer_text)
+        # create an embed
+        embed = Embed.from_data({**old_data, **new_data, 'fields': _fields})
 
         # send/edit message
         if msg:
             await msg.edit(embed=embed)
         else:
-            await channel.send(embed=embed)
+            await ctx.channel.send(embed=embed)
 
         # delete user message
         await ctx.message.delete()
@@ -360,7 +359,7 @@ class Commands:
         await ctx.send(f'{Emojis.Squid1}{Emojis.Squid2 * n1}{Emojis.Squid3}'
                        f'{Emojis.Squid2 * n2}{Emojis.Squid4}')
 
-    @command()
+    @command(aliases=['anim_squido'])
     async def anim_squid(self, ctx):
         '''
         Posts an animated squid made of custom emojis.
