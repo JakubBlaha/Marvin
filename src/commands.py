@@ -427,7 +427,8 @@ class MessageFixer(Client):
             await msg.remove_reaction(REACTION, self.user)
         else:
             await msg.channel.send(
-                f'*from* {msg.author.mention}\n{fixed_content}')
+                f'*from* {msg.author.mention}: *localized*\n{fixed_content}')
+            await msg.delete()
 
 
 def setup(bot):

@@ -1,4 +1,4 @@
-CHARS = {
+CHARS: dict = {
     '2': 'ě',
     '3': 'š',
     '4': 'č',
@@ -10,9 +10,10 @@ CHARS = {
     '0': 'é',
     ';': 'ů',
     'y': 'z',
-    'z': 'y'
+    'z': 'y',
+    '>': ':'
 }
-
+NO_TRIGGER: set = {'y', 'z'}
 
 def fix_content(s: str) -> str:
     ignored_indexes = []
@@ -24,6 +25,13 @@ def fix_content(s: str) -> str:
             ignoring = False
         if ignoring:
             ignored_indexes.append(index)
+
+    # Check if required
+    for ch in s:
+        if ch in set(CHARS) - NO_TRIGGER:
+            break
+    else:
+        return s
 
     for index, ch in enumerate(s):
         if index not in ignored_indexes:
