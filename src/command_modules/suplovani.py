@@ -58,7 +58,7 @@ def pdf_to_string(path: str, target: str = '') -> str:
     data = [[col['text'] for col in itemgetter(*COLS)(row)] for row in data]
 
     # ensure headers
-    if data[0] != HEADERS:
+    if data[0][1].isdigit():
         data.insert(0, HEADERS)
 
     # shorten, replace names
@@ -115,34 +115,43 @@ def _extract_target(data, target):
     return new_data
 
 
-def _expand_classes(rows):
-    ''' Expands classes to other rows. `rows` is list. Return expanded. '''
+def _expand_classes(rows: list) -> list:
+    ''' Expands classes to other rows. Return expanded. '''
 
+    # Get rows which's [0] has a value and the rows next to it don't
+    # "Able" stands for "expandable"
+    # for example:
+    #  | - - - - |
+    #  | A - - - | <- able row
+    #  | - - - - |
     able_rows = [
         i + 1 for i in range(len(rows) - 2)
         if rows[i + 1] and not(rows[i][0] or rows[i + 2][0])
     ]
 
-    index_add = 1
+    index_add = 1 # The range that the able row can reach to
     while True:
-        # exit condition
-        for row in rows:
-            if not row[0] and index_add < len(rows):
-                break
-        else:
-            # exit
+        if '' not in [r[0] for r in rows]:
+            # Full
+            break
+        if index_add > len(rows)/2:
             break
 
-        # expand rows[0]
         for i, row in enumerate(rows):
-            if i in able_rows:
-                if rows[i + index_add][0]:
-                    continue
-                if rows[i - index_add][0]:
-                    continue
-                rows[i + index_add][0] = row[0]
-                rows[i - index_add][0] = row[0]
+            if i not in able_rows:
+                # Not expandable
+                continue
+            if (i - index_add < 0) or (i + index_add >= len(rows)):
+                # Out of bounds
+                continue
+            if rows[i + index_add][0] or rows[i - index_add][0]:
+                # Either side is not empty
+                continue
+            # Expand it
+            rows[i + index_add][0] = row[0]
+            rows[i - index_add][0] = row[0]
 
+        # Increase the range
         index_add += 1
 
     return rows
