@@ -21,10 +21,10 @@ def fix_content(s: str) -> str:
     for index, ch in enumerate(s):
         if ch == '<' and not ignoring:
             ignoring = True
-        elif ch == '>' and ignoring:
-            ignoring = False
         if ignoring:
             ignored_indexes.append(index)
+        if ch == '>' and ignoring:
+            ignoring = False
 
     # Check if required
     for ch in s:
