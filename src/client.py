@@ -1,14 +1,15 @@
 import sys
 from discord import Game, Status
-from discord.ext.commands import Bot
+from discord.ext.commands import Bot, Command
 
 from logger import Logger
 from config import Config
 from message_fixer import MessageFixer
 from embed_excluder import EmbedExcluder
+from large_emoji_client import LargeEmojiCLient
 
 
-class FreefClient(MessageFixer, EmbedExcluder, Bot):
+class FreefClient(MessageFixer, EmbedExcluder, LargeEmojiCLient, Bot):
     def __init__(self, *args, **kw):
         Logger.info('Client: Initializing client')
         super().__init__(*args, **kw)
