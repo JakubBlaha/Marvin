@@ -2,7 +2,8 @@
 
 <img src="https://github.com/JakubBlaha/freefbot/blob/master/res/logo.png?raw=true" alt="logo.png" height=200>
 
-A simple personal discord bot made for our class in python using [discord.py](https://github.com/Rapptz/discord.py).
+A simple discord bot made for personal purposes in python using [discord.py](https://github.com/Rapptz/discord.py). This bot is focused on school discord servers for students, however can be easily modified for your own purposes.
+
 
 ## Features
 **Available commands:**
@@ -20,11 +21,20 @@ A simple personal discord bot made for our class in python using [discord.py](ht
 There has to be a `config.yaml` file in the same location as he `client.py` file is. The file has to be formatted as *yaml* and some *yaml-specific* features cant be used becuase of the `yaml.safe_load` function being used. The file must contain credentials as the following example shows.
 ```yaml
 token: TokenGoesHere    # Discord bot token
+guild_id: GuildId       # The id of the guild the bot will belong to
 username: MyUsername01  # moodle3.gvid.cz username
 password: Password123   # moodle3.gvid.cz password
 chromedriver: '*.exe'   # the path to chromedriver.exe required for the !supl command
 log_channel: logs       # the name of the channel to where all logs should be sent
 presence: Hello world!  # The text that will be shown as playing a game
 status: online          # A string representing an attribute of the discord.Status class
+
+# The embed exclusion settings
+embed_exclusion_channels: [] # List of channel ids to cehck in
+embed_exclusion_check_interval: # The check interval in seconds
+embed_exclusion_alert_channel_id: # The channel id to post notifications about outdates embeds to. If omitted, no notifications will be posted
+embed_exclusion_alert_role_id: # The id of the role to tag in the notifications
 ```
 The [moodle](https://moodle3.gvid.cz) credentials are used for the `!supl` command which gives you substitutions for the current/following day depending on the document presence as they are needed to login in the course.
+
+There is a feature called `EmbedExcluder` in the bot, which basically reminds you to remove any outdated embeds, that may have a date in their description. The *embed exclusion settings* are used to customize this feature.

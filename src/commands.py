@@ -1,5 +1,5 @@
 from discord.ext.commands import Bot, command
-from discord import File, Message, Embed, Color, Client
+from discord import File, Message, Embed, Color, Client, utils, Guild
 from time import sleep
 from traceback import format_exc
 from time import sleep
@@ -14,7 +14,6 @@ from logger import Logger
 # command modules
 from command_modules.get_subjects import get_subjects
 from command_modules.suplovani import suplovani
-from command_modules.cz import fix_content
 from simpleeval import simple_eval
 from emojis import Emojis
 
@@ -28,22 +27,26 @@ DEFAULT_EMBED = {
 }
 
 
-async def send_channel_history(ctx, channel_name, no_history):
-    ''' Send all channel history to the current context. '''
-    for channel in ctx.bot.get_all_channels():
-        if channel.name == channel_name:
-            target_channel = channel
-            break
-    else:
-        await ctx.send(f':warning: Channel `{ch_name}` not found :warning:')
+async def send_channel_history(ctx,
+                               channel_name,
+                               no_history,
+                               ignore_date=False):
+    '''
+    Send all channel history to the current context. Embeds with description of
+    already outdated date will be skipped.
+    '''
+    target_channel = utils.get(ctx.guild.channels, name=channel_name)
+    if not target_channel:
+        await ctx.send(
+            f':warning: Channel `{channel_name}` not found :warning:')
 
     msgs = [msg async for msg in target_channel.history()]
     if msgs:
         for msg in msgs:
-            if msg.content:
-                await ctx.send(msg.content)
-            for embed in msg.embeds:
-                await ctx.send(embed=embed)
+            await ctx.send(
+                msg.content,
+                embed=msg.embeds[0]
+                if msg.embeds and is_embed_up_to_date(msg.embeds[0]) else None)
     else:
         await ctx.send(no_history)
 
@@ -252,14 +255,11 @@ class Commands:
             field for index, field in enumerate(_fields)
             if not index in new_data.get('del_fields', [])
         ]
-        _fields += [
-            {
-                'inline': True,
-                'name': name,
-                'value': value
-            }
-            for name, value in new_data.get('fields', {}).items()
-        ]
+        _fields += [{
+            'inline': True,
+            'name': name,
+            'value': value
+        } for name, value in new_data.get('fields', {}).items()]
 
         # fix color data
         if isinstance(new_data.get('color', None), str):
@@ -326,6 +326,7 @@ class Commands:
             color=getattr(Color, color)())
         for key, value in fields.items():
             embed.add_field(name=key, value=value)
+        embed.set_footer(text=f"Created by: {ctx.author.name}")
 
         await ctx.send(embed=embed)
 
@@ -393,42 +394,6 @@ class Commands:
             res = random()
 
         await ctx.send(f'{ctx.author.mention} {res}')
-
-
-class MessageFixer(Client):
-    async def on_message(self, msg):
-        await super().on_message(msg)
-
-        # don't fix own messages
-        if msg.author == self.user:
-            return
-
-        # don't fix commands
-        if msg.content.startswith(self.command_prefix):
-            return
-
-        fixed_content = fix_content(msg.content)
-        # nothing to fix
-        if msg.content == fixed_content:
-            return
-
-        REACTION = '\u274c'
-
-        await msg.add_reaction(REACTION)
-
-        def check(reaction, user):
-            return (reaction.message == msg and reaction.emoji == REACTION
-                    and user != self.user)
-
-        try:
-            reaction, user = await self.wait_for(
-                'reaction_add', timeout=10, check=check)
-        except TimeoutError:
-            await msg.remove_reaction(REACTION, self.user)
-        else:
-            await msg.channel.send(
-                f'*from* {msg.author.mention}: *localized*\n{fixed_content}')
-            await msg.delete()
 
 
 def setup(bot):

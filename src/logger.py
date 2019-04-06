@@ -31,7 +31,7 @@ class LoggerMeta(type):
             cls.fname = '0.txt'
             cls.info(f'Logger: Purged `{cls.LOG_DIR}`')
 
-        cls.log = open(os.path.join(cls.LOG_DIR, cls.fname), 'w')
+        cls.log = open(os.path.join(cls.LOG_DIR, cls.fname), 'w', encoding='utf-8')
 
     def _ensure_dir(cls):
         os.makedirs(cls.LOG_DIR, exist_ok=True)

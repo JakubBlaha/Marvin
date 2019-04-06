@@ -1,7 +1,7 @@
 import os
 import yaml
 
-REQUIRED_ENTRIES = ['token']
+REQUIRED_ENTRIES = ['token', 'guild_id']
 
 
 class ConfigMeta(type):
@@ -15,7 +15,7 @@ class ConfigMeta(type):
         cls.reload()
 
     def reload(cls):
-        with open(cls._FILENAME) as f:
+        with open(cls._FILENAME, encoding='utf-8') as f:
             cls._store = yaml.safe_load(f)
 
         if cls._store is None:

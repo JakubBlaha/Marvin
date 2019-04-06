@@ -3,11 +3,12 @@ from discord import Game, Status
 from discord.ext.commands import Bot
 
 from logger import Logger
-import commands
 from config import Config
+from message_fixer import MessageFixer
+from embed_excluder import EmbedExcluder
 
 
-class FreefClient(commands.MessageFixer, Bot):
+class FreefClient(MessageFixer, EmbedExcluder, Bot):
     def __init__(self, *args, **kw):
         Logger.info('Client: Initializing client')
         super().__init__(*args, **kw)
