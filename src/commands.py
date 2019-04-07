@@ -14,6 +14,7 @@ from logger import Logger
 # command modules
 from command_modules.get_subjects import get_subjects
 from command_modules.substitutions import substitutions
+from command_modules.embed import is_embed_up_to_date
 from simpleeval import simple_eval
 from emojis import Emojis
 
@@ -43,10 +44,8 @@ async def send_channel_history(ctx,
     msgs = [msg async for msg in target_channel.history()]
     if msgs:
         for msg in msgs:
-            await ctx.send(
-                msg.content,
-                embed=msg.embeds[0]
-                if msg.embeds and is_embed_up_to_date(msg.embeds[0]) else None)
+            if msg.embeds and is_embed_up_to_date(msg.embeds[0]):
+                await ctx.send(msg.content, embed=msg.embeds[0])
     else:
         await ctx.send(no_history)
 
@@ -159,8 +158,7 @@ class Commands(Cog):
         '''
 
         await ctx.trigger_typing()
-        await ctx.send(
-            substitutions(target, Config.username, Config.password))
+        await ctx.send(substitutions(target, Config.username, Config.password))
 
     @command()
     async def log(self, ctx):
@@ -295,10 +293,9 @@ class Commands(Cog):
         description = await request_input(ctx,
                                           'Please specify the `description`:')
 
-        color = await request_input(
-            ctx,
-            f'Please specify the `color`:',
-            allowed=['red', 'orange', 'green'])
+        color = await request_input(ctx,
+                                    f'Please specify the `color`:',
+                                    allowed=['red', 'orange', 'green'])
 
         fields = {}
         TERMINATOR = '👌'
@@ -318,10 +315,9 @@ class Commands(Cog):
 
             fields[field_name] = field_value
 
-        embed = Embed(
-            title=title,
-            description=description,
-            color=getattr(Color, color)())
+        embed = Embed(title=title,
+                      description=description,
+                      color=getattr(Color, color)())
         for key, value in fields.items():
             embed.add_field(name=key, value=value)
         embed.set_footer(text=f"Created by: {ctx.author.name}")
