@@ -1,27 +1,16 @@
 import os, sys
 import tabula
 import tabulate
-from time import sleep
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from datetime import datetime
 from operator import itemgetter
 from tempfile import gettempdir
+import mechanize
 
-sys.path.insert(0, os.path.abspath(
-    os.path.join(__file__, os.pardir, os.pardir)))
+sys.path.insert(0, os.path.abspath(os.path.join(__file__, os.pardir,
+                                                os.pardir)))
 from logger import Logger
 
 BASE_URL = 'https://moodle3.gvid.cz/course/view.php?id=3'
 DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/freefbot')
-
-# Selenium
-EXPERIMENTAL_OPTIONS = ('prefs', {
-    'download.default_directory': DOWNLOAD_PATH,
-    'download.prompt_for_download': False,
-    'download.directory_upgrade': True,
-})
-OPTIONS = ('--headless', '--disable-gpu')
 
 # Table
 COLS = (0, 1, 3, 4, 5)
@@ -126,15 +115,15 @@ def _expand_classes(rows: list) -> list:
     #  | - - - - |
     able_rows = [
         i + 1 for i in range(len(rows) - 2)
-        if rows[i + 1] and not(rows[i][0] or rows[i + 2][0])
+        if rows[i + 1] and not (rows[i][0] or rows[i + 2][0])
     ]
 
-    index_add = 1 # The range that the able row can reach to
+    index_add = 1  # The range that the able row can reach to
     while True:
         if '' not in [r[0] for r in rows]:
             # Full
             break
-        if index_add > len(rows)/2:
+        if index_add > len(rows) / 2:
             break
 
         for i, row in enumerate(rows):
@@ -157,86 +146,50 @@ def _expand_classes(rows: list) -> list:
     return rows
 
 
-def wait_for_download(path, interval=.1):
-    ''' Wait for file to be created. Return the file path. '''
-    while not os.path.isfile(path):
-        sleep(interval)
+def download_pdf(username, password):
+    ''' Download the latest pdf file. Return its local path. '''
 
-    return path
-
-
-def download_pdf(username, password, chromedriver_path=''):
-    ''' Downloads the last pdf from moodle. Return the pdf filename. '''
-    # make download dir
+    # Make the download directory
     os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
-    # specify options
-    Logger.info('Selenium: Generating options..\nExperimental options: '
-                f'{EXPERIMENTAL_OPTIONS}\nOptions: {OPTIONS}')
-    options = Options()
-    options.add_experimental_option(*EXPERIMENTAL_OPTIONS)
-    for opt in OPTIONS:
-        options.add_argument(opt)
+    # Setup the browser
+    Logger.info('Mechanize: Preparing the browser..')
+    br = mechanize.Browser()
 
-    # setup browser
-    Logger.info('Selenium: Initializing browser..')
-    Logger.info(f'Selenium: Chromedriver path: {chromedriver_path}')
-    browser = webdriver.Chrome(chromedriver_path, options=options)
+    Logger.info('Mechanize: Loading the initial page..')
+    br.open(BASE_URL)
 
-    # Load page
-    Logger.info(f'Selenium: Loading initial page.. {BASE_URL}')
-    browser.get(BASE_URL)
+    # Fill in the forms
+    Logger.info('Mechanize: Filling in the form..')
+    br.select_form(nr=0)
+    br['username'] = username
+    br['password'] = password
+    br.submit()
 
-    # get elements
-    Logger.info(f'Selenium: Getting page elements..')
-    username_form = browser.find_element_by_id('username')
-    password_form = browser.find_element_by_id('password')
-    login_btn = browser.find_element_by_id('loginbtn')
-
-    # login
-    Logger.info(f'Selenium: Logging in..')
-    username_form.send_keys(username)
-    password_form.send_keys(password)
-    login_btn.click()
-
-    # setup download
-    browser.command_executor._commands["send_command"] = (
-        "POST", '/session/$sessionId/chromium/send_command')
-    params = {
-        'cmd': 'Page.setDownloadBehavior',
-        'params': {
-            'behavior': 'allow',
-            'downloadPath': DOWNLOAD_PATH
-        }
-    }
-    browser.execute("send_command", params)
-
-    # click first pdf
-    Logger.info('Selenium: Finding the last posted pdf..')
-    link = browser.find_element_by_partial_link_text('.pdf')
-    Logger.info(f'Selenium: Found link with href {link.get_attribute("href")}')
-    if link.text not in os.listdir(DOWNLOAD_PATH):
-        link.click()
-
-    # wait for download
-    Logger.info(f'Selenium: Waiting for {link.text} to download..')
-    ret = wait_for_download(os.path.join(DOWNLOAD_PATH, link.text))
-    Logger.info(f'Command: Found {ret}')
-
-    return link.text
+    # Download the pdf
+    Logger.info('Mechanize: Downloading the pdf..')
+    for link in br.links():
+        if '.pdf' in link.text:
+            _local_path = os.path.join(DOWNLOAD_PATH, link.text)
+            br.retrieve(link.url, _local_path)
+            Logger.info(f'Mechanize: The pdf wa downloaded to {_local_path}')
+            return _local_path
 
 
-# main function
-def suplovani(target, username, password, chromedriver_path=''):
-    ''' Returns suplovani for the current / following day. '''
-    fname = download_pdf(username, password, chromedriver_path)
+def substitutions(target, username, password):
+    ''' Return substitutions for the current / following day. '''
+    _local_path = download_pdf(username, password)
 
     # extract date
-    _date_enc = os.path.splitext(fname)[0]
+    _date_enc = os.path.splitext(os.path.split(_local_path)[1])[0]
     day, month, year = _date_enc[:2], _date_enc[2:4], _date_enc[4:]
 
     # get table
-    s = pdf_to_string(f'{DOWNLOAD_PATH}/{fname}', target)
+    s = pdf_to_string(_local_path, target)
 
     # join date and table
     return f'*{day}. {month}. 20{year}*\n' + s
+
+
+if __name__ == "__main__":
+    download_pdf('', '')

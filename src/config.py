@@ -11,8 +11,11 @@ class ConfigMeta(type):
     def __init__(cls, *args, **kw):
         super().__init__(*args, **kw)
 
-        cls.ensure_file()
-        cls.reload()
+        try:
+            cls.ensure_file()
+            cls.reload()
+        except Exception:
+            print('Failed to read the config file!')
 
     def reload(cls):
         with open(cls._FILENAME, encoding='utf-8') as f:

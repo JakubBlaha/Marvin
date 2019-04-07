@@ -8,10 +8,10 @@ discord-py = {ref = "rewrite", git = "https://github.com/Rapptz/discord.py"}
 pyyaml = "*"
 tabula-py = "*"
 tabulate = "*"
-selenium = "*"
 simpleeval = "*"
 pandas = "*"
 yapf = "*"
+mechanize = "*"
 
 [dev-packages]
 yapf = "*"

@@ -1,4 +1,4 @@
-from discord.ext.commands import Bot, command
+from discord.ext.commands import Bot, command, Cog
 from discord import File, Message, Embed, Color, Client, utils, Guild
 from time import sleep
 from traceback import format_exc
@@ -13,7 +13,7 @@ from logger import Logger
 
 # command modules
 from command_modules.get_subjects import get_subjects
-from command_modules.suplovani import suplovani
+from command_modules.substitutions import substitutions
 from simpleeval import simple_eval
 from emojis import Emojis
 
@@ -83,7 +83,7 @@ class Break(Exception):
     pass
 
 
-class Commands:
+class Commands(Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -146,23 +146,21 @@ class Commands:
         ''' Outputs homeworks from the *úkoly* channel. '''
         await send_channel_history(ctx, 'úkoly', '**O žádném úkolu se neví.**')
 
-    @command(aliases=['suply'])
-    async def supl(self, ctx, target='3.F'):
+    @command(aliases=['supl', 'suply'])
+    async def substits(self, ctx, target='3.F'):
         '''
-        Outputs the substitutions.
+        Outputs the latest substitutions.
         
-        The substitutions are pulled from moodle3.gvid.cz using selenium,
+        The substitutions are pulled from moodle3.gvid.cz using mechanize,
         logging in with username and password from the config file and clicking
         the last pdf link. Then transformed to text using tabula-py. If you
         want to output all substitutions instead of only the targetted ones,
         type 'all' as the target argument.
         '''
 
-        # TODO expire downloaded pdf
         await ctx.trigger_typing()
         await ctx.send(
-            suplovani(target, Config.username, Config.password,
-                      Config.chromedriver))
+            substitutions(target, Config.username, Config.password))
 
     @command()
     async def log(self, ctx):
