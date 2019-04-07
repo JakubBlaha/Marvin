@@ -256,7 +256,7 @@ class Commands:
             if not index in new_data.get('del_fields', [])
         ]
         _fields += [{
-            'inline': True,
+            'inline': False,
             'name': name,
             'value': value
         } for name, value in new_data.get('fields', {}).items()]
