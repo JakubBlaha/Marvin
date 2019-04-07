@@ -1,6 +1,8 @@
 import os, sys
 import shutil
+import io
 
+from config import Config
 
 class LoggerMeta(type):
     LOG_DIR = 'logs'
@@ -9,10 +11,16 @@ class LoggerMeta(type):
     client = None
     log_channel = None
 
+    log = io.StringIO()
+
     def __init__(cls, *args, **kw):
         super().__init__(*args, **kw)
 
         cls.terminal = sys.stdout
+
+        # file logging
+        if Config.get('disable_logs', False):
+            return
 
         cls._ensure_dir()
 

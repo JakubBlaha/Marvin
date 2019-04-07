@@ -34,6 +34,9 @@ embed_exclusion_channels: [] # List of channel ids to cehck in
 embed_exclusion_check_interval: # The check interval in seconds
 embed_exclusion_alert_channel_id: # The channel id to post notifications about outdates embeds to. If omitted, no notifications will be posted
 embed_exclusion_alert_role_id: # The id of the role to tag in the notifications
+
+# System
+disable_logs: False     # When set to True, all file logging will be disabled
 ```
 The [moodle](https://moodle3.gvid.cz) credentials are used for the `!supl` command which gives you substitutions for the current/following day depending on the document presence as they are needed to login in the course.
 
