@@ -389,6 +389,11 @@ class Commands(Cog):
 
         await ctx.send(f'{ctx.author.mention} {res}')
 
+    @command(hidden=True)
+    async def toggle_oos(self, ctx):
+        ''' Toggle out of service. '''
+        await self.bot.toggle_oos()
+
 
 def setup(bot):
     bot.add_cog(Commands(bot))
