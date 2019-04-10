@@ -15,6 +15,7 @@ from logger import Logger
 from command_modules.get_subjects import get_subjects
 from command_modules.substitutions import substitutions
 from command_modules.embed import is_embed_up_to_date
+from command_modules.message_split import split as msg_split
 from simpleeval import simple_eval
 from emojis import Emojis
 
@@ -158,7 +159,10 @@ class Commands(Cog):
         '''
 
         await ctx.trigger_typing()
-        await ctx.send(substitutions(target, Config.username, Config.password))
+
+        s = substitutions(target, Config.username, Config.password)
+        for chunk in msg_split(s):
+            await ctx.send(chunk)
 
     @command()
     async def log(self, ctx):
