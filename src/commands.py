@@ -271,7 +271,7 @@ class Commands(Cog):
             new_data['footer'] = {'text': str(new_data['footer'])}
 
         # create an embed
-        embed = Embed.from_data({**old_data, **new_data, 'fields': _fields})
+        embed = Embed.from_dict({**old_data, **new_data, 'fields': _fields})
 
         # send/edit message
         if msg:
