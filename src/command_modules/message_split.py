@@ -13,7 +13,7 @@ def split(s: str, chunk_size=2000):
         for fmt in sorted(FORMATTERS, reverse=True):
             if chunk.count(fmt) % 2:
                 chunks[index] += fmt
-                chunks[index + 1] = fmt + chunks[index + 1]    
+                chunks[index + 1] = fmt + chunks[index + 1]
                 break
 
         # TODO Special case for code formatting
