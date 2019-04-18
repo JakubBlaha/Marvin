@@ -24,7 +24,8 @@ token: TokenGoesHere    # Discord bot token
 guild_id: GuildId       # The id of the guild the bot will belong to
 username: MyUsername01  # moodle3.gvid.cz username
 password: Password123   # moodle3.gvid.cz password
-log_channel: logs       # the name of the channel to where all logs should be sent
+log_channel_id: 123     # the id of the channel where all logs should be sent to
+channel_log_flush_interval: 10  # Max seconds the log content can stay in the buffer
 presence: Hello world!  # The text that will be shown as playing a game
 status: online          # A string representing an attribute of the discord.Status class
 

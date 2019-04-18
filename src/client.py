@@ -13,7 +13,6 @@ class FreefClient(MessageFixer, EmbedExcluder, LargeEmojiCLient, Bot):
     _oos = False  # Out of service
 
     def __init__(self, *args, **kw):
-        Logger.info('Client: Initializing client')
         super().__init__(*args, **kw)
         self.load_extension('commands')
 
@@ -39,12 +38,11 @@ class FreefClient(MessageFixer, EmbedExcluder, LargeEmojiCLient, Bot):
         Logger.info(f'Client: Toggled out of service {self._oos}')
 
 
-# Logger
-sys.stderr = Logger
-sys.stdout = Logger
-
 # Client
 client = FreefClient(command_prefix='!')
+
+# Logger
 Logger.client = client
-Logger.log_channel = Config.log_channel
+
+# Run client
 client.run(Config.token)
