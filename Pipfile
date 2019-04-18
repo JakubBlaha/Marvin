@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-discord-py = {ref = "rewrite", git = "https://github.com/Rapptz/discord.py"}
 pyyaml = "*"
 tabula-py = "*"
 tabulate = "*"
@@ -12,6 +11,7 @@ simpleeval = "*"
 pandas = "*"
 yapf = "*"
 mechanize = "*"
+discord-py = "*"
 
 [dev-packages]
 yapf = "*"
