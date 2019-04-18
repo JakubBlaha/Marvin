@@ -358,7 +358,7 @@ class Commands(Cog):
         await ctx.send(f'{Emojis.Squid1}{Emojis.Squid2 * n1}{Emojis.Squid3}'
                        f'{Emojis.Squid2 * n2}{Emojis.Squid4}')
 
-    @command(aliases=['anim_squido'])
+    @command(aliases=['anim_squido', 'anime_squido', 'anime_squid'])
     async def anim_squid(self, ctx):
         '''
         Posts an animated squid made of custom emojis.
