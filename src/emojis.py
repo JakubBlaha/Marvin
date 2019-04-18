@@ -1,34 +1,27 @@
-import yaml
-
 from logger import Logger
 
-TEMPLATE = '<:{name}:{id}>'
+TEMPLATE = '<:{0}:{1}>'
 
 
 class EmojisMeta(type):
     '''
-    Access server custom emojis from the specified file. The emojis will be
-    set as attributes of this class in a string with format `<:name:id>`.
-    Note that these emojis are not instances of the `discord.Emoji` class.
-    '''
+    A metaclass for the class Emojis.
 
-    FNAME = 'res/emojis.yaml'
+    The method `reload` has to be called explicitly before the emojis
+    can be accessed.
+    '''
 
     def __init__(cls, *args, **kw):
         super().__init__(*args, **kw)
 
-        try:
-            with open(cls.FNAME) as f:
-                data = yaml.safe_load(f)
-        except FileNotFoundError:
-            Logger.error(f'Emoji: {cls.FNAME} not found')
-            return
+    def reload(cls, client):
+        ''' Reload all custom emoji the client has an access to. '''
 
-        for name, id_ in data.items():
-            setattr(cls, name, TEMPLATE.format(name=name, id=id_))
+        Logger.info('Emojis: Reloading emojis..')
 
-        Logger.info(f'Emoji: Loaded emojis from {cls.FNAME}')
+        for e in client.emojis:
+            setattr(cls, e.name, TEMPLATE.format(e.name, e.id))
 
 
 class Emojis(metaclass=EmojisMeta):
-    pass
+    ''' Class provoding client emoji mentions as attributes. '''
