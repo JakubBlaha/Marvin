@@ -7,7 +7,7 @@ DATA_PATH = os.path.abspath(
 FUTURE = datetime(MAXYEAR, 1, 1)
 
 with open(DATA_PATH, encoding='utf-8') as f:
-    DATA: dict = yaml.load(f)
+    DATA: dict = yaml.safe_load(f)
 
 
 def _get_day_month(date: str) -> tuple:
