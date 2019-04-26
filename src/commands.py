@@ -323,22 +323,6 @@ class Commands(Cog):
 
         await ctx.send(''.join([f'<:{name}:{id_}>' for name, id_ in emojis]))
 
-    @command()
-    async def squid(self, ctx, n1: int = 5, n2: int = 5):
-        '''
-        Send sequence of the squid emojis.
-        
-        n1 - before the squid head
-        n2 - after the squid head
-        Max length of the squid is 70.
-        '''
-
-        n1 = min(n1, 33)
-        n2 = min(n2, 34)
-
-        await ctx.send(f'{Emojis.Squid1}{Emojis.Squid2 * n1}{Emojis.Squid3}'
-                       f'{Emojis.Squid2 * n2}{Emojis.Squid4}')
-
     @command(aliases=['anim_squido', 'anime_squido', 'anime_squid'])
     async def anim_squid(self, ctx):
         '''
