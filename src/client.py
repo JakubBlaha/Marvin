@@ -15,6 +15,7 @@ class FreefClient(MessageFixer, EmbedExcluder, LargeEmojiCLient, Bot):
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.load_extension('commands')
+        self.load_extension('cogs.table_scraper')
 
     async def on_ready(self):
         Logger.info(f'Client: Logged on as {self.user}')

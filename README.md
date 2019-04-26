@@ -22,8 +22,6 @@ There has to be a `config.yaml` file in the same location as he `client.py` file
 ```yaml
 token: TokenGoesHere    # Discord bot token
 guild_id: GuildId       # The id of the guild the bot will belong to
-username: MyUsername01  # moodle3.gvid.cz username
-password: Password123   # moodle3.gvid.cz password
 log_channel_id: 123     # the id of the channel where all logs should be sent to
 channel_log_flush_interval: 10  # Max seconds the log content can stay in the buffer
 presence: Hello world!  # The text that will be shown as playing a game
@@ -37,6 +35,13 @@ embed_exclusion_alert_role_id: # The id of the role to tag in the notifications
 
 # System
 disable_logs: False     # When set to True, all file logging will be disabled
+
+# Command preferences
+username: MyUsername01  # moodle3.gvid.cz username
+password: Password123   # moodle3.gvid.cz password
+table_replacements: {'example': 'ex.'}  # Dict of replacement values to replace the content of the table from the output of the !substits command with
+table_headers: ['#', 'Name']  # ... table headers
+table_cols: [0, 1]  # ... table cols to be extracted
 ```
 The [moodle](https://moodle3.gvid.cz) credentials are used for the `!supl` command which gives you substitutions for the current/following day depending on the document presence as they are needed to login in the course.
 

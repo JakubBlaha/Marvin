@@ -13,7 +13,6 @@ from logger import Logger
 
 # command modules
 from command_modules.get_subjects import get_subjects
-from command_modules.substitutions import substitutions
 from command_modules.embed import is_embed_up_to_date
 from command_modules.message_split import split as msg_split
 from simpleeval import simple_eval
@@ -145,24 +144,6 @@ class Commands(Cog):
     async def ukol(self, ctx):
         ''' Outputs homeworks from the *úkoly* channel. '''
         await send_channel_history(ctx, 'úkoly', '**O žádném úkolu se neví.**')
-
-    @command(aliases=['supl', 'suply'])
-    async def substits(self, ctx, target='3.F'):
-        '''
-        Outputs the latest substitutions.
-        
-        The substitutions are pulled from moodle3.gvid.cz using mechanize,
-        logging in with username and password from the config file and clicking
-        the last pdf link. Then transformed to text using tabula-py. If you
-        want to output all substitutions instead of only the targetted ones,
-        type 'all' as the target argument.
-        '''
-
-        await ctx.trigger_typing()
-
-        s = substitutions(target, Config.username, Config.password)
-        for chunk in msg_split(s):
-            await ctx.send(chunk)
 
     @command()
     async def log(self, ctx):

@@ -1,5 +1,5 @@
-from typing import Callable
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from cache import Cacher
 
@@ -11,11 +11,11 @@ class Preloader(Cacher):
         super().__init__(*args, **kw)
 
         self._loop = loop
-        loop.create_task(self._loop_fun())
+        loop.create_task(self._task())
 
-    async def _loop_fun(self):
+    async def _task(self):
         while self._loop.is_running():
-            self.call()
+            self._loop.run_in_executor(ThreadPoolExecutor(), self.call)
             await asyncio.sleep(self._expire_time)
 
 
