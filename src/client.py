@@ -7,9 +7,10 @@ from config import Config
 from message_fixer import MessageFixer
 from embed_excluder import EmbedExcluder
 from large_emoji_client import LargeEmojiCLient
+from mention_reply import MentionReplier
 
 
-class FreefClient(MessageFixer, EmbedExcluder, LargeEmojiCLient, Bot):
+class FreefClient(MentionReplier, MessageFixer, EmbedExcluder, LargeEmojiCLient, Bot):
     _oos = False  # Out of service
 
     def __init__(self, *args, **kw):
