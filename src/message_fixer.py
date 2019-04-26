@@ -1,4 +1,4 @@
-from discord import Client, Message
+from discord import Client, Message, Embed
 from concurrent.futures._base import TimeoutError as TimeoutError_
 
 from command_modules.cz import fix_content
@@ -34,6 +34,11 @@ class MessageFixer(Client):
         except TimeoutError_:
             await msg.remove_reaction(REACTION, self.user)
         else:
-            await msg.channel.send(
-                f'*from* {msg.author.mention}: *localized*\n{fixed_content}')
+            await msg.channel.send(embed=self._generate_embed(msg, fixed_content))
             await msg.delete()
+
+    def _generate_embed(self, msg: Message, fixed_content: str):
+        e = Embed(description=fixed_content)
+        e.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
+
+        return e
