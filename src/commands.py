@@ -367,6 +367,7 @@ class Commands(Cog):
 def setup(bot):
     bot.add_cog(Commands(bot))
 
-    @bot.event
     async def on_ready():
         Emojis.reload(bot)
+
+    bot.add_listener(on_ready)
