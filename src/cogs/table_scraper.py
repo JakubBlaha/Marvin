@@ -110,14 +110,6 @@ def fix_merged_cells(rows: list) -> list:
         # Increase the range
         index_add += 1
 
-    # Remove redundant split cells
-    for index, row in reversed(list(enumerate(rows))):
-        if index < 1:
-            break
-
-        if row[0] == rows[index - 1][0]:
-            row[0] = ''
-
     # Remove empty rows
     rows = [i for i in rows if i[1]]
 
@@ -135,11 +127,22 @@ def extract_target(data, target, with_headers=True):
     return _new_data
 
 
+def build_section_cells(data: list) -> list:
+    for index, row in reversed(list(enumerate(data))):
+        if index < 1:
+            break
+
+        if row[0] == data[index - 1][0]:
+            row[0] = ''
+
+    return data
+
+
 def get_string(data: Iterable) -> str:
     ''' Return a ready-to-send str made from the table. '''
 
     if len(data) < 2:
-        return "**No substitutions** (╯°□°）╯︵ ┻━┻"
+        return " - *No substitutions* (╯°□°）╯︵ ┻━┻"
     return f'```fix\n{tabulate.tabulate(data[1:], headers=data[0])}```'
 
 
@@ -183,6 +186,7 @@ class TableScraper(Cog):
         _data = self._preloader.output[1]
         _data = fix_merged_cells(_data)
         _data = extract_target(_data, target)
+        _data = build_section_cells(_data)
         _data = f'**{date_from_fname(_fname)}**' + get_string(_data)
 
         for chunk in msg_split(_data):
