@@ -305,7 +305,9 @@ class Commands(Cog):
                       color=getattr(Color, color)())
         for key, value in fields.items():
             embed.add_field(name=key, value=value)
-        embed.set_footer(text=f"Created by: {ctx.author.name}")
+
+        # Set the author
+        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=embed)
 
