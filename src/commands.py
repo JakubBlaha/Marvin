@@ -17,6 +17,7 @@ from command_modules.embed import is_embed_up_to_date
 from command_modules.message_split import split as msg_split
 from simpleeval import simple_eval
 from emojis import Emojis
+from command_modules import bag
 
 DEFAULT_EMBED = {
     'title': '\u200b',
@@ -364,6 +365,11 @@ class Commands(Cog):
     async def toggle_oos(self, ctx):
         ''' Toggle out of service. '''
         await self.bot.toggle_oos()
+
+    @command()
+    async def bag(self, ctx):
+        ''' Outputs the subjects to take out and put in your bag. '''
+        await ctx.send(bag.build_string(bag.get_out_in(bag.get_data())))
 
 
 def setup(bot):
