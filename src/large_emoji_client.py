@@ -17,4 +17,6 @@ class LargeEmojiCLient(Client):
             if emoji.name.lower() == _content.lower():
                 e = Embed()
                 e.set_image(url=emoji.url)
+                e.set_author(name=msg.author.name, icon_url=msg.author.avatar_url)
                 await msg.channel.send(embed=e)
+                await msg.delete()
