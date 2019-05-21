@@ -33,6 +33,11 @@ embed_exclusion_check_interval: # The check interval in seconds
 embed_exclusion_alert_channel_id: # The channel id to post notifications about outdates embeds to. If omitted, no notifications will be posted
 embed_exclusion_alert_role_id: # The id of the role to tag in the notifications
 
+# The event channel description reminder settings
+upcoming_events_notif_channel_id: ...  # The channel description channel id
+upcoming_events_notif_checked_channels: [...]  # Channels' ids to check
+upcoming_events_notif_interval: ...  # An integer
+
 # System
 disable_logs: False     # When set to True, all file logging will be disabled
 

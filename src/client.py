@@ -8,9 +8,11 @@ from message_fixer import MessageFixer
 from embed_excluder import EmbedExcluder
 from large_emoji_client import LargeEmojiCLient
 from mention_reply import MentionReplier
+from events_notifier import EventsNotifier
 
 
-class FreefClient(MentionReplier, MessageFixer, EmbedExcluder, LargeEmojiCLient, Bot):
+class FreefClient(EventsNotifier, MentionReplier, MessageFixer, EmbedExcluder,
+                  LargeEmojiCLient, Bot):
     _oos = False  # Out of service
 
     def __init__(self, *args, **kw):
@@ -19,8 +21,8 @@ class FreefClient(MentionReplier, MessageFixer, EmbedExcluder, LargeEmojiCLient,
         self.load_extension('cogs.table_scraper')
 
     async def on_ready(self):
-        Logger.info(f'Client: Logged on as {self.user}')
         await self.reload_presence()
+        Logger.info(f'Client: Logged on as {self.user}')
 
     async def reload_presence(self):
         await self.change_presence(activity=Game(
