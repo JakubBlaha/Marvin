@@ -19,20 +19,6 @@ def _get_day_month(date: str) -> tuple:
     return (day, month)
 
 
-# def is_date_valid(date: str) -> bool:
-#     day, month = _get_day_month(date)
-
-#     if not day.isdigit():
-#         return False
-
-#     if month.isdigit() and 0 < int(month) < 13:
-#         return True
-
-#     return month.lower() in [
-#         i for j in DATA[DESIRED_LOCALE].values() for i in j
-#     ]
-
-
 def str_to_datetime(date: str, invalid=FUTURE) -> datetime:
     '''
     Return a datetime object made from the given string. If the string has an

@@ -18,6 +18,8 @@ from command_modules.message_split import split as msg_split
 from simpleeval import simple_eval
 from emojis import Emojis
 from command_modules import bag
+from utils.get_datetime_from_string import get_datetime_from_string
+from utils.embed_to_text import embed_to_text
 
 DEFAULT_EMBED = {
     'title': '\u200b',
@@ -43,12 +45,21 @@ async def send_channel_history(ctx,
             f':warning: Channel `{channel_name}` not found :warning:')
 
     msgs = [msg async for msg in target_channel.history()]
-    if msgs:
-        for msg in msgs:
-            if msg.embeds and is_embed_up_to_date(msg.embeds[0]):
-                await ctx.send(msg.content, embed=msg.embeds[0])
-    else:
+
+    # Tell if no msgs, return
+    if not msgs:
         await ctx.send(no_history)
+        return
+
+    # Sort by date
+    msgs.sort(key=lambda it: get_datetime_from_string(
+        embed_to_text((it.embeds + [Embed()])[0]) + it.content), reverse=True)
+
+    # Send them
+    for msg in msgs:
+        await ctx.send(msg.content,
+                       embed=msg.embeds[0] if msg.embeds
+                       and is_embed_up_to_date(msg.embeds[0]) else None)
 
 
 async def request_input(ctx, message, regex='', mention=True, allowed=[]):
