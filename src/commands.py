@@ -106,8 +106,10 @@ class Commands(Cog):
         Repeats the given string\emote n times. Maximum is 50.
         '''
 
-        n = min(n, 50)
-        await ctx.send(string * n)
+        e = Embed(description=string*min(n, 50))
+        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=e)
 
     @command()
     async def rozvrh(self, ctx):
