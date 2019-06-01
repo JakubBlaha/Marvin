@@ -179,7 +179,11 @@ class Commands(Cog):
         Return the current log consisting of sys.stdout and sys.stderr.
         '''
 
-        await ctx.send(f'```python\n{Logger.get_log()[-1980:]}```')
+        e = Embed(description=f'```python\n{Logger.get_log()[-1980:]}```')
+        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=e)
+        await ctx.message.delete()
         Logger.info(f'Command: Sent logs to `{ctx.channel.name}` channel')
 
     @command()

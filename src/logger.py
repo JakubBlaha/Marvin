@@ -155,8 +155,7 @@ class LoggerMeta(type):
         cls._bridge.flush()
 
     def get_log(cls):
-        with open(os.path.join(cls.LOG_DIR, cls.fname)) as f:
-            return f.read()
+        return cls.log.getvalue()
 
 
 class Logger(metaclass=LoggerMeta):
@@ -164,4 +163,4 @@ class Logger(metaclass=LoggerMeta):
 
 
 sys.stdout = Logger
-# sys.stderr = Logger
+sys.stderr = Logger
