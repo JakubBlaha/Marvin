@@ -151,11 +151,15 @@ class Commands(Cog):
         '''
 
         try:
-            ret = simple_eval(expression)
-        except Exception:
-            ret = (':warning: Failed to evaluate :warning:'
-                   f'```python\n{format_exc()}```')
-        await ctx.send(f'<@{ctx.author.id}> {ret}')
+            ret = f'```{simple_eval(expression)}```'
+        except Exception as ex:
+            ret = f':warning: **Failed to evaluate** :warning:\n```{ex}```'
+
+        e = Embed(title=ret, description=f'`{expression}`')
+        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=e)
+        await ctx.message.delete()
 
     @command(aliases=['testy'])
     async def test(self, ctx):
