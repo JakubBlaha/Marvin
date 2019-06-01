@@ -92,10 +92,6 @@ async def request_input(ctx, message, regex='', mention=True, allowed=[]):
     return user_msg.content
 
 
-class Break(Exception):
-    pass
-
-
 class Commands(Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -108,21 +104,14 @@ class Commands(Cog):
         Repeats the given string\emote n times. Maximum is 50.
         '''
 
-        e = Embed(description=string * min(n, 50))
-        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-
-        await ctx.send(embed=e)
-        await ctx.message.delete()
+        await send_command_embed(ctx, string * min(n, 50), show_invocation=False)
 
     @command(aliases=['table', 'rozvrh'])
     async def timetable(self, ctx):
         '''Send an image of our timetable.'''
-        e = Embed()
-        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        e.set_image(url=Config.get('timetable_url', 'https://example.com'))
-
-        await ctx.send(embed=e)
-        await ctx.message.delete()
+        await send_command_embed(ctx, send=False)
+        ctx.output_embed.set_image(url=Config.get('timetable_url', 'https://example.com'))
+        await ctx.send(embed=ctx.output_embed)
 
     @command()
     async def subj(self, ctx):
@@ -135,11 +124,7 @@ class Commands(Cog):
         are given in an alphabetical order.
         '''
 
-        e = Embed(description=f'```fix\n{get_subjects()}```')
-        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-
-        await ctx.send(embed=e)
-        await ctx.message.delete()
+        await send_command_embed(ctx, f'```fix\n{get_subjects()}```')
 
     @command()
     async def eval(self, ctx, *, expression):
@@ -152,15 +137,11 @@ class Commands(Cog):
         '''
 
         try:
-            ret = f'```{simple_eval(expression)}```'
+            ret = f'```python\n{simple_eval(expression)}```'
         except Exception as ex:
             ret = f':warning: **Failed to evaluate** :warning:\n```{ex}```'
 
-        e = Embed(title=ret, description=f'`{expression}`')
-        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-
-        await ctx.send(embed=e)
-        await ctx.message.delete()
+        await send_command_embed(ctx, ret)
 
     @command(aliases=['testy'])
     async def test(self, ctx):
@@ -180,11 +161,7 @@ class Commands(Cog):
         Return the current log consisting of sys.stdout and sys.stderr.
         '''
 
-        e = Embed(description=f'```python\n{Logger.get_log()[-1980:]}```')
-        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-
-        await ctx.send(embed=e)
-        await ctx.message.delete()
+        await send_command_embed(ctx, f'```{Logger.get_log()[-1980:]}```')
         Logger.info(f'Command: Sent logs to `{ctx.channel.name}` channel')
 
     @command()
@@ -345,11 +322,7 @@ class Commands(Cog):
     @command()
     async def emoji(self, ctx):
         ''' List all customly added emojis. '''
-        e = Embed(description=''.join(map(str, ctx.guild.emojis)))
-        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-
-        await ctx.send(embed=e)
-        await ctx.message.delete()
+        await send_command_embed(ctx, ''.join(map(str, ctx.guild.emojis)))
 
     @command(aliases=['anim_squido', 'anime_squido', 'anime_squid'])
     async def anim_squid(self, ctx):
@@ -384,7 +357,7 @@ class Commands(Cog):
         else:
             res = random()
 
-        await send_command_embed(ctx, f'`{res}`')
+        await send_command_embed(ctx, f'```python\n{res}```')
 
     @command(hidden=True)
     async def toggle_oos(self, ctx):
