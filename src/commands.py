@@ -367,7 +367,7 @@ class Commands(Cog):
     @command()
     async def bag(self, ctx):
         ''' Outputs the subjects to take out and put in your bag. '''
-        await ctx.send(bag.build_string(bag.get_out_in(bag.get_data())))
+        await send_command_embed(ctx, bag.build_string(bag.get_out_in(bag.get_data())))
 
 
 def setup(bot):

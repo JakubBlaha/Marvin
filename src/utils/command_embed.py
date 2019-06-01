@@ -14,8 +14,8 @@ async def send_command_embed(ctx: Context,
 
     e = Embed(
         description=
-        f'{content}{chr(10) * bool(str(content))}{f"`{ctx.message.content}`" * show_invocation}'
-        .strip())
+        f'{content}{chr(10) * (not content.endswith("```"))}\n{f"`{ctx.message.content}`" * show_invocation}'
+    )
     e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
     if send:
