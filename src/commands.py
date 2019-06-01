@@ -344,16 +344,11 @@ class Commands(Cog):
     @command()
     async def emoji(self, ctx):
         ''' List all customly added emojis. '''
-        names, ids = [], []
-        for emoji in ctx.guild.emojis:
-            names.append(emoji.name)
-            ids.append(emoji.id)
-        emojis = [(name, id_) for name, id_ in zip(names, ids)]
+        e = Embed(description=''.join(map(str, ctx.guild.emojis)))
+        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
-        Logger.info('Command: Listing emojis:\n' +
-                    '\n'.join([f'{name}: {id_}' for name, id_ in emojis]))
-
-        await ctx.send(''.join([f'<:{name}:{id_}>' for name, id_ in emojis]))
+        await ctx.send(embed=e)
+        await ctx.message.delete()
 
     @command(aliases=['anim_squido', 'anime_squido', 'anime_squid'])
     async def anim_squid(self, ctx):
