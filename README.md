@@ -47,6 +47,8 @@ password: Password123   # moodle3.gvid.cz password
 table_replacements: {'example': 'ex.'}  # Dict of replacement values to replace the content of the table from the output of the !substits command with
 table_headers: ['#', 'Name']  # ... table headers
 table_cols: [0, 1]  # ... table cols to be extracted
+
+timetable_url: https://www.example.com/image.png    # An image url that will be used by the !timetable command
 ```
 The [moodle](https://moodle3.gvid.cz) credentials are used for the `!supl` command which gives you substitutions for the current/following day depending on the document presence as they are needed to login in the course.
 

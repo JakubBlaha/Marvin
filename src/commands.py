@@ -53,7 +53,8 @@ async def send_channel_history(ctx,
 
     # Sort by date
     msgs.sort(key=lambda it: get_datetime_from_string(
-        embed_to_text((it.embeds + [Embed()])[0]) + it.content), reverse=True)
+        embed_to_text((it.embeds + [Embed()])[0]) + it.content),
+              reverse=True)
 
     # Send them
     for msg in msgs:
@@ -106,18 +107,20 @@ class Commands(Cog):
         Repeats the given string\emote n times. Maximum is 50.
         '''
 
-        e = Embed(description=string*min(n, 50))
+        e = Embed(description=string * min(n, 50))
         e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=e)
 
-    @command()
-    async def rozvrh(self, ctx):
-        '''
-        Send an image of our timetable.
-        '''
+    @command(aliases=['table', 'rozvrh'])
+    async def timetable(self, ctx):
+        '''Send an image of our timetable.'''
+        e = Embed()
+        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        e.set_image(url=Config.get('timetable_url', 'https://example.com'))
 
-        await ctx.send(file=File('res/rozvrh.png'))
+        await ctx.send(embed=e)
+        await ctx.message.delete()
 
     @command()
     async def subj(self, ctx):
