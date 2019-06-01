@@ -20,6 +20,7 @@ from emojis import Emojis
 from command_modules import bag
 from utils.get_datetime_from_string import get_datetime_from_string
 from utils.embed_to_text import embed_to_text
+from utils.command_embed import send_command_embed
 
 DEFAULT_EMBED = {
     'title': '\u200b',
@@ -383,7 +384,7 @@ class Commands(Cog):
         else:
             res = random()
 
-        await ctx.send(f'{ctx.author.mention} {res}')
+        await send_command_embed(ctx, f'`{res}`')
 
     @command(hidden=True)
     async def toggle_oos(self, ctx):
