@@ -134,7 +134,11 @@ class Commands(Cog):
         are given in an alphabetical order.
         '''
 
-        await ctx.send(f'```fix\n{get_subjects()}```')
+        e = Embed(description=f'```fix\n{get_subjects()}```')
+        e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=e)
+        await ctx.message.delete()
 
     @command()
     async def eval(self, ctx, *, expression):
