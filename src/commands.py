@@ -111,6 +111,7 @@ class Commands(Cog):
         e.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
 
         await ctx.send(embed=e)
+        await ctx.message.delete()
 
     @command(aliases=['table', 'rozvrh'])
     async def timetable(self, ctx):
