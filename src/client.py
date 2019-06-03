@@ -7,11 +7,11 @@ from config import Config
 from message_fixer import MessageFixer
 from embed_excluder import EmbedExcluder
 from large_emoji_client import LargeEmojiCLient
-from mention_reply import MentionReplier
 from events_notifier import EventsNotifier
+from cleverbot_client import CleverbotClient
 
 
-class FreefClient(EventsNotifier, MentionReplier, MessageFixer, EmbedExcluder,
+class FreefClient(CleverbotClient, EventsNotifier, MessageFixer, EmbedExcluder,
                   LargeEmojiCLient, Bot):
     _oos = False  # Out of service
 

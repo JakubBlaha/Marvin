@@ -53,3 +53,6 @@ timetable_url: https://www.example.com/image.png    # An image url that will be 
 The [moodle](https://moodle3.gvid.cz) credentials are used for the `!supl` command which gives you substitutions for the current/following day depending on the document presence as they are needed to login in the course.
 
 There is a feature called `EmbedExcluder` in the bot, which basically reminds you to remove any outdated embeds, that may have a date in their description. The *embed exclusion settings* are used to customize this feature.
+
+### The Cleverbot integration
+Upon sending a message which *freefbot* is tagged in, the message will be forwarded to *Cleverbot* and a response will be awaited. Upon receiving a response or running into a `TimeoutException` an appropriate text will be sent to the channel.

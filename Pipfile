@@ -12,6 +12,8 @@ pandas = "*"
 yapf = "*"
 mechanize = "*"
 discord-py = "*"
+selenium = "*"
+emoji = "*"
 
 [dev-packages]
 yapf = "*"
