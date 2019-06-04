@@ -71,7 +71,7 @@ class MessageFixer(Client):
 
         def check(reaction, user):
             return (reaction.message == msg and reaction.emoji == REACTION
-                    and user != self.user)
+                    and user == msg.author)
 
         try:
             reaction, user = await self.wait_for('reaction_add',
