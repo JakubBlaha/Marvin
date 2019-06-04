@@ -67,11 +67,12 @@ async def send_channel_history(ctx,
 async def request_input(ctx, message, regex='', mention=True, allowed=[]):
     # create regex from allowed
     if allowed and not regex:
-        regex = f'({"|".join(allowed)}){{1}}'
+        regex = re.compile(f'({"|".join(allowed)}){{1}}', re.IGNORECASE)
     elif allowed and regex:
         Logger.warning(
             f'Input: Given `allowed` {allowed} but also `regex` {regex}')
 
+    # Send the asking message
     bot_message = (await ctx.send(
         ctx.author.mention * mention + ' ' + message +
         ('\n' + f'*Allowed values: {", ".join(allowed)}*') * bool(regex)))
@@ -289,6 +290,7 @@ class Commands(Cog):
         color = await request_input(ctx,
                                     f'Please specify the `color`:',
                                     allowed=['red', 'orange', 'green'])
+        color = color.lower()
 
         fields = {}
         TERMINATOR = '👌'
