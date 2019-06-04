@@ -9,9 +9,10 @@ from embed_excluder import EmbedExcluder
 from large_emoji_client import LargeEmojiCLient
 from events_notifier import EventsNotifier
 from cleverbot_client import CleverbotClient
+from auto_reactor import AutoReactor
 
 
-class FreefClient(CleverbotClient, EventsNotifier, MessageFixer, EmbedExcluder,
+class FreefClient(AutoReactor, CleverbotClient, EventsNotifier, MessageFixer, EmbedExcluder,
                   LargeEmojiCLient, Bot):
     _oos = False  # Out of service
 

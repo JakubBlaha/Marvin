@@ -48,6 +48,9 @@ table_replacements: {'example': 'ex.'}  # Dict of replacement values to replace 
 table_headers: ['#', 'Name']  # ... table headers
 table_cols: [0, 1]  # ... table cols to be extracted
 
+auto_reactor_channel_ids: [...]   # The bot will automatically add the following reactions to any message posted to any of these channels
+auto_reactor_reaction_ids: [...]  # The reaction ids
+
 timetable_url: https://www.example.com/image.png    # An image url that will be used by the !timetable command
 ```
 The [moodle](https://moodle3.gvid.cz) credentials are used for the `!supl` command which gives you substitutions for the current/following day depending on the document presence as they are needed to login in the course.
