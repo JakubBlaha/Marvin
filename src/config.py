@@ -1,7 +1,39 @@
 import os
 import yaml
 
-REQUIRED_ENTRIES = ['token', 'guild_id']
+# Name constants / intellisense help
+TOKEN = 'token'
+GUILD_ID = 'guild_id'
+
+MOODLE_USERNAME = 'username'
+MOODLE_PASSWORD = 'password'
+
+LOG_CHANNEL_ID = 'log_channel_id'
+DISABLE_LOGS = 'disable_logs'
+
+PRESENCE = 'presence'
+STATUS = 'status'
+
+EMBED_EXCLUSION_CHANNEL_ID = 'embed_exclusion_alert_channel_id'
+EMBED_EXCLUSION_CHANNEL_IDS = 'embed_exclusion_channel_ids'
+EMBED_EXCLUSION_ALERT_ROLE_ID = 'embed_exclusion_alert_role_id'
+EMBED_EXCLUSION_CHECK_INTERVAL = 'embed_exclusion_check_interval'
+
+TABLE_REPLACEMENTS = 'table_replacements'
+TABLE_HEADERS = 'table_headers'
+TABLE_COLS = 'table_cols'
+
+UPCOMING_EVENTS_NOTIF_CHANNEL_ID = 'upcoming_events_notif_channel_id'
+UPCOMING_EVENTS_NOTIF_CHECKED_CHANNELS = 'upcoming_events_notif_checked_channels'
+UPCOMING_EVENTS_NOTIF_INTERVAL = 'upcoming_events_notif_interval'
+
+TIMETABLE_URL = 'timetable_url'
+
+AUTO_REACTOR_CHANNEL_IDS = 'auto_reactor_channel_ids'
+AUTO_REACTOR_REACTION_IDS = 'auto_reactor_reaction_ids'
+
+
+REQUIRED_ENTRIES = [TOKEN, GUILD_ID]
 
 
 class ConfigMeta(type):
