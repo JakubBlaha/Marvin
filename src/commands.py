@@ -275,8 +275,8 @@ class Commands(Cog):
         # delete user message
         await ctx.message.delete()
 
-    @command()
-    async def spira_embed(self, ctx):
+    @command(aliases=['spira_embed', 'spira'])
+    async def easy_embed(self, ctx):
         '''
         An idiot-proof embed builder...
         '''
@@ -312,7 +312,7 @@ class Commands(Cog):
                       description=description,
                       color=getattr(Color, color)())
         for key, value in fields.items():
-            embed.add_field(name=key, value=value)
+            embed.add_field(name=key, value=value, inline=False)
 
         # Set the author
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
