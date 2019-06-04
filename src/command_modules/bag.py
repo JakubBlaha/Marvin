@@ -10,17 +10,25 @@ def get_data() -> list:
         return list(reader(f))
 
 
+def round_day(i: int, step: int) -> int:
+	while i in (5, 6):
+		i = (i + step) % 7
+
+	return i % 7
+
+
 def get_out_in(data: list) -> list:
     # Get the weekday
-    _wday = datetime.today().weekday()
+    _wday = round_day(datetime.today().weekday(), -1)
+    _wday_next = round_day(_wday + 1, 1)
 
     # Get the subjects
-    _today = set(data[_wday])
-    _tomorrow = set(data[(_wday + 1) % 7])
+    _last_day = set(data[_wday])
+    _next_day = set(data[_wday_next])
 
     # Process the subjects
-    _out = _today - _tomorrow
-    _in = _tomorrow - _today
+    _out = _last_day - _next_day
+    _in = _next_day - _last_day
 
     return [_out, _in]
 
