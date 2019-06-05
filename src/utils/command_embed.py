@@ -20,7 +20,8 @@ async def send_command_embed(ctx: Context,
 
     if send:
         await ctx.send(embed=e)
-    await ctx.message.delete()
+    if not ctx.message.pinned:
+        await ctx.message.delete()
 
     ctx.output_embed = e
     return e
