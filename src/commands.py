@@ -1,9 +1,8 @@
 from discord.ext.commands import Bot, command, Cog
 from discord import File, Message, Embed, Color, Client, utils, Guild
-from time import sleep
+from discord.errors import NotFound
 from traceback import format_exc
-from time import sleep
-from asyncio import TimeoutError
+from asyncio import TimeoutError, sleep
 from random import random, randint
 import yaml
 import re
@@ -86,7 +85,7 @@ async def request_input(ctx, message, regex='', mention=True, allowed=[]):
         user_msg = await ctx.bot.wait_for('message', check=check)
         msg_ok = re.match(regex, user_msg.content)
         await user_msg.add_reaction('\u2705' if msg_ok else '\u274c')
-        sleep(1)
+        await sleep(.5)
         await user_msg.delete()
 
     await bot_message.delete()
@@ -328,17 +327,18 @@ class Commands(Cog):
 
     @command(aliases=['anim_squido', 'anime_squido', 'anime_squid'])
     async def anim_squid(self, ctx):
-        '''
-        Posts an animated squid made of custom emojis.
-        '''
-
+        ''' Posts an animated squid made of custom emojis. '''
         LEN = 8
         msg = await ctx.send('...')
         for i in (*range(LEN + 1), *range(LEN - 1, -1, -1)):
-            await msg.edit(
-                content=f'{Emojis.Squid1}{Emojis.Squid2 * i}{Emojis.Squid3}'
-                f'{Emojis.Squid2 * (LEN - i)}{Emojis.Squid4}')
-            sleep(.1)
+            try:
+                await msg.edit(
+                    content=f'{Emojis.Squid1}{Emojis.Squid2 * i}{Emojis.Squid3}'
+                    f'{Emojis.Squid2 * (LEN - i)}{Emojis.Squid4}')
+            except NotFound:
+                return
+            
+            await sleep(.3)
 
     @command()
     async def random(self, ctx, arg1: int = None, arg2: int = None):
