@@ -10,9 +10,11 @@ from large_emoji_client import LargeEmojiCLient
 from events_notifier import EventsNotifier
 from cleverbot_client import CleverbotClient
 from auto_reactor import AutoReactor
+from control_panel_client import ControlPanelClient
 
 
-class FreefClient(AutoReactor, CleverbotClient, EventsNotifier, MessageFixer, EmbedExcluder,
+class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient,
+                  EventsNotifier, MessageFixer, EmbedExcluder,
                   LargeEmojiCLient, Bot):
     _oos = False  # Out of service
 
@@ -22,6 +24,8 @@ class FreefClient(AutoReactor, CleverbotClient, EventsNotifier, MessageFixer, Em
         self.load_extension('cogs.table_scraper')
 
     async def on_ready(self):
+        await super().on_ready()
+
         await self.reload_presence()
         Logger.info(f'Client: Logged on as {self.user}')
 

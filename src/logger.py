@@ -163,4 +163,4 @@ class Logger(metaclass=LoggerMeta):
 
 
 sys.stdout = Logger
-sys.stderr = Logger
+# sys.stderr = Logger

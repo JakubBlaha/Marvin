@@ -32,6 +32,8 @@ TIMETABLE_URL = 'timetable_url'
 AUTO_REACTOR_CHANNEL_IDS = 'auto_reactor_channel_ids'
 AUTO_REACTOR_REACTION_IDS = 'auto_reactor_reaction_ids'
 
+CONTROL_PANEL_CHANNEL_ID = 'control_panel_channel_id'
+
 
 REQUIRED_ENTRIES = [TOKEN, GUILD_ID]
 
@@ -81,7 +83,7 @@ class ConfigMeta(type):
         with open(cls._FILENAME, 'w') as f:
             yaml.dump(cls._store, f)
 
-    def get(cls, name, default):
+    def get(cls, name, default=None):
         ''' Use instead of `getattr`. '''
         return cls._store.get(name, default)
 

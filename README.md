@@ -52,6 +52,8 @@ auto_reactor_channel_ids: [...]   # The bot will automatically add the following
 auto_reactor_reaction_ids: [...]  # The reaction ids
 
 timetable_url: https://www.example.com/image.png    # An image url that will be used by the !timetable command
+
+control_panel_channel_id: ...     # The id of the channel command panel should be used in
 ```
 The [moodle](https://moodle3.gvid.cz) credentials are used for the `!supl` command which gives you substitutions for the current/following day depending on the document presence as they are needed to login in the course.
 
@@ -59,3 +61,8 @@ There is a feature called `EmbedExcluder` in the bot, which basically reminds yo
 
 ### The Cleverbot integration
 Upon sending a message which *freefbot* is tagged in, the message will be forwarded to *Cleverbot* and a response will be awaited. Upon receiving a response or running into a `TimeoutException` an appropriate text will be sent to the channel.
+
+### The Command panel
+The Command panel is a feature, which provides the ability to execute commands more easily. That is done by reaction (clicking the emoji) that is already preset on the Command panel message. The message is an embed with all the emojis described. All messages generated in this channel will be deleted after a 60 seconds period.
+
+*The Command panel is a channel-specific feature, so use it in a dedicated channel only.*
