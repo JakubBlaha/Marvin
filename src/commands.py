@@ -20,6 +20,7 @@ from command_modules import bag
 from utils.get_datetime_from_string import get_datetime_from_string
 from utils.embed_to_text import embed_to_text
 from utils.command_embed import send_command_embed
+from utils.channel_embed_summary import channel_embed_summary
 
 DEFAULT_EMBED = {
     'title': '\u200b',
@@ -29,38 +30,6 @@ DEFAULT_EMBED = {
     'del_fields': (),
     'color': Embed.Empty
 }
-
-
-async def send_channel_history(ctx,
-                               channel_name,
-                               no_history,
-                               ignore_date=False):
-    '''
-    Send all channel history to the current context. Embeds with description of
-    already outdated date will be skipped.
-    '''
-    target_channel = utils.get(ctx.guild.channels, name=channel_name)
-    if not target_channel:
-        await ctx.send(
-            f':warning: Channel `{channel_name}` not found :warning:')
-
-    msgs = [msg async for msg in target_channel.history()]
-
-    # Tell if no msgs, return
-    if not msgs:
-        await ctx.send(no_history)
-        return
-
-    # Sort by date
-    msgs.sort(key=lambda it: get_datetime_from_string(
-        embed_to_text((it.embeds + [Embed()])[0]) + it.content),
-              reverse=True)
-
-    # Send them
-    for msg in msgs:
-        await ctx.send(msg.content,
-                       embed=msg.embeds[0] if msg.embeds
-                       and is_embed_up_to_date(msg.embeds[0]) else None)
 
 
 async def request_input(ctx, message, regex='', mention=True, allowed=[]):
@@ -92,6 +61,17 @@ async def request_input(ctx, message, regex='', mention=True, allowed=[]):
     return user_msg.content
 
 
+def del_invoc(fn: callable):
+    async def wrapper(self, ctx, *args, **kw):
+        ret = await fn(self, ctx, *args, **kw)
+        await ctx.message.delete()
+
+    wrapper.__name__ = fn.__name__
+    wrapper.__doc__ = fn.__doc__
+
+    return wrapper
+
+
 class Commands(Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -104,13 +84,16 @@ class Commands(Cog):
         Repeats the given string\emote n times. Maximum is 50.
         '''
 
-        await send_command_embed(ctx, string * min(n, 50), show_invocation=False)
+        await send_command_embed(ctx,
+                                 string * min(n, 50),
+                                 show_invocation=False)
 
     @command(aliases=['table', 'rozvrh'])
     async def timetable(self, ctx):
         '''Send an image of our timetable.'''
         await send_command_embed(ctx, send=False)
-        ctx.output_embed.set_image(url=Config.get('timetable_url', 'https://example.com'))
+        ctx.output_embed.set_image(
+            url=Config.get('timetable_url', 'https://example.com'))
         await ctx.send(embed=ctx.output_embed)
 
     @command()
@@ -144,14 +127,22 @@ class Commands(Cog):
         await send_command_embed(ctx, ret)
 
     @command(aliases=['testy'])
+    @del_invoc
     async def test(self, ctx):
         ''' Outputs exams from the *testy* channel. '''
-        await send_channel_history(ctx, 'testy', '**O žádném testu se neví.**')
+        _embed = await channel_embed_summary(
+            utils.get(ctx.guild.channels, name='testy'))
+        _embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.channel.send(embed=_embed)
 
     @command(aliases=['ukoly'])
+    @del_invoc
     async def ukol(self, ctx):
         ''' Outputs homeworks from the *úkoly* channel. '''
-        await send_channel_history(ctx, 'úkoly', '**O žádném úkolu se neví.**')
+        _embed = await channel_embed_summary(
+            utils.get(ctx.guild.channels, name='úkoly'))
+        _embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        await ctx.channel.send(embed=_embed)
 
     @command()
     async def log(self, ctx):
@@ -337,7 +328,7 @@ class Commands(Cog):
                     f'{Emojis.Squid2 * (LEN - i)}{Emojis.Squid4}')
             except NotFound:
                 return
-            
+
             await sleep(.3)
 
     @command()
@@ -362,6 +353,7 @@ class Commands(Cog):
         await send_command_embed(ctx, f'```python\n{res}```')
 
     @command(hidden=True)
+    @del_invoc
     async def toggle_oos(self, ctx):
         ''' Toggle out of service. '''
         await self.bot.toggle_oos()
@@ -369,7 +361,8 @@ class Commands(Cog):
     @command()
     async def bag(self, ctx):
         ''' Outputs the subjects to take out and put in your bag. '''
-        await send_command_embed(ctx, bag.build_string(bag.get_out_in(bag.get_data())))
+        await send_command_embed(
+            ctx, bag.build_string(bag.get_out_in(bag.get_data())))
 
 
 def setup(bot):
