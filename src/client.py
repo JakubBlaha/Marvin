@@ -4,6 +4,7 @@ from discord.ext.commands import Bot, Command
 
 from logger import Logger
 from config import Config
+from remote_config import RemoteConfig
 from message_fixer import MessageFixer
 from embed_excluder import EmbedExcluder
 from large_emoji_client import LargeEmojiCLient

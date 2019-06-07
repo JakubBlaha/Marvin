@@ -1,14 +1,14 @@
 from discord import Client, Message
 
-from config import Config, AUTO_REACTOR_CHANNEL_IDS, AUTO_REACTOR_REACTION_IDS
+from remote_config import RemoteConfig
 
 
-class AutoReactor(Client):
-    def __init__(self, *args, **kw):
-        super().__init__(*args, **kw)
+class AutoReactor(RemoteConfig, Client):
+    async def on_ready(self):
+        await super().on_ready()
 
-        self._channels = Config.get(AUTO_REACTOR_CHANNEL_IDS, [])
-        self._reactions = Config.get(AUTO_REACTOR_REACTION_IDS, [])
+        self._channels = self['auto_reactor_channel_ids'] or []
+        self._reactions = self['auto_reactor_reaction_ids'] or []
 
     async def on_message(self, msg: Message):
         await super().on_message(msg)

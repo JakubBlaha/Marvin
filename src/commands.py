@@ -7,7 +7,6 @@ from random import random, randint
 import yaml
 import re
 
-from config import Config
 from logger import Logger
 
 # command modules
@@ -94,7 +93,7 @@ class Commands(Cog):
         '''Send an image of our timetable.'''
         await send_command_embed(ctx, send=False)
         ctx.output_embed.set_image(
-            url=Config.get('timetable_url', 'https://example.com'))
+            url=self.bot['timetable_url'] or 'https://example.com')
         await ctx.send(embed=ctx.output_embed)
 
     @command()
