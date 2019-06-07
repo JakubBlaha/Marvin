@@ -66,3 +66,10 @@ Upon sending a message which *freefbot* is tagged in, the message will be forwar
 The Command panel is a feature, which provides the ability to execute commands more easily. That is done by reaction (clicking the emoji) that is already preset on the Command panel message. The message is an embed with all the emojis described. All messages generated in this channel will be deleted after a 60 seconds period.
 
 *The Command panel is a channel-specific feature, so use it in a dedicated channel only.*
+
+### The remote config
+The remote config feature allows to store the bot configuration in a separate discord channel with the name `config`. The last message from the channel will be taken and converted by the `yaml` module. An example content of such a message can be found below.
+
+```yaml
+control_panel_channel_id: ...
+```
