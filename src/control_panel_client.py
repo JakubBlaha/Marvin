@@ -4,7 +4,7 @@ from discord import TextChannel, Message, Reaction, User, Embed
 from discord.ext.commands import Bot
 from discord.errors import NotFound
 
-from config import Config, CONTROL_PANEL_CHANNEL_ID
+from remote_config import RemoteConfig
 
 EMOJI_COMMAND_MAP = {
     '📃': 'substits',
@@ -16,13 +16,15 @@ EMOJI_COMMAND_MAP = {
 }
 
 
-class ControlPanelClient(Bot):
+class ControlPanelClient(RemoteConfig, Bot):
     _channel: TextChannel
     _msg: Message = None
 
     async def on_ready(self):
+        await super().on_ready()
+
         # Get the channel
-        self._channel = self.get_channel(Config.get(CONTROL_PANEL_CHANNEL_ID))
+        self._channel = self.get_channel(self['control_panel_channel_id'])
 
         # Clear the channel
         await self._clear_channel()
@@ -50,7 +52,8 @@ class ControlPanelClient(Bot):
 
     async def _clear_channel(self):
         ''' Clears the configured channel. '''
-        await self._channel.delete_messages([msg async for msg in self._channel.history()])
+        await self._channel.delete_messages(
+            [msg async for msg in self._channel.history()])
 
     def _generate_embed(self, command_map: dict) -> Embed:
         ''' Return an embed based on the `command_map` argument. '''
