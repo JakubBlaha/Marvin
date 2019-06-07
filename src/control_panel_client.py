@@ -87,6 +87,7 @@ class ControlPanelClient(Bot):
 
         # Simulate the context
         _context = await self.get_context(self._msg)
+        _context.is_private = True
 
         # Get the command, invoke
         await self.get_command(EMOJI_COMMAND_MAP[reaction.emoji]

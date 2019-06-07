@@ -64,7 +64,8 @@ async def request_input(ctx, message, regex='', mention=True, allowed=[]):
 def del_invoc(fn: callable):
     async def wrapper(self, ctx, *args, **kw):
         ret = await fn(self, ctx, *args, **kw)
-        await ctx.message.delete()
+        if not hasattr(ctx, 'is_private'):
+            await ctx.message.delete()
 
     wrapper.__name__ = fn.__name__
     wrapper.__doc__ = fn.__doc__
