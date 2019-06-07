@@ -1,6 +1,6 @@
 import yaml
 
-from discord import Client, TextChannel, utils
+from discord import Client, TextChannel, Guild, utils
 
 from logger import Logger
 from config import Config, GUILD_ID
@@ -17,14 +17,20 @@ class RemoteConfig(Client):
     any values.
     '''
     data = {}
+    guild: Guild
 
     async def on_ready(self):
         await self.reload_config()
 
     async def reload_config(self, channel_name='config'):
+        Logger.info(
+            f'RemoteConfig: Reloading the config from channel {channel_name}')
+
+        # Get the guild
+        self.guild = self.get_guild(Config.get(GUILD_ID))
+
         # Get the config channel
-        _channel = utils.get(self.get_guild(Config.get(GUILD_ID)).channels,
-                             name=channel_name)
+        _channel = utils.get(self.guild.channels, name=channel_name)
 
         # Load the config
         self.data = await self._get_yaml_from_channel(_channel)
@@ -44,7 +50,9 @@ class RemoteConfig(Client):
             return {}
 
         # Convert the data
-        _data = yaml.safe_load(_msg.content)
+        _content = _msg.content
+        _content = _content.replace('```yaml\n', '').replace('```', '')
+        _data = yaml.safe_load(_content)
 
         # Ensure the data is valid
         if not isinstance(_data, dict):
