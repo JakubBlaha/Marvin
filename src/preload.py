@@ -1,5 +1,4 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 
 from cache import Cacher
 
@@ -15,7 +14,7 @@ class Preloader(Cacher):
 
     async def _task(self):
         while self._loop.is_running():
-            self._loop.run_in_executor(ThreadPoolExecutor(), self.call)
+            self._loop.run_in_executor(None, lambda: self.output)
             await asyncio.sleep(self._expire_time)
 
 

@@ -120,3 +120,4 @@ dmypy.json
 config.yaml
 downloads/
 logs/
+*/cache/*

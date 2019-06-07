@@ -1,12 +1,9 @@
 from typing import Callable
 from time import time
+import yaml
+import os
 
-
-DEFAULT_EXPIRE_TIME = 600  # 10 minutes
-
-
-class EmptyOutput:
-    pass
+CACHE_PATH = 'cache/cache.yaml'
 
 
 class Cacher:
@@ -17,14 +14,11 @@ class Cacher:
     _args: tuple
     _kw: dict
 
-    _cached_output = EmptyOutput()
-    _last_cached_timestamp = 0
-
     def __init__(self,
                  func: Callable,
                  args: tuple = (),
                  kw: dict = {},
-                 expire_time: int = DEFAULT_EXPIRE_TIME):
+                 expire_time: int = 600):
         self._expire_time = expire_time
         self._func = func
         self._args = args
@@ -32,15 +26,8 @@ class Cacher:
 
     @property
     def output(self):
-        # Call for the first time
-        if isinstance(self._cached_output, EmptyOutput):
-            self.call()
-
-        # Time difference unacceptable
-        if (time() - self._last_cached_timestamp) > self._expire_time:
-            self.call()
-
-        return self._cached_output
+        return LocalCacher.load(self._func.__name__,
+                                self._expire_time) or self.call()
 
     def call(self, *args, **kw):
         '''
@@ -52,25 +39,63 @@ class Cacher:
             args = self._args
             kw = self._kw
 
-        self._cached_output = self._func(*args, **kw)
-        self._last_cached_timestamp = time()
+        # Call
+        _output = self._func(*args, **kw)
 
-        return self._cached_output
+        # Cache to drive
+        LocalCacher.cache(self._func.__name__, _output)
+
+        return _output
 
 
-if __name__ == "__main__":
-    _timecacher = Cacher(time, expire_time=3)
-    assert isinstance(_timecacher._cached_output, EmptyOutput)
-    
-    _output = _timecacher.output
-    assert isinstance(_output, float)
-    
-    from time import sleep
-    sleep(1)
-    assert _timecacher.output == _output
-    sleep(2)
-    assert _timecacher.output != _output
+class LocalCacher:
+    @classmethod
+    def cache(cls, key, value):
+        _data = cls._read_cache()
+        _data.update(cls._gen_cache(key, value))
+        cls._write_cache(_data)
 
-    _output = _timecacher.output
-    sleep(.1)
-    assert _timecacher.call() != _output
+    @classmethod
+    def load(cls, key, lasts: int):
+        _data = cls._read_cache()
+        _cached = _data.get(key, {})
+        return _cached.get(
+            'value',
+            None) if time() - _cached.get('stamp', 0) < lasts else None
+
+    @staticmethod
+    def _read_cache() -> dict:
+        try:
+            with open(CACHE_PATH) as f:
+                return yaml.safe_load(f)
+        except FileNotFoundError:
+            return {}
+
+    @staticmethod
+    def _write_cache(cache: dict):
+        os.makedirs(os.path.dirname(CACHE_PATH), exist_ok=True)
+
+        with open(CACHE_PATH, 'w') as f:
+            yaml.safe_dump(cache, f, default_flow_style=True)
+
+    @staticmethod
+    def _gen_cache(key, value) -> dict:
+        return {key: {'stamp': time(), 'value': value}}
+
+
+# if __name__ == "__main__":
+#     _timecacher = Cacher(time, expire_time=3)
+#     assert isinstance(_timecacher._cached_output, )
+
+#     _output = _timecacher.output
+#     assert isinstance(_output, float)
+
+#     from time import sleep
+#     sleep(1)
+#     assert _timecacher.output == _output
+#     sleep(2)
+#     assert _timecacher.output != _output
+
+#     _output = _timecacher.output
+#     sleep(.1)
+#     assert _timecacher.call() != _output
