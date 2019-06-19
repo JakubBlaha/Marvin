@@ -364,6 +364,11 @@ class Commands(Cog):
         await send_command_embed(
             ctx, bag.build_string(bag.get_out_in(bag.get_data())))
 
+    @command(hidden=True)
+    @del_invoc
+    async def reload_config(self, ctx):
+        await self.bot.reload_config()
+
 
 def setup(bot):
     bot.add_cog(Commands(bot))
