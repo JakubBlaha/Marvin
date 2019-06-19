@@ -129,20 +129,22 @@ class Commands(Cog):
     @command(aliases=['testy'])
     @del_invoc
     async def test(self, ctx):
-        ''' Outputs exams from the *testy* channel. '''
-        _embed = await channel_embed_summary(
-            utils.get(ctx.guild.channels, name='testy'))
-        _embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        await ctx.channel.send(embed=_embed)
+        ''' Embed summary of the *testy* channel. '''
+        await ctx.send(embed=await channel_embed_summary(
+            utils.get(ctx.guild.channels, name='testy'),
+            kw={'footer': {
+                'text': ctx.author.display_name
+            }}))
 
     @command(aliases=['ukoly'])
     @del_invoc
     async def ukol(self, ctx):
-        ''' Outputs homeworks from the *úkoly* channel. '''
-        _embed = await channel_embed_summary(
-            utils.get(ctx.guild.channels, name='úkoly'))
-        _embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        await ctx.channel.send(embed=_embed)
+        ''' Embed summary of the *úkoly* channel. '''
+        await ctx.send(embed=await channel_embed_summary(
+            utils.get(ctx.guild.channels, name='úkoly'),
+            kw={'footer': {
+                'text': ctx.author.display_name
+            }}))
 
     @command()
     async def log(self, ctx):

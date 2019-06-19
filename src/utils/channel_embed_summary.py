@@ -3,7 +3,7 @@ from discord import Embed, TextChannel, Color
 from utils.get_datetime_from_string import get_datetime_from_string
 
 
-async def channel_embed_summary(channel: TextChannel) -> Embed:
+async def channel_embed_summary(channel: TextChannel, kw: dict = {}) -> Embed:
     # Get the embeds
     _embeds = [msg.embeds[0] async for msg in channel.history() if msg.embeds]
 
@@ -12,7 +12,8 @@ async def channel_embed_summary(channel: TextChannel) -> Embed:
                  reverse=True)
 
     # Build the embed
-    _embed = Embed()
+    print(kw)
+    _embed = Embed.from_dict(kw)
     for embed in _embeds:
         _embed.add_field(name=f'**{embed.title}**, {embed.description}',
                          value=', '.join(f.name for f in embed.fields),
