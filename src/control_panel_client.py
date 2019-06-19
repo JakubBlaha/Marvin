@@ -97,7 +97,7 @@ class ControlPanelClient(RemoteConfig, Bot):
                                ).invoke(_context)
 
         # Reset reactions
-        await self._reset_reactions(self._msg)
+        await self._msg.remove_reaction(reaction, user)
 
     async def on_message(self, msg: Message):
         # Remove any messages posted to the configured channel after a time
