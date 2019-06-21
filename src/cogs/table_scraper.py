@@ -1,21 +1,26 @@
+import io
+import os  # , sys
 from datetime import datetime
-from tempfile import gettempdir
 from operator import itemgetter
+from tempfile import gettempdir
 from typing import Iterable
-import os  #, sys
 
-from discord.ext.commands import Cog, command
 import mechanize
 import tabula
 import tabulate
+from discord import Embed, File
+from discord.ext.commands import Cog, Context, command
+from PIL import Image
 
-from preload import Preloader
+from command_modules.message_split import split as msg_split
 from config import Config
 from logger import Logger
-from command_modules.message_split import split as msg_split
+from preload import Preloader
+from utils.list_to_image import ListToImageBuilder
 
 BASE_URL = 'https://moodle3.gvid.cz/course/view.php?id=3'
 DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/freefbot')
+MAX_ROWS_IN_PART = 4
 
 
 def download_pdf(username, password):
@@ -78,6 +83,28 @@ def pdf_to_list(path: str) -> str:
     return data
 
 
+def process_arrows(data: list) -> list:
+    '''
+    Cleans up arrow cells.
+
+    Used to clean up cells that contain arrows. The cell content will be split
+    by the '->' sequence and only the second part of the content will be
+    preserved.
+
+    Args:
+        data: A 2D table-like list.
+
+    Returns:
+        A 2D table-like list.
+    '''
+
+    for row in data:
+        for index, cell in enumerate(row):
+            row[index] = cell.split('->', 1)[-1]
+
+    return data
+
+
 def fix_merged_cells(rows: list) -> list:
     ''' Return the data with fixed merged cells. '''
     _root_rows = [
@@ -118,7 +145,7 @@ def fix_merged_cells(rows: list) -> list:
 
 def extract_target(data, target, with_headers=True):
     ''' Return a table filtered by the first column. Contains. '''
-    if target == '.':
+    if target in ('.', 'all'):
         return data
 
     _new_data = [data[0]] if with_headers else []
@@ -138,20 +165,20 @@ def build_section_cells(data: list) -> list:
     return data
 
 
-def get_string(data: Iterable) -> str:
-    ''' Return a ready-to-send str made from the table. '''
-
-    if len(data) < 2:
-        return " - *No substitutions* (╯°□°）╯︵ ┻━┻"
-    return f'```fix\n{tabulate.tabulate(data[1:], headers=data[0])}```'
-
-
 def date_from_fname(fname: str) -> str:
     ''' Return a date as a str. Example: 010119.ext -> 1. 1. 0019. '''
     _date_enc = os.path.splitext(fname)[0]
     day, month, year = _date_enc[:2], _date_enc[2:4], _date_enc[4:]
 
     return f'{day}. {month}. {datetime.now().year // 100}{year}'
+
+
+def get_file(img: Image.Image) -> File:
+    _buffer = io.BytesIO()
+    img.save(_buffer, 'PNG')
+    _buffer.seek(0)
+
+    return File(_buffer, 'img.png')
 
 
 class TableScraper(Cog):
@@ -167,30 +194,35 @@ class TableScraper(Cog):
         return (_local_path, pdf_to_list(_local_path))
 
     @command(aliases=['supl', 'suply'])
-    async def substits(self, ctx, target='3.F'):
+    async def substits(self, ctx: Context, target='3.F'):
         '''
         Outputs the latest substitutions.
         
         The substitutions are pulled from moodle3.gvid.cz using mechanize,
         logging in with username and password from the config file and clicking
         the last pdf link. Then transformed to text using tabula-py. If you
-        want to output all substitutions instead of only the targetted ones,
-        type '.' as the target argument.
+        want to output all substitutions instead of only the targetted,
+        type '.' or 'all' as the target argument.
         '''
 
         await ctx.trigger_typing()
 
-        _local_path = self._preloader.output[0]
+        _local_path, _data = self._preloader.output
         _fname = os.path.split(_local_path)[1]
 
-        _data = self._preloader.output[1]
+        # Generate the table
+        _data = process_arrows(_data)
         _data = fix_merged_cells(_data)
         _data = extract_target(_data, target)
         _data = build_section_cells(_data)
-        _data = f'**{date_from_fname(_fname)}**' + get_string(_data)
 
-        for chunk in msg_split(_data):
-            await ctx.send(chunk)
+        # Generate, send the images
+        _builder = ListToImageBuilder(_data, footer=date_from_fname(_fname))
+        _builder.set_header()
+
+        # Send chunks
+        for img in _builder.generate():
+            await ctx.send(file=get_file(img))
 
 
 def setup(bot):

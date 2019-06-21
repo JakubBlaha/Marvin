@@ -14,6 +14,7 @@ mechanize = "*"
 discord-py = "*"
 selenium = "*"
 emoji = "*"
+pillow = "*"
 
 [dev-packages]
 yapf = "*"
