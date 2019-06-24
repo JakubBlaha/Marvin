@@ -7,38 +7,52 @@ A simple discord bot made for personal purposes in python using [discord.py](htt
 
 ## Features
 **Available commands:**
-  - *eval*   - Evaluates a python expression.
-  - *repeat* - Repeats the given string.
-  - *rozvrh* - Send an image of our timetable.
-  - *subj*   - Gives the subjects to prepare for.
-  - *supl*   - Outputs the substitutions.
-  - *test*   - Outputs exams from the *testy* channel.
-  - *ukol*   - Outputs homeworks from the *úkoly* channel.
+  - *eval*     - Evaluates a python expression.
+  - *repeat*   - Repeats the given string.
+  - *table*    - Sends the timetable.
+  - *subj*     - Outputs the subjects for this / the next day.
+  - *substits* - Outputs the substitutions.
+  - *test*     - Outputs exams from the *testy* channel.
+  - *ukol*     - Outputs homeworks from the *úkoly* channel.
   - more ..
 
 ## Usage
-###### the `config.yaml` file
-There has to be a `config.yaml` file in the same location as he `client.py` file is. The file has to be formatted as *yaml* and some *yaml-specific* features cant be used becuase of the `yaml.safe_load` function being used. The file must contain credentials as the following example shows.
+There needs to be a `src/config.yaml` file with some critical information.
 ```yaml
-token: ...              # Discord bot token
-guild_id: ...           # The id of the guild the bot will belong to
-log_channel_id: ...     # the id of the channel where all logs should be sent to
-channel_log_flush_interval: 10  # Max seconds the log content can stay in the buffer
+token: ...
+guild_id: ...
 presence: Hello world!  # The text that will be shown as playing a game
 status: online          # A string representing an attribute of the discord.Status class
 
-# System
-disable_logs: False     # When set to True, all file logging will be disabled
+# Logging
+disable_logs: False
+log_channel_id: ...
+channel_log_flush_interval: 10
 
-# Command preferences
-username: MyUsername01  # moodle3.gvid.cz username
-password: Password123   # moodle3.gvid.cz password
-table_replacements: {'example': 'ex.'}  # Dict of replacement values to replace the content of the table from the output of the !substits command with
-table_headers: ['#', 'Name']  # ... table headers
-table_cols: [0, 1]  # ... table cols to be extracted
+# Command specific
+username: ...           # moodle username
+password: ...           # moodle password
 ```
-The [moodle](https://moodle3.gvid.cz) credentials are used for the `!supl` command which gives you substitutions for the current/following day depending on the document presence as they are needed to login in the course.
 
+### The remote config
+The remote config feature allows to store the bot configuration in a separate discord channel with the name `config`. The last message from the channel will be taken and parsed by the `yaml` module. An example content of such a message can be found below.
+
+```yaml
+# The Control Panel
+control_panel_channel_id: ...
+
+# The auto Reactor
+auto_reactor_channel_ids: [...]
+auto_reactor_reaction_ids: [...]
+
+# The !table command
+timetable_url: https://www.example.com
+
+# The !substits command
+substits_col_indexes: [...]       # Considered columns
+substits_headers: [...]           # Custom table headers
+substits_replace_contents: {...}  # Pairs of original -> replaced keywords in the table
+```
 
 ### The Embed excluder
 The *Embed excluder* will add the ❌ reaction to any outdated embed found in channels with the 🔔 emoji in their topic.
@@ -54,14 +68,5 @@ The Command panel is a feature, which provides the ability to execute commands m
 ### The Event notifier
 The Event notifier will periodically scan each channel having the 🔔 emoji in it's topic every 10 minutes and edit the `general` channel's description so it contains a summary of all of the scanned embeds.
 
-### The remote config
-The remote config feature allows to store the bot configuration in a separate discord channel with the name `config`. The last message from the channel will be taken and converted by the `yaml` module. An example content of such a message can be found below.
-
-```yaml
-control_panel_channel_id: ...
-
-auto_reactor_channel_ids: [...]
-auto_reactor_reaction_ids: [...]
-
-timetable_url: https://www.example.com
-```
+### The `!substits` command
+The table scraper is a sort of a personal feature, but can be easily modified if needed. The scraper downloads a pdf file from moodle, extracts a table from it and sends the data as a set of constructed images. All of the configuration but the *username* and *password*, which are stored in the *local config*, are stored in the *remote config*.

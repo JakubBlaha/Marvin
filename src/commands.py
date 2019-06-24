@@ -1,25 +1,24 @@
-from discord.ext.commands import Bot, command, Cog
-from discord import File, Message, Embed, Color, Client, utils, Guild
-from discord.errors import NotFound
-from traceback import format_exc
-from asyncio import TimeoutError, sleep
-from random import random, randint
-import yaml
 import re
+from asyncio import TimeoutError, sleep
+from random import randint, random
+from traceback import format_exc
 
-from logger import Logger
-
-# command modules
-from command_modules.get_subjects import get_subjects
-from command_modules.embed import is_embed_up_to_date
-from command_modules.message_split import split as msg_split
+import yaml
+from discord import Client, Color, Embed, File, Guild, Message, utils
+from discord.errors import NotFound
+from discord.ext.commands import Bot, Cog, command
 from simpleeval import simple_eval
-from emojis import Emojis
+
 from command_modules import bag
-from utils.get_datetime_from_string import get_datetime_from_string
-from utils.embed_to_text import embed_to_text
-from utils.command_embed import send_command_embed
+from command_modules.embed import is_embed_up_to_date
+from command_modules.get_subjects import get_subjects
+from decorators import del_invoc
+from emojis import Emojis
+from logger import Logger
 from utils.channel_embed_summary import channel_embed_summary
+from utils.command_embed import send_command_embed
+from utils.embed_to_text import embed_to_text
+from utils.get_datetime_from_string import get_datetime_from_string
 
 DEFAULT_EMBED = {
     'title': '\u200b',
@@ -58,18 +57,6 @@ async def request_input(ctx, message, regex='', mention=True, allowed=[]):
 
     await bot_message.delete()
     return user_msg.content
-
-
-def del_invoc(fn: callable):
-    async def wrapper(self, ctx, *args, **kw):
-        ret = await fn(self, ctx, *args, **kw)
-        if not hasattr(ctx, 'is_private'):
-            await ctx.message.delete()
-
-    wrapper.__name__ = fn.__name__
-    wrapper.__doc__ = fn.__doc__
-
-    return wrapper
 
 
 class Commands(Cog):

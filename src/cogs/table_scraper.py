@@ -1,19 +1,17 @@
 import io
-import os  # , sys
+import os
 from datetime import datetime
 from operator import itemgetter
 from tempfile import gettempdir
-from typing import Iterable
 
 import mechanize
 import tabula
-import tabulate
 from discord import Embed, File
-from discord.ext.commands import Cog, Context, command
+from discord.ext.commands import Bot, Cog, Context, command
 from PIL import Image
 
-from command_modules.message_split import split as msg_split
 from config import Config
+from decorators import del_invoc
 from logger import Logger
 from preload import Preloader
 from utils.list_to_image import ListToImageBuilder
@@ -57,111 +55,6 @@ def pdf_to_list(path: str) -> str:
     Logger.info(f'Command: Reading {path}..')
     data = tabula.read_pdf(path, 'json')[0]['data']
 
-    # fix data
-    _cols_to_ext = Config.get('table_cols', [])
-    if not _cols_to_ext:
-        Logger.warning('Command: No columns to extract!')
-
-    _latest_required_col_index = max(_cols_to_ext)
-    for index, row in enumerate(data):
-        if len(row) < _latest_required_col_index:
-            data.pop(index)
-            Logger.warning(f'!supl: Invalid data at index {index}')
-
-    # Filter columns
-    data = [[col['text'] for col in itemgetter(*_cols_to_ext)(row)]
-            for row in data]
-
-    # ensure headers
-    if Config.table_headers and data[0][1].isdigit():
-        data.insert(0, Config.table_headers)
-
-    # Replace with custom data
-    for key, value in Config.get('table_replacements', {}).items():
-        data = [[i.replace(key, value) for i in j] for j in data]
-
-    return data
-
-
-def process_arrows(data: list) -> list:
-    '''
-    Cleans up arrow cells.
-
-    Used to clean up cells that contain arrows. The cell content will be split
-    by the '->' sequence and only the second part of the content will be
-    preserved.
-
-    Args:
-        data: A 2D table-like list.
-
-    Returns:
-        A 2D table-like list.
-    '''
-
-    for row in data:
-        for index, cell in enumerate(row):
-            row[index] = cell.split('->', 1)[-1]
-
-    return data
-
-
-def fix_merged_cells(rows: list) -> list:
-    ''' Return the data with fixed merged cells. '''
-    _root_rows = [
-        i + 1 for i in range(len(rows) - 2)
-        if rows[i + 1] and not (rows[i][0] or rows[i + 2][0])
-    ]
-
-    index_add = 1  # The range of the roots
-    while True:
-        if '' not in [r[0] for r in rows]:
-            # Full
-            break
-        if index_add > len(rows) / 2:
-            break
-
-        for i, row in enumerate(rows):
-            if i not in _root_rows:
-                # Not expandable
-                continue
-            if (i - index_add < 0) or (i + index_add >= len(rows)):
-                # Out of bounds
-                continue
-            if rows[i + index_add][0] or rows[i - index_add][0]:
-                # Either side is not empty
-                continue
-            # Expand it
-            rows[i + index_add][0] = row[0]
-            rows[i - index_add][0] = row[0]
-
-        # Increase the range
-        index_add += 1
-
-    # Remove empty rows
-    rows = [i for i in rows if i[1]]
-
-    return rows
-
-
-def extract_target(data, target, with_headers=True):
-    ''' Return a table filtered by the first column. Contains. '''
-    if target in ('.', 'all'):
-        return data
-
-    _new_data = [data[0]] if with_headers else []
-    _new_data += filter(lambda x: target in x[0], data)
-
-    return _new_data
-
-
-def build_section_cells(data: list) -> list:
-    for index, row in reversed(list(enumerate(data))):
-        if index < 1:
-            break
-
-        if row[0] == data[index - 1][0]:
-            row[0] = ''
-
     return data
 
 
@@ -181,10 +74,164 @@ def get_file(img: Image.Image) -> File:
     return File(_buffer, 'img.png')
 
 
+class TableData:
+    '''
+    A provider for lot of useful methods.
+
+    This class contains a lot of useful methods and manages the table data
+    internally.
+    '''
+
+    data: list = []
+
+    def __init__(self, data: list):
+        self.data = data
+
+    def get_cols(self) -> list:
+        ''' Get the data as a list of columns instead as a list of rows. '''
+        return list(map(list, zip(*self.data)))
+
+    def set_cols(self, cols: list):
+        ''' Update the table from a ist of columns. '''
+        self.data = list(map(list, zip(*cols)))
+
+    def extract_table_cols(self, col_indexes: list):
+        '''
+        Extract given columns.
+
+        Extract given columns based on their indexes.
+
+        Attrs:
+            data: A list representing the table data.
+            col_indexes: A list representing the indexes of the columns that
+                will be extracted.
+        '''
+
+        self.data = [[col['text'] for col in itemgetter(*col_indexes)(row)]
+                     for row in self.data]
+
+    def add_headers(self, headers: list):
+        '''
+        Add headers to the data.
+
+        Adds the given headers do the data. The headers will be inserted at the
+        index 0.
+
+        Attrs:
+            headers: A list containing the headers. The headers should be of
+                the same length as the width of the table is.
+        '''
+
+        self.data.insert(0, headers)
+
+    def replace_contents(self, contents: dict):
+        '''
+        Replace individual cell contents.
+
+        Attrs:
+            contents: A dict which's keys is the content to replace and which's
+                values are the new content.
+        '''
+
+        for k, v in contents.items():
+            for row in self.data:
+                for index, cell in enumerate(row):
+                    row[index] = cell.replace(k, v)
+
+    def process_arrows(self):
+        '''
+        Cleans up arrow cells.
+
+        Cleans up cells that contain arrows. The cell content will be split
+        by the '->' sequence and only the second part of the content will be
+        preserved.
+        '''
+
+        for row in self.data:
+            for index, cell in enumerate(row):
+                row[index] = cell.split('->', 1)[-1]
+
+    def v_split_cells(self, col_indexes: list):
+        '''
+        Splits merged cells into individual rows vertically.
+
+        Merged cells are represented by a single cell with a valid content
+        surrounded by a non-valid content such as ''. The cells will be split
+        only vertically.
+
+        Attrs:
+            col_indexes: A list containing the column indexes to be split.
+        '''
+
+        _data = self.get_cols()
+
+        # Split cols
+        for col in [_data[i] for i in col_indexes]:
+            _range = 1
+            _bases = [(i, c) for i, c in enumerate(col) if c]
+
+            while '' in col:
+                for index, cell in _bases:
+                    # Ensure in bounds
+                    if (index - _range) < 0 or (index + _range) >= len(col):
+                        continue
+
+                    # Ensure both sides are empty
+                    if col[index - _range] or col[index + _range]:
+                        continue
+
+                    col[index + _range] = cell
+                    col[index - _range] = cell
+
+                _range += 1
+
+        self.set_cols(_data)
+
+        # Delete columns that would only represent the merged cell
+        # Find first col index not present in the list
+        _base_col_index = min(
+            set(range(max(col_indexes) + 2)) - set(col_indexes))
+        for row in self.data:
+            if not row[_base_col_index]:
+                self.data.remove(row)
+
+    def v_merge_cells(self, up: bool = True):
+        '''
+        Merge all cells with the same data vertically.
+
+        All cells in all columns with the same data will be merged, but only
+        vertically. The data will be aligned either up or down.
+
+        Attrs:
+            up: Whether the data should be aligned up. If this value is False,
+                the data will be aligned down. Default is True (up).
+        '''
+
+        _data = self.get_cols()
+
+        for col in _data:
+            for index in range(*((len(_data) - 1, -1,
+                                  -1) if up else (len(_data), ))):
+                try:
+                    if col[index - 1 if up else 1] == col[index]:
+                        col[index] = ''
+                except IndexError:
+                    pass
+
+        self.set_cols(_data)
+
+        # Remove empty rows
+        for row in self.data:
+            if not ''.join(row):
+                self.data.remove(row)
+
+
 class TableScraper(Cog):
+    bot: Bot
     _preloader: Preloader
 
-    def __init__(self, bot):
+    def __init__(self, bot: Bot):
+        self.bot = bot
         self._preloader = Preloader(bot.loop, self.preloader_feed,
                                     (Config.username, Config.password))
 
@@ -210,14 +257,37 @@ class TableScraper(Cog):
         _local_path, _data = self._preloader.output
         _fname = os.path.split(_local_path)[1]
 
-        # Generate the table
-        _data = process_arrows(_data)
-        _data = fix_merged_cells(_data)
-        _data = extract_target(_data, target)
-        _data = build_section_cells(_data)
+        # Process the data
+        _table = TableData(_data)
+        _table.extract_table_cols(self.bot['substits_col_indexes'] or [])
+        _table.add_headers(self.bot['substits_headers'] or [])
+        _table.replace_contents(self.bot['substits_replace_contents'] or {})
+        _table.process_arrows()
+        _table.v_split_cells([0])
+        _table.v_merge_cells()
+
+        _headers = _table.data[:1]
+        _data = _table.data[1:]
+
+        _embed = Embed()
+
+        # Filter data
+        if target not in ('all', '.'):
+            _data = list(filter(lambda x: x[0] == target, _data))
+
+        # Embed
+        if not _data:
+            _embed.title = '**No substitutions!**   (╯°□°）╯︵ ┻━┻'
+        
+        _embed.description = f'{ctx.author.display_name}, `{ctx.message.content}`'
+        await ctx.send(embed=_embed)
+
+        if not _data:
+            return
 
         # Generate, send the images
-        _builder = ListToImageBuilder(_data, footer=date_from_fname(_fname))
+        _builder = ListToImageBuilder(_headers + _data,
+                                      footer=date_from_fname(_fname))
         _builder.set_header()
 
         # Send chunks

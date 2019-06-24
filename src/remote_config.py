@@ -13,8 +13,8 @@ class RemoteConfig(Client):
     environments to all have the same config setup shared together.
 
     This class should be used as a first base class to any subclass requiring
-    this feature. Make sure to call the `reload_config` method before accessing
-    any values.
+    this feature. Make sure the method `reload_config` is called before accessing
+    any values. It is called in the `on_ready` coroutine by default.
     '''
     data = {}
     guild: Guild

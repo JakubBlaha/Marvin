@@ -1,22 +1,23 @@
 import sys
+
 from discord import Game, Status
 from discord.ext.commands import Bot, Command
 
-from logger import Logger
-from config import Config
-from remote_config import RemoteConfig
-from message_fixer import MessageFixer
-from embed_excluder import EmbedExcluder
-from large_emoji_client import LargeEmojiCLient
-from events_notifier import EventsNotifier
-from cleverbot_client import CleverbotClient
 from auto_reactor import AutoReactor
+from cleverbot_client import CleverbotClient
+from config import Config
 from control_panel_client import ControlPanelClient
+from embed_excluder import EmbedExcluder
+from events_notifier import EventsNotifier
+from large_emoji_client import LargeEmojiCLient
+from logger import Logger
+from message_fixer import MessageFixer
+from remote_config import RemoteConfig
 
 
-class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient,
+class FreefClient(ControlPanelClient, AutoReactor, #CleverbotClient,
                   EventsNotifier, MessageFixer, EmbedExcluder,
-                  LargeEmojiCLient, Bot):
+                  LargeEmojiCLient, RemoteConfig, Bot):
     _oos = False  # Out of service
 
     def __init__(self, *args, **kw):
