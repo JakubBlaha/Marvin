@@ -124,28 +124,35 @@ class LoggerMeta(type):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-    def _log(cls, level, string):
-        if not ':' in string:
-            string = ':' + string
+    def _log(cls, level, *args):
+        if not 0 < len(args) < 3:
+            raise ValueError(f'Invalid arguments: {args}')
 
-        category, message = [i.strip() for i in string.split(':', 1)]
-        _string = f'[{level.ljust(8)}] [{category.ljust(8)}] {message}'
-        print(_string)
+        if len(args) < 2:
+            tag, msg = args[0].split(':', 1)
+        else:
+            tag, msg = args
 
-    def debug(cls, msg):
-        cls._log('DEBUG', msg)
+        tag = str(tag).strip()
+        msg = str(msg).strip()
 
-    def info(cls, msg):
-        cls._log('INFO', msg)
+        sys.stdout.write(f'[{level.ljust(8)}] [{tag.ljust(20)}] {msg}\n')
 
-    def warning(cls, msg):
-        cls._log('WARNING', msg)
+    def debug(cls, *args):
+        cls._log('DEBUG', *args)
 
-    def error(cls, msg):
-        cls._log('ERROR', msg)
+    def info(cls, *args):
+        cls._log('INFO', *args)
+
+    def warning(cls, *args):
+        cls._log('WARNING', *args)
+
+    def error(cls, *args):
+        cls._log('ERROR', *args)
 
     def write(cls, msg):
         sys.__stdout__.write(msg)
+        sys.__stdout__.flush()
         cls.log.write(msg)
         cls._bridge.write(msg)
 
