@@ -17,6 +17,7 @@ emoji = "*"
 pillow = "*"
 "bs4" = "*"
 termcolor = "*"
+colorama = "*"
 
 [dev-packages]
 yapf = "*"
