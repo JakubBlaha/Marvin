@@ -16,6 +16,7 @@ selenium = "*"
 emoji = "*"
 pillow = "*"
 "bs4" = "*"
+termcolor = "*"
 
 [dev-packages]
 yapf = "*"

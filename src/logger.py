@@ -1,13 +1,23 @@
-import os, sys
-import shutil
-import io
 import asyncio
-from discord import TextChannel, Client
+import io
+import os
+import shutil
+import sys
 import time
+
+import colorama
+from discord import Client, TextChannel
+from termcolor import colored
 
 from config import Config
 
+colorama.init()
+
 MSG_TEMPLATE = '```python\n{}```'
+DEBUG = colored('DEBUG', 'magenta')
+INFO = colored('INFO', 'blue')
+WARNING = colored('WARNING', 'yellow')
+ERROR = colored('ERROR', 'red')
 
 
 class LogBridge:
@@ -136,19 +146,19 @@ class LoggerMeta(type):
         tag = str(tag).strip()
         msg = str(msg).strip()
 
-        sys.stdout.write(f'[{level.ljust(8)}] [{tag.ljust(20)}] {msg}\n')
+        sys.stdout.write(f'[{level.ljust(16)}] [{tag.ljust(20)}] {msg}\n')
 
     def debug(cls, *args):
-        cls._log('DEBUG', *args)
+        cls._log(DEBUG, *args)
 
     def info(cls, *args):
-        cls._log('INFO', *args)
+        cls._log(INFO, *args)
 
     def warning(cls, *args):
-        cls._log('WARNING', *args)
+        cls._log(WARNING, *args)
 
     def error(cls, *args):
-        cls._log('ERROR', *args)
+        cls._log(ERROR, *args)
 
     def write(cls, msg):
         sys.__stdout__.write(msg)
@@ -171,3 +181,9 @@ class Logger(metaclass=LoggerMeta):
 
 sys.stdout = Logger
 # sys.stderr = Logger
+
+if __name__ == "__main__":
+    Logger.debug('Tag: Test Debug')
+    Logger.info('Tag: Test Info')
+    Logger.warning('Tag: Test Warning')
+    Logger.error('Tag: Test Error')
