@@ -19,7 +19,7 @@ class FreefClient(
         TwitchClient,
         ControlPanelClient,
         AutoReactor,
-        #CleverbotClient,
+        CleverbotClient,
         EventsNotifier,
         MessageFixer,
         EmbedExcluder,
