@@ -70,3 +70,6 @@ The Event notifier will periodically scan each channel having the 🔔 emoji in 
 
 ### The `!substits` command
 The table scraper is a sort of a personal feature, but can be easily modified if needed. The scraper downloads a pdf file from moodle, extracts a table from it and sends the data as a set of constructed images. All of the configuration but the *username* and *password*, which are stored in the *local config*, are stored in the *remote config*.
+
+### The Twitch Client
+The twitch client watches for messages with emote names in them and replaces them with their actual images using discord embeds. If the emoji names is the only content of the message, the message will be deleted.

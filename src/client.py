@@ -1,24 +1,32 @@
 import sys
 
-from discord import Game, Status
+from discord import Game, Guild, Status
 from discord.ext.commands import Bot, Command
 
 from auto_reactor import AutoReactor
 from cleverbot_client import CleverbotClient
-from config import Config
+from config import GUILD_ID, Config
 from control_panel_client import ControlPanelClient
 from embed_excluder import EmbedExcluder
 from events_notifier import EventsNotifier
-from large_emoji_client import LargeEmojiCLient
 from logger import Logger
 from message_fixer import MessageFixer
 from remote_config import RemoteConfig
+from twitch_client import TwitchClient
 
 
-class FreefClient(ControlPanelClient, AutoReactor, #CleverbotClient,
-                  EventsNotifier, MessageFixer, EmbedExcluder,
-                  LargeEmojiCLient, RemoteConfig, Bot):
+class FreefClient(
+        TwitchClient,
+        ControlPanelClient,
+        AutoReactor,
+        #CleverbotClient,
+        EventsNotifier,
+        MessageFixer,
+        EmbedExcluder,
+        RemoteConfig,
+        Bot):
     _oos = False  # Out of service
+    guild: Guild
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -26,6 +34,8 @@ class FreefClient(ControlPanelClient, AutoReactor, #CleverbotClient,
         self.load_extension('cogs.table_scraper')
 
     async def on_ready(self):
+        self.guild = self.get_guild(Config.get(GUILD_ID))
+
         await super().on_ready()
 
         await self.reload_presence()
