@@ -91,6 +91,10 @@ class TwitchClient(Client):
     async def on_message(self, msg: Message):
         await super().on_message(msg)
 
+        # Skip messages with no content
+        if not msg.content:
+            return
+
         # Skip own messages
         if msg.author == self.user:
             return
