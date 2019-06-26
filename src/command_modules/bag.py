@@ -1,6 +1,6 @@
 from csv import reader
-from datetime import datetime
 
+from utils.relevant_day import relevant_weekday_index
 
 RES_FNAME = 'command_modules/res/rozvrh.csv'
 
@@ -11,22 +11,22 @@ def get_data() -> list:
 
 
 def round_day(i: int, step: int) -> int:
-	while i in (5, 6):
-		i = (i + step) % 7
+    while i in (5, 6):
+        i = (i + step) % 7
 
-	return i % 7
+    return i % 7
 
 
 def get_out_in(data: list) -> list:
     # Get the weekday
-    _wday = round_day(datetime.today().weekday(), -1)
+    _wday = round_day(relevant_weekday_index() - 1, -1)
     _wday_next = round_day(_wday + 1, 1)
 
     # Get the subjects
     _last_day = set(data[_wday])
     _next_day = set(data[_wday_next])
 
-    # Process the subjects
+    # Get the difference
     _out = _last_day - _next_day
     _in = _next_day - _last_day
 
