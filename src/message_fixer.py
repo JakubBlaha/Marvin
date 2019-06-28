@@ -1,4 +1,4 @@
-from discord import Client, Message, Embed
+from discord import Client, Message, Embed, NotFound
 from concurrent.futures._base import TimeoutError as TimeoutError_
 
 CHARS: dict = {
@@ -78,7 +78,10 @@ class MessageFixer(Client):
                                                  timeout=5,
                                                  check=check)
         except TimeoutError_:
-            await msg.remove_reaction(REACTION, self.user)
+            try:
+                await msg.remove_reaction(REACTION, self.user)
+            except NotFound:
+                pass
         else:
             await msg.channel.send(
                 embed=self._generate_embed(msg, fixed_content))
