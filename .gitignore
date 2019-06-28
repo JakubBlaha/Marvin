@@ -121,3 +121,6 @@ config.yaml
 downloads/
 logs/
 */cache/*
+
+# idea
+.idea/
