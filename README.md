@@ -54,6 +54,42 @@ substits_headers: [...]           # Custom table headers
 substits_replace_contents: {...}  # Pairs of original -> replaced keywords in the table
 ```
 
+### The embed builder
+The bot contains an embed builder which can build new and edit existing embeds in a user-friendly way. Only few commands and message reactions are used in the process.
+
+**Commands**
+  - `new` - The bot will kindly ask for the required information and build an embed based on the information provided.
+  - `edit` - A group of subcommands used to edit an existing embed. The syntax of the subcommand is `!embed edit [embed index] [subcommand] [value]`. An embed index has to be passed right before any of the subcommand. The index is counted from *0* and includes only the embeds, but no messages containing no embeds. `title`, `url`, `description`, `color`, `footer` and `fields` subcommands are available.
+  
+    All of the subcommands require an actual value to be passed after the subcommand as already stated, *except* the `fields` subcommand, which will guide you through the process.
+
+    The following actions are available during the field editing.
+
+    Reaction | Action
+    ---------|-------
+    ➕ | Add field
+    ✏ | Edit field
+    ➖ | Remove field
+    ↩ | Undo
+    ↪ | Redo
+    ✅ | Save
+
+
+**Examples**
+> Editing the title of the *most recent* embed title to `My awesome title`.
+```
+!embed edit 0 title My awesome title
+```
+> Editing the embed fields of the *second most recent* embed.
+```
+!embed edit 1 fields
+```
+We can also use aliases for the subcommands. For example `t` will become `title`, `d` `description`, etc. Note that the alias for the `footer` subcommand is `foo` and not `f`, since that one is for `fields`. A full list of aliases can be retrieved by either of these commands.
+```
+!help embed edit
+!embed edit
+```
+
 ### The Embed excluder
 The *Embed excluder* will add the ❌ reaction to any outdated embed found in channels with the 🔔 emoji in their topic.
 

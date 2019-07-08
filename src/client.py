@@ -32,6 +32,7 @@ class FreefClient(
         super().__init__(*args, **kw)
         self.load_extension('commands')
         self.load_extension('cogs.table_scraper')
+        self.load_extension('embeds')
 
     async def on_ready(self):
         self.guild = self.get_guild(Config.get(GUILD_ID))
