@@ -1,10 +1,7 @@
-import os
-
 from PIL import Image, ImageDraw, ImageFont
 from PIL.ImageFont import FreeTypeFont
 
-FONT_DIR_ABSOLUTE_PATH = os.path.abspath(
-    f'{__file__}../../../../res/fnt') + '/'
+FONT_DIR = 'res/fnt/'
 IMAGE_SIZE = (1000, 3000)
 
 
@@ -17,7 +14,7 @@ class FontMap:
         self._fonts.append(default_font)
 
         # Make list
-        self._data = [[0 for i in range(width)] for j in range(height)]
+        self._data = [[0 for _ in range(width)] for _ in range(height)]
 
     def set_at(self, x, y, font: ImageFont.FreeTypeFont):
         try:
@@ -40,7 +37,7 @@ class FontMap:
 
 
 def get_font(filename: str, size: int = 24) -> ImageFont.FreeTypeFont:
-    return ImageFont.truetype(FONT_DIR_ABSOLUTE_PATH + filename, size=size)
+    return ImageFont.truetype(FONT_DIR + filename, size=size)
 
 
 class ListToImageBuilder:
@@ -107,7 +104,7 @@ class ListToImageBuilder:
         self._draw = ImageDraw.Draw(self._img)
 
     def recalc_sizes(self):
-        ''' Recalculate row heights and column widths. '''
+        """ Recalculate row heights and column widths. """
         # Reset sizes
         self._col_sizes = [0] * self._width
         self._row_sizes = [0] * self._height
@@ -127,13 +124,13 @@ class ListToImageBuilder:
                 self._col_sizes[ci] = max(self._col_sizes[ci], _w)
 
     def set_header(self, font: ImageFont.FreeTypeFont = None, row=0):
-        ''' Sets the header. '''
+        """ Sets the header. """
         font = font or self._fnt_header
         for i in range(0, self._width):
             self.font_map.set_at(i, row, font)
 
     def generate(self):
-        ''' Generator yielding images from the data. '''
+        """ Generator yielding images from the data. """
         # Total image width
         _total_img_width = sum(self._col_sizes) + self.h_space
 
@@ -190,16 +187,3 @@ class ListToImageBuilder:
             self.data[i:i + self.chunk_size]
             for i in range(0, self._height, self.chunk_size)
         ]
-
-
-if __name__ == "__main__":
-    img = table_to_image([
-        ['Col1', 'Col1.50000', 'Col2', 'Col3', 'Col4', 'Col5'],
-        ['Val', 'Val', 'Val', 'Val', 'Val', 'Val'],
-        ['ValVal', 'Val', 'Val', 'ValVal', 'Val', 'Val'],
-        ['Val', 'Val', 'ValVal', 'Val', 'ValVal', 'Val'],
-    ],
-                         footer='Footer test')
-
-    for img in split_image(img, 100):
-        img.show()

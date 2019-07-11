@@ -1,9 +1,10 @@
-from discord import Client, TextChannel
 import asyncio
+
+from discord import Client
 
 from logger import Logger
 from remote_config import RemoteConfig
-from command_modules.embed import is_embed_up_to_date
+import utils
 
 
 class EmbedExcluder(RemoteConfig, Client):
@@ -27,7 +28,7 @@ class EmbedExcluder(RemoteConfig, Client):
                     continue
 
                 # Add the reaction
-                if not is_embed_up_to_date(msg.embeds[0]):
+                if utils.EmbedUtils.is_outdated(msg.embeds[0]):
                     await msg.add_reaction('❌')
                 else:
                     await msg.remove_reaction('❌', self.user)

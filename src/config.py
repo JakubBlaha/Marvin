@@ -1,7 +1,9 @@
 import os
+import sys
+
 import yaml
 
-# Name constants / intellisense help
+# Name constants / code completion help
 TOKEN = 'token'
 GUILD_ID = 'guild_id'
 
@@ -13,27 +15,6 @@ DISABLE_LOGS = 'disable_logs'
 
 PRESENCE = 'presence'
 STATUS = 'status'
-
-EMBED_EXCLUSION_CHANNEL_ID = 'embed_exclusion_alert_channel_id'
-EMBED_EXCLUSION_CHANNEL_IDS = 'embed_exclusion_channel_ids'
-EMBED_EXCLUSION_ALERT_ROLE_ID = 'embed_exclusion_alert_role_id'
-EMBED_EXCLUSION_CHECK_INTERVAL = 'embed_exclusion_check_interval'
-
-TABLE_REPLACEMENTS = 'table_replacements'
-TABLE_HEADERS = 'table_headers'
-TABLE_COLS = 'table_cols'
-
-UPCOMING_EVENTS_NOTIF_CHANNEL_ID = 'upcoming_events_notif_channel_id'
-UPCOMING_EVENTS_NOTIF_CHECKED_CHANNELS = 'upcoming_events_notif_checked_channels'
-UPCOMING_EVENTS_NOTIF_INTERVAL = 'upcoming_events_notif_interval'
-
-TIMETABLE_URL = 'timetable_url'
-
-AUTO_REACTOR_CHANNEL_IDS = 'auto_reactor_channel_ids'
-AUTO_REACTOR_REACTION_IDS = 'auto_reactor_reaction_ids'
-
-CONTROL_PANEL_CHANNEL_ID = 'control_panel_channel_id'
-
 
 REQUIRED_ENTRIES = [TOKEN, GUILD_ID]
 
@@ -48,8 +29,9 @@ class ConfigMeta(type):
         try:
             cls.ensure_file()
             cls.reload()
-        except Exception:
-            print('Failed to read the config file!')
+        except Exception as e:
+            print('Failed to read the config file! Exiting.. \n', e)
+            sys.exit()
 
     def reload(cls):
         with open(cls._FILENAME, encoding='utf-8') as f:
@@ -64,7 +46,7 @@ class ConfigMeta(type):
         local_keys = cls._store.keys()
 
         for entry in REQUIRED_ENTRIES:
-            if not entry in local_keys:
+            if entry not in local_keys:
                 raise ValueError(f'{entry} not present in {cls._FILENAME}')
 
     def ensure_file(cls):
@@ -84,7 +66,7 @@ class ConfigMeta(type):
             yaml.dump(cls._store, f)
 
     def get(cls, name, default=None):
-        ''' Use instead of `getattr`. '''
+        """ Use instead of `getattr`. """
         return cls._store.get(name, default)
 
 

@@ -1,14 +1,11 @@
 import asyncio
-import re
 
-from discord.ext.commands import Bot
-from discord import Message, TextChannel
 import discord.utils
+from discord.ext.commands import Bot
 
-from remote_config import RemoteConfig
+import utils
 from logger import Logger
-from utils.embed_to_text import embed_to_text
-from command_modules.embed import is_embed_up_to_date
+from remote_config import RemoteConfig
 
 
 class EventsNotifier(RemoteConfig, Bot):
@@ -37,8 +34,8 @@ class EventsNotifier(RemoteConfig, Bot):
 
         await _channel.edit(topic=_str)
 
-    async def _get_event_message_titles(self) -> Message:
-        # Go throught the channel history
+    async def _get_event_message_titles(self):
+        # Go through the channel history
         for _ch in filter(lambda x: '🔔' in (getattr(x, 'topic', None) or ''),
                           self.guild.channels):
             async for _msg in _ch.history():
@@ -47,5 +44,5 @@ class EventsNotifier(RemoteConfig, Bot):
                     continue
 
                 # Yield the title, if the embed is valid
-                if is_embed_up_to_date(_msg.embeds[0]):
+                if utils.EmbedUtils.is_outdated(_msg.embeds[0]):
                     yield _msg.embeds[0].title

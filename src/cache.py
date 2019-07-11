@@ -7,7 +7,7 @@ CACHE_PATH = 'cache/cache.yaml'
 
 
 class Cacher:
-    ''' Cache the output of a function. '''
+    """ Cache the output of a function. """
 
     _expire_time: int
     _func: Callable
@@ -17,12 +17,12 @@ class Cacher:
     def __init__(self,
                  func: Callable,
                  args: tuple = (),
-                 kw: dict = {},
+                 kw: dict = None,
                  expire_time: int = 600):
         self._expire_time = expire_time
         self._func = func
         self._args = args
-        self._kw = kw
+        self._kw = kw or {}
 
     @property
     def output(self):
@@ -30,10 +30,10 @@ class Cacher:
                                 self._expire_time) or self.call()
 
     def call(self, *args, **kw):
-        '''
+        """
         Call the function. If no args or kwargs are given, use the ones that
         were specified on instantiation. Cache the output. Return the output.
-        '''
+        """
 
         if not (args and kw):
             args = self._args
@@ -81,21 +81,3 @@ class LocalCacher:
     @staticmethod
     def _gen_cache(key, value) -> dict:
         return {key: {'stamp': time(), 'value': value}}
-
-
-# if __name__ == "__main__":
-#     _timecacher = Cacher(time, expire_time=3)
-#     assert isinstance(_timecacher._cached_output, )
-
-#     _output = _timecacher.output
-#     assert isinstance(_output, float)
-
-#     from time import sleep
-#     sleep(1)
-#     assert _timecacher.output == _output
-#     sleep(2)
-#     assert _timecacher.output != _output
-
-#     _output = _timecacher.output
-#     sleep(.1)
-#     assert _timecacher.call() != _output

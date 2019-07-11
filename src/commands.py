@@ -1,152 +1,174 @@
-import re
-from asyncio import TimeoutError, sleep
+from calendar import day_abbr
 from random import randint, random
-from traceback import format_exc
 
-import yaml
-from discord import Client, Color, Embed, File, Guild, Message, utils
-from discord.errors import NotFound
-from discord.ext.commands import Bot, Cog, command
+from discord import Embed
+from discord.ext.commands import Context, Cog, command
 from simpleeval import simple_eval
 
-from command_modules import bag
-from command_modules.embed import is_embed_up_to_date
-from command_modules.get_subjects import get_subjects
+import utils
+from client import FreefClient
 from decorators import del_invoc
 from emojis import Emojis
 from logger import Logger
-from utils.channel_embed_summary import channel_embed_summary
-from utils.command_embed import send_command_embed
-from utils.embed_to_text import embed_to_text
-from utils.get_datetime_from_string import get_datetime_from_string
-
-DEFAULT_EMBED = {
-    'title': '\u200b',
-    'description': '\u200b',
-    'footer': None,
-    'fields': {},
-    'del_fields': (),
-    'color': Embed.Empty
-}
+from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL, TIMETABLE
 
 
-async def request_input(ctx, message, regex='', mention=True, allowed=[]):
-    # create regex from allowed
-    if allowed and not regex:
-        regex = re.compile(f'({"|".join(allowed)}){{1}}', re.IGNORECASE)
-    elif allowed and regex:
-        Logger.warning(
-            f'Input: Given `allowed` {allowed} but also `regex` {regex}')
+async def reply_command(ctx: Context, send=True, include_invoc=True, include_author=True, **kw) -> Embed:
+    """
+    Send the command output in the context channel, include the invocation
+    message and the author. Return the built embed.
 
-    # Send the asking message
-    bot_message = (await ctx.send(
-        ctx.author.mention * mention + ' ' + message +
-        ('\n' + f'*Allowed values: {", ".join(allowed)}*') * bool(regex)))
-    await bot_message.add_reaction('\u2b07')
+    :param ctx: The command context.
+    :param send: Whether to send the command or return the embed only.
+    :param include_invoc: Whether to include the invocation message in the
+        embed description.
+    :param include_author: Whether to include the author name in the embed.
+    :param kw: The additional kwargs to build the embed from.
+    :return: An embed representing a command reply.
+    """
 
-    def check(msg):
-        return msg.channel == ctx.channel and msg.author == ctx.author
+    embed = Embed.from_dict(kw)
 
-    msg_ok = False
-    while not msg_ok:
-        user_msg = await ctx.bot.wait_for('message', check=check)
-        msg_ok = re.match(regex, user_msg.content)
-        await user_msg.add_reaction('\u2705' if msg_ok else '\u274c')
-        await sleep(.5)
-        await user_msg.delete()
+    # Add the invocation message
+    if include_invoc:
+        embed.description = embed.description or ''  # Ensure string
+        embed.description += '\n' if embed.description.endswith('```') else '\n\n'  # Somewhat nicer formatting
+        embed.description += f'`{ctx.message.clean_content}`'  # Append the invoc message
 
-    await bot_message.delete()
-    return user_msg.content
+    # Add the author
+    if include_author:
+        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+    # Send the embed
+    if send:
+        await ctx.send(embed=embed)
+
+    return embed
 
 
 class Commands(Cog):
+    bot: FreefClient
+
     def __init__(self, bot):
         self.bot = bot
 
     @command()
+    @del_invoc
     async def repeat(self, ctx, string: str, n: int = 10):
-        '''
-        Repeats the given string.
-        
-        Repeats the given string\emote n times. Maximum is 50.
-        '''
-
-        await send_command_embed(ctx,
-                                 string * min(n, 50),
-                                 show_invocation=False)
+        """ Repeat the given message n times. Maximum is 50. """
+        await reply_command(ctx, include_invoc=False, description=string * min(n, 50))
 
     @command(aliases=['table', 'rozvrh'])
+    @del_invoc
     async def timetable(self, ctx):
-        '''Send an image of our timetable.'''
-        await send_command_embed(ctx, send=False)
-        ctx.output_embed.set_image(
-            url=self.bot['timetable_url'] or 'https://example.com')
-        await ctx.send(embed=ctx.output_embed)
+        """ Send an image of our timetable. """
+        await reply_command(ctx, image={'url': ctx.bot[TIMETABLE_URL] or 'https://example.com'})
 
     @command()
+    @del_invoc
     async def subj(self, ctx):
-        '''
+        """
         Gives the subjects to prepare for.
 
-        Gives the subjects to prepare for dependently on the current time.
         If it's already after the lunch, gives the subjects of the following
         day, otherwise gives the subjects for the current day. The subjects
         are given in an alphabetical order.
-        '''
+        """
 
-        await send_command_embed(ctx, f'```fix\n{get_subjects()}```')
+        day_index = utils.Datetime.shifted_weekday()
+
+        subjs = self.bot[TIMETABLE][day_index]  # Get day subjs
+        subjs = set(subjs) - set('-')  # Remove spare time
+        subjs = sorted(list(subjs))  # Sort alphabetically
+
+        prefix = day_abbr[day_index]
+
+        string = f'**{prefix}:** {", ".join(subjs)}'
+
+        await reply_command(ctx, description=string)
 
     @command()
+    @del_invoc
+    async def bag(self, ctx, day_index=None):
+        """
+        Tell me which subjects to put in my bag and take out of my bag
+        for the next school day.
+
+        If `day_index` is given (0 for monday), the output will be given for
+        that day.
+        """
+
+        omit = set('-')
+
+        day_index = day_index or utils.Datetime.shifted_weekday()
+        day_index = min(int(day_index), 5) % 5  # do not include weekend
+
+        timetable = self.bot[TIMETABLE][:5]  # do not include weekend
+
+        passed_subjs = set(timetable[day_index - 1]) - omit
+        pending_subjs = set(timetable[day_index]) - omit
+
+        out_subjs = passed_subjs - pending_subjs  # take out of the bag
+        in_subjs = pending_subjs - passed_subjs  # put in the bag
+
+        out_subjs = sorted(list(out_subjs))  # sort alphabetically
+        in_subjs = sorted(list(in_subjs))
+
+        string = f'**Out:** {", ".join(out_subjs)}\n**In:** {", ".join(in_subjs)}'
+
+        await reply_command(ctx, description=string)
+
+    @command()
+    @del_invoc
     async def eval(self, ctx, *, expression):
-        '''
+        """
         Evaluates a python expression.
 
         Evaluates a python expression. If the evaluation fails,
         outputs the error code. It is not possible to access variables
         or functions. Example: 25**(1/2) -> 5.0
-        '''
+        """
 
         try:
             ret = f'```python\n{simple_eval(expression)}```'
         except Exception as ex:
             ret = f':warning: **Failed to evaluate** :warning:\n```{ex}```'
 
-        await send_command_embed(ctx, ret)
+        await reply_command(ctx, description=ret)
 
-    @command(aliases=['testy'])
+    @command(aliases=['ex', 'test', 'testy'])
     @del_invoc
-    async def test(self, ctx):
-        ''' Embed summary of the *testy* channel. '''
-        await ctx.send(embed=await channel_embed_summary(
-            utils.get(ctx.guild.channels, name='testy'),
-            kw={'footer': {
-                'text': ctx.author.display_name
-            }}))
+    async def exam(self, ctx):
+        """ Output pending exams. """
+        await reply_command(ctx,
+                            **(await utils.EmbedUtils.channel_summary(
+                                ctx.bot.get_channel(ctx.bot[EXAM_CHANNEL_ID]))).to_dict())
 
-    @command(aliases=['ukoly'])
+    # noinspection SpellCheckingInspection
+    @command(aliases=['hw', 'ukol', 'ukoly'])
     @del_invoc
-    async def ukol(self, ctx):
-        ''' Embed summary of the *úkoly* channel. '''
-        await ctx.send(embed=await channel_embed_summary(
-            utils.get(ctx.guild.channels, name='úkoly'),
-            kw={'footer': {
-                'text': ctx.author.display_name
-            }}))
+    async def homework(self, ctx):
+        """ Output pending homeworks. """
+        await reply_command(ctx,
+                            **(await utils.EmbedUtils.channel_summary(
+                                ctx.bot.get_channel(ctx.bot[HOMEWORK_CHANNEL_ID]))).to_dict())
 
     @command()
+    @del_invoc
     async def log(self, ctx):
-        '''
+        """
         Return the current log.
 
         Return the current log consisting of sys.stdout and sys.stderr.
-        '''
+        """
 
-        await send_command_embed(ctx, f'```{Logger.get_log()[-1980:]}```')
+        await reply_command(ctx, description=f'```{Logger.get_log()[-1980:]}```')
         Logger.info(f'Command: Sent logs to `{ctx.channel.name}` channel')
 
     @command()
+    @del_invoc
     async def random(self, ctx, arg1: int = None, arg2: int = None):
-        '''
+        """
         Gives a random number depending on the arguments.
 
         Up to two arguments can be passed into this function. If both arguments
@@ -154,29 +176,25 @@ class Commands(Cog):
         argument is given, the given number will be in a range from 0 to arg1.
         If both arguments are given, the given number will be in a range from
         arg1 to arg2.
-        '''
+        """
 
-        if not (arg1 is None or arg2 is None):
-            res = randint(arg1, arg2)
-        elif arg1 is not None:
+        if arg1 and arg2:
+            res = randint(*sorted((arg1, arg2)))
+        elif arg1:
             res = randint(0, arg1)
         else:
             res = random()
 
-        await send_command_embed(ctx, f'```python\n{res}```')
+        await reply_command(ctx, description=f'```python\n{res}```')
 
+    # noinspection PyUnusedLocal
     @command(hidden=True)
     @del_invoc
     async def toggle_oos(self, ctx):
-        ''' Toggle out of service. '''
+        """ Toggle out of service. """
         await self.bot.toggle_oos()
 
-    @command()
-    async def bag(self, ctx):
-        ''' Outputs the subjects to take out and put in your bag. '''
-        await send_command_embed(
-            ctx, bag.build_string(bag.get_out_in(bag.get_data())))
-
+    # noinspection PyUnusedLocal
     @command(hidden=True)
     @del_invoc
     async def reload_config(self, ctx):

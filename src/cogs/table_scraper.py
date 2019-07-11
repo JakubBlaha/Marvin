@@ -3,18 +3,19 @@ import os
 from datetime import datetime
 from operator import itemgetter
 from tempfile import gettempdir
+from typing import Iterable
 
 import mechanize
 import tabula
-from discord import Embed, File
-from discord.ext.commands import Bot, Cog, Context, command
 from PIL import Image
+from discord import Embed, File
+from discord.ext.commands import Cog, Context, command
 
+from client import FreefClient
 from config import Config
-from decorators import del_invoc
 from logger import Logger
 from preload import Preloader
-from utils.list_to_image import ListToImageBuilder
+from utils import ListToImageBuilder
 
 BASE_URL = 'https://moodle3.gvid.cz/course/view.php?id=3'
 DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/freefbot')
@@ -22,7 +23,7 @@ MAX_ROWS_IN_PART = 4
 
 
 def download_pdf(username, password):
-    ''' Download the latest pdf file. Return its local path. '''
+    """ Download the latest pdf file. Return its local path. """
     # Make the download directory
     os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
@@ -51,7 +52,7 @@ def download_pdf(username, password):
 
 
 def pdf_to_list(path: str) -> str:
-    ''' Read a pdf and return as a table. '''
+    """ Read a pdf and return as a table. """
     Logger.info(f'Command: Reading {path}..')
     data = tabula.read_pdf(path, 'json')[0]['data']
 
@@ -59,7 +60,7 @@ def pdf_to_list(path: str) -> str:
 
 
 def date_from_fname(fname: str) -> str:
-    ''' Return a date as a str. Example: 010119.ext -> 1. 1. 0019. '''
+    """ Return a date as a str. Example: 010119.ext -> 1. 1. 0019. """
     _date_enc = os.path.splitext(fname)[0]
     day, month, year = _date_enc[:2], _date_enc[2:4], _date_enc[4:]
 
@@ -75,12 +76,12 @@ def get_file(img: Image.Image) -> File:
 
 
 class TableData:
-    '''
+    """
     A provider for lot of useful methods.
 
     This class contains a lot of useful methods and manages the table data
     internally.
-    '''
+    """
 
     data: list = []
 
@@ -88,15 +89,15 @@ class TableData:
         self.data = data
 
     def get_cols(self) -> list:
-        ''' Get the data as a list of columns instead as a list of rows. '''
+        """ Get the data as a list of columns instead as a list of rows. """
         return list(map(list, zip(*self.data)))
 
     def set_cols(self, cols: list):
-        ''' Update the table from a ist of columns. '''
+        """ Update the table from a ist of columns. """
         self.data = list(map(list, zip(*cols)))
 
     def extract_table_cols(self, col_indexes: list):
-        '''
+        """
         Extract given columns.
 
         Extract given columns based on their indexes.
@@ -105,13 +106,13 @@ class TableData:
             data: A list representing the table data.
             col_indexes: A list representing the indexes of the columns that
                 will be extracted.
-        '''
+        """
 
         self.data = [[col['text'] for col in itemgetter(*col_indexes)(row)]
                      for row in self.data]
 
     def add_headers(self, headers: list):
-        '''
+        """
         Add headers to the data.
 
         Adds the given headers do the data. The headers will be inserted at the
@@ -120,18 +121,18 @@ class TableData:
         Attrs:
             headers: A list containing the headers. The headers should be of
                 the same length as the width of the table is.
-        '''
+        """
 
         self.data.insert(0, headers)
 
     def replace_contents(self, contents: dict):
-        '''
+        """
         Replace individual cell contents.
 
         Attrs:
             contents: A dict which's keys is the content to replace and which's
                 values are the new content.
-        '''
+        """
 
         for k, v in contents.items():
             for row in self.data:
@@ -139,20 +140,20 @@ class TableData:
                     row[index] = cell.replace(k, v)
 
     def process_arrows(self):
-        '''
+        """
         Cleans up arrow cells.
 
         Cleans up cells that contain arrows. The cell content will be split
         by the '->' sequence and only the second part of the content will be
         preserved.
-        '''
+        """
 
         for row in self.data:
             for index, cell in enumerate(row):
                 row[index] = cell.split('->', 1)[-1]
 
     def v_split_cells(self, col_indexes: list):
-        '''
+        """
         Splits merged cells into individual rows vertically.
 
         Merged cells are represented by a single cell with a valid content
@@ -161,7 +162,7 @@ class TableData:
 
         Attrs:
             col_indexes: A list containing the column indexes to be split.
-        '''
+        """
 
         _data = self.get_cols()
 
@@ -196,7 +197,7 @@ class TableData:
                 self.data.remove(row)
 
     def v_merge_cells(self, up: bool = True):
-        '''
+        """
         Merge all cells with the same data vertically.
 
         All cells in all columns with the same data will be merged, but only
@@ -205,13 +206,13 @@ class TableData:
         Attrs:
             up: Whether the data should be aligned up. If this value is False,
                 the data will be aligned down. Default is True (up).
-        '''
+        """
 
         _data = self.get_cols()
 
         for col in _data:
             for index in range(*((len(_data) - 1, -1,
-                                  -1) if up else (len(_data), ))):
+                                  -1) if up else (len(_data),))):
                 try:
                     if col[index - 1 if up else 1] == col[index]:
                         col[index] = ''
@@ -227,30 +228,31 @@ class TableData:
 
 
 class TableScraper(Cog):
-    bot: Bot
+    bot: FreefClient
     _preloader: Preloader
 
-    def __init__(self, bot: Bot):
+    def __init__(self, bot: FreefClient):
         self.bot = bot
         self._preloader = Preloader(bot.loop, self.preloader_feed,
                                     (Config.username, Config.password))
 
-    def preloader_feed(self, username: str, password: str) -> list:
-        ''' The function to run in the preloader. '''
+    @staticmethod
+    def preloader_feed(username: str, password: str) -> Iterable:
+        """ The function to run in the preloader. """
         _local_path = download_pdf(username, password)
-        return (_local_path, pdf_to_list(_local_path))
+        return _local_path, pdf_to_list(_local_path)
 
     @command(aliases=['supl', 'suply'])
     async def substits(self, ctx: Context, target='3.F'):
-        '''
+        """
         Outputs the latest substitutions.
-        
+
         The substitutions are pulled from moodle3.gvid.cz using mechanize,
         logging in with username and password from the config file and clicking
         the last pdf link. Then transformed to text using tabula-py. If you
-        want to output all substitutions instead of only the targetted,
+        want to output all substitutions instead of only the targeted,
         type '.' or 'all' as the target argument.
-        '''
+        """
 
         await ctx.trigger_typing()
 
@@ -278,7 +280,7 @@ class TableScraper(Cog):
         # Embed
         if not _data:
             _embed.title = '**No substitutions!**   (╯°□°）╯︵ ┻━┻'
-        
+
         _embed.description = f'{ctx.author.display_name}, `{ctx.message.content}`'
         await ctx.send(embed=_embed)
 

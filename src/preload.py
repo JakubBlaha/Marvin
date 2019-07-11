@@ -16,19 +16,3 @@ class Preloader(Cacher):
         while self._loop.is_running():
             self._loop.run_in_executor(None, lambda: self.output)
             await asyncio.sleep(self._expire_time)
-
-
-if __name__ == "__main__":
-    from time import time
-
-    async def _check_output(obj):
-        _output = obj.output
-        await asyncio.sleep(1)
-        assert _output == obj.output
-
-        await asyncio.sleep(1)
-        assert _output != obj.output
-
-    _loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-    _time_preloader = Preloader(_loop, time, expire_time=2)
-    _loop.run_until_complete(_check_output(_time_preloader))
