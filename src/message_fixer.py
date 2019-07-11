@@ -1,5 +1,7 @@
-from discord import Client, Message, Embed, NotFound
-from concurrent.futures._base import TimeoutError as TimeoutError_
+import asyncio
+
+from discord import Message, Embed, NotFound
+from discord.ext.commands import Bot
 
 CHARS: dict = {
     '2': 'ě',
@@ -30,7 +32,7 @@ def clean_iter(string: str) -> tuple:
 
 
 def fix_content(s: str) -> str:
-    # Check if should be trigered
+    # Check if should be triggered
     for _, ch in clean_iter(s):
         if ch in set(CHARS) - NO_TRIGGER:
             break
@@ -44,7 +46,9 @@ def fix_content(s: str) -> str:
     return s
 
 
-class MessageFixer(Client):
+class MessageFixer(Bot):
+    REACTION = '\u274c'
+
     async def on_message(self, msg: Message):
         await super().on_message(msg)
 
@@ -61,38 +65,28 @@ class MessageFixer(Client):
             return
 
         fixed_content = fix_content(msg.content)
+
         # nothing to fix
         if msg.content == fixed_content:
             return
 
-        REACTION = '\u274c'
-
-        await msg.add_reaction(REACTION)
+        await msg.add_reaction(self.REACTION)
 
         def check(reaction, user):
-            return (reaction.message == msg and reaction.emoji == REACTION
-                    and user == msg.author)
+            return reaction.message == msg and reaction.emoji == self.REACTION and user == msg.author
 
         try:
-            reaction, user = await self.wait_for('reaction_add',
-                                                 timeout=5,
-                                                 check=check)
-        except TimeoutError_:
+            await self.wait_for('reaction_add', timeout=5, check=check)
+        except asyncio.TimeoutError:
             try:
-                await msg.remove_reaction(REACTION, self.user)
+                await msg.remove_reaction(self.REACTION, self.user)
             except NotFound:
                 pass
         else:
-            await msg.channel.send(
-                embed=self._generate_embed(msg, fixed_content))
+            embed = Embed(description=fixed_content)
+            embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
+            await msg.channel.send(embed=embed)
             await msg.delete()
-
-    def _generate_embed(self, msg: Message, fixed_content: str):
-        e = Embed(description=fixed_content)
-        e.set_author(name=msg.author.display_name,
-                     icon_url=msg.author.avatar_url)
-
-        return e
 
 
 if __name__ == "__main__":
