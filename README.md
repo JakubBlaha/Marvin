@@ -1,23 +1,53 @@
 # freefbot
+![logo](res/logo.png)
 
-<img src="https://github.com/JakubBlaha/freefbot/blob/master/res/logo.png?raw=true" alt="logo.png" height=200>
+A simple discord bot made for personal purposes in python using [discord.py](https://github.com/Rapptz/discord.py). This bot is focused on class discord servers for students, however can be easily modified for your own purposes.
 
-A simple discord bot made for personal purposes in python using [discord.py](https://github.com/Rapptz/discord.py). This bot is focused on school discord servers for students, however can be easily modified for your own purposes.
+## Setup
+There is no public server hosting this bot, therefore you need to run it yourself on your RPi or something. Follow the instructions below.
+
+ - Register your discord bot and get a API token at https://discordapp.com/developers/applications/
+ - Install **Python 3.7** and `pipenv` if you haven't already.
+ - Clone the project.
+```bash
+git clone https://github.com/JakubBlaha/freefbot.git
+```
+ - Create the [`config.yaml`](#the-local-config) file with your API key and the [`config`](#the-remote-config) channel in your discord server as shown below. 
+ - Setup the virtual environment.
+ ```bash
+ cd freefbot
+ pipenv install
+ ```
+ - Activate the virtual environment and run the bot.
+ ```bash
+ pipenv shell
+ python3.7 client.py
+ ```
+
+Now go ahead and enjoy the super-feature-rich discord bot. 😁
+
 
 
 ## Features
 **Available commands:**
-  - *eval*     - Evaluates a python expression.
-  - *repeat*   - Repeats the given string.
-  - *table*    - Sends the timetable.
-  - *subj*     - Outputs the subjects for this / the next day.
-  - *substits* - Outputs the substitutions.
-  - *test*     - Outputs exams from the *testy* channel.
-  - *ukol*     - Outputs homeworks from the *úkoly* channel.
-  - more ..
+
+Command|Action
+-------|------
+`!eval`|Evaluate a python expression.
+`!random`|Give a random number.
+`!repeat`|Repeat the given message.
+`!table`|Send the timetable.
+`!subj`|Output the subjects to prepare for.
+`!bag`|Output which subjects to take out and put in your bag.
+`!substits`|Output the coming substitutions.
+`!exam`|Output exams from the `exam_channel_id` channel.
+`!hw`|Output homeworks from the `homework_channel_id` channel.
+`!embed`|Build/edit an embed
+more ..| 🎆 🌟 🎇 ⭐ ✨
 
 ## Usage
-There needs to be a `src/config.yaml` file with some critical information.
+### The local config
+There needs to be a `config.yaml` file in the root folder with some critical information.
 ```yaml
 token: ...
 guild_id: ...
@@ -35,9 +65,12 @@ password: ...           # moodle password
 ```
 
 ### The remote config
-The remote config feature allows to store the bot configuration in a separate discord channel with the name `config`. The last message from the channel will be taken and parsed by the `yaml` module. An example content of such a message can be found below.
+The remote config feature allows to store the bot configuration in a separate discord channel named `config` in the *yaml* format. Only the last message will be considered. An example content of such a message can be found below.
 
 ```yaml
+# General
+locale: en-us  # The locale that will be used for various purposes
+
 # The Control Panel
 control_panel_channel_id: ...
 
@@ -90,22 +123,46 @@ We can also use aliases for the subcommands. For example `t` will become `title`
 !embed edit
 ```
 
+![setting_the_title](res/demo/embed_builder1.png)
+>Setting an embed title was never easier
+
+![building_using_reactions](res/demo/embed_builder2.png)
+>At least creating the embed is fun!
+
 ### The Embed excluder
-The *Embed excluder* will add the ❌ reaction to any outdated embed found in channels with the 🔔 emoji in their topic.
+The *Embed excluder* will add the ❌ reaction to any outdated embed found in channels with the 🔔 emoji in their topic. Can be used as a sort of a indicator to remove outdated embeds more easily.
+
+![embed_with_an_x_mark](res/demo/embed_excluder.png)
+>Pretty late to remove the embed actually ☺
 
 ### The Cleverbot integration
-Upon sending a message which *freefbot* is tagged in, the message will be forwarded to *Cleverbot* and a response will be awaited. Upon receiving a response or running into a `TimeoutException` an appropriate text will be sent to the channel. Cleverbot will not be initialized until requested, therefore the first message may take a while to process.
+This feature is just for fun, anything else. Simply tag the bot in your message and tell him something dumb. 
+
+![cleverbot_integration](res/demo/cleverbot.png)
+>Pretty need, heh?
 
 ### The Command panel
-The Command panel is a feature, which provides the ability to execute commands more easily. That is done by reaction (clicking the emoji) that is already preset on the Command panel message. The message is an embed with all the emojis described. All messages generated in this channel will be deleted after a 60 seconds period.
+The Command panel is a feature, which provides the ability to execute commands more easily. That is done clicking the reaction. All the messages generated in this channel will be deleted after one minute.
+
+![command_panel](res/demo/command_panel.png)
+>Access your timetable more easily
 
 *The Command panel is a channel-specific feature, so use it in a dedicated channel only.*
 
 ### The Event notifier
 The Event notifier will periodically scan each channel having the 🔔 emoji in it's topic every 10 minutes and edit the `general` channel's description so it contains a summary of all of the scanned embeds.
 
+![event_notifier](res/demo/event_notifier.png)
+>I would forget, if my bot didn't tell me. Really. 😉
+
 ### The `!substits` command
 The table scraper is a sort of a personal feature, but can be easily modified if needed. The scraper downloads a pdf file from moodle, extracts a table from it and sends the data as a set of constructed images. All of the configuration but the *username* and *password*, which are stored in the *local config*, are stored in the *remote config*.
 
+![substitutions](res/demo/substits.png)
+>Never have to go through the long process of downloading the pdf again. Have it nice and easy here!
+
 ### The Twitch Client
 The twitch client watches for messages with emote names in them and replaces them with their actual images using discord embeds. If the emoji names is the only content of the message, the message will be deleted.
+
+![twitch_client](res/demo/twitch.png)
+>What would be the point of our gamer lifes without them?
