@@ -1,16 +1,19 @@
+import datetime
 from calendar import day_abbr
 from random import randint, random
 
-from discord import Embed
+from discord import Embed, HTTPException
 from discord.ext.commands import Context, Cog, command
 from simpleeval import simple_eval
 
+import common
 import utils
 from client import FreefClient
-from decorators import del_invoc
+from decorators import del_invoc, required_role
 from emojis import Emojis
 from logger import Logger
 from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL, TIMETABLE
+from timeout_message import TimeoutMessage
 
 
 async def reply_command(ctx: Context, send=True, include_invoc=True, include_author=True, **kw) -> Embed:
@@ -199,6 +202,38 @@ class Commands(Cog):
     @del_invoc
     async def reload_config(self, ctx):
         await self.bot.reload_config()
+
+    @command(hidden=True, aliases=['del'])
+    @required_role(role_id=535515495420657665)
+    async def delete(self, ctx: Context, n=1):
+        """ Delete the last *n* messages. One by default. """
+        # We should delete the invocation message first
+        await ctx.message.delete()
+
+        n = int(n)
+
+        # Get messages to delete. Max 14 days old.
+        msgs = []
+        async for msg in ctx.channel.history():
+            if utils.MessageUtils.age(msg) > datetime.timedelta(days=14):
+                break
+
+            msgs.append(msg)
+
+            n -= 1
+            if n == 0:
+                break
+
+        # Delete the messages
+        try:
+            await ctx.channel.delete_messages(msgs)
+        except HTTPException:
+            await TimeoutMessage(ctx, 5).send(common.Embed.COMMAND_ERROR)
+            return
+
+        # Tell the user if some messages could not be deleted
+        if n > 0:
+            await TimeoutMessage(ctx, 5).send(embed=common.Embed.TOO_OLD_MESSAGES)
 
 
 def setup(bot):

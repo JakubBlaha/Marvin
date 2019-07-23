@@ -2,7 +2,7 @@ import calendar
 import datetime
 from typing import List
 
-from discord import Embed, TextChannel, Color
+from discord import Embed, TextChannel, Color, Message
 
 from .list_to_image import FontMap, ListToImageBuilder
 
@@ -116,3 +116,10 @@ class EmbedUtils:
             _embed.color = Color.red()
 
         return _embed
+
+
+class MessageUtils:
+    @staticmethod
+    def age(msg: Message):
+        """ Return a timedelta saying how old the message is. """
+        return datetime.datetime.now() - msg.created_at

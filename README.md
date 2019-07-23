@@ -42,7 +42,8 @@ Command|Action
 `!substits`|Output the coming substitutions.
 `!exam`|Output exams from the `exam_channel_id` channel.
 `!hw`|Output homeworks from the `homework_channel_id` channel.
-`!embed`|Build/edit an embed
+`!del`|Delete a number of messages.
+`!embed`|Build/edit an embed.
 more ..| 🎆 🌟 🎇 ⭐ ✨
 
 ## Usage
