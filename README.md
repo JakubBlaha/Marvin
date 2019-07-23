@@ -66,7 +66,7 @@ password: ...           # moodle password
 ```
 
 ### The remote config
-The remote config feature allows to store the bot configuration in a separate discord channel named `config` in the *yaml* format. Only the last message will be considered. An example content of such a message can be found below.
+The remote config feature allows to store the bot configuration in a separate discord channel named `config` in the *yaml* format. The last 100 messages will be considered.
 
 ```yaml
 # General

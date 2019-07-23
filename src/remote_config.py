@@ -17,6 +17,8 @@ EXAM_CHANNEL_ID = 'exam_channel_id'
 HOMEWORK_CHANNEL_ID = 'homework_channel_id'
 TIMETABLE = 'timetable'
 
+TAG = 'RemoteConfig'
+
 
 class RemoteConfig(Client):
     """
@@ -42,43 +44,44 @@ class RemoteConfig(Client):
         Logger.info(
             f'RemoteConfig: Reloading the config from channel {channel_name}')
 
-        # Get the guild
-        guild = self.get_guild(Config.get(GUILD_ID))
-
         # Get the config channel
-        await self.fetch_guild(guild.id)
-        _channel = utils.get(guild.channels, name=channel_name)
+        await self.fetch_guild(Config.get(GUILD_ID))
+        guild = self.get_guild(Config.get(GUILD_ID))
+        channel = await self.fetch_channel(utils.get(guild.channels, name=channel_name).id)
 
         # Load the config
-        await self.fetch_channel(_channel.id)
-        self.data = await self._get_yaml_from_channel(_channel)
+        self.data = await self._get_yaml_from_channel(channel)
 
     @staticmethod
     async def _get_yaml_from_channel(ch: TextChannel) -> dict:
         """ Return a dict taken from the latest message in the yaml format. """
         # Get the latest message
-        _msg = None
-        async for _msg in ch.history():
-            break
+        data = {}
+        async for msg in ch.history():
+            content = msg.clean_content
 
-        # Warn if no message was found
-        if not _msg:
-            Logger.warning(
-                f'RemoteConfig: Could not get the last message from channel {ch}'
-            )
-            return {}
+            # Clean up
+            content = content.replace('```yaml', '').replace('```', '')
 
-        # Convert the data
-        _content = _msg.content
-        _content = _content.replace('```yaml\n', '').replace('```', '')
-        _data = yaml.safe_load(_content)
+            # Convert
+            # noinspection PyBroadException
+            try:
+                partial_data = yaml.safe_load(content)
+            except Exception:
+                Logger.warning(TAG, f'Converting message {msg.id} to yaml failed!')
+                continue
 
-        # Ensure the data is valid
-        if not isinstance(_data, dict):
-            Logger.warning(f'RemoteConfig: Invalid data type: {type(_data)}')
-            return {}
+            # Update the real data
+            try:
+                data.update(partial_data)
+            except ValueError:
+                Logger.warning(TAG, f'Converting message {msg.id} to dict failed!')
 
-        return _data
+        # Warn if content could not be loaded
+        if not data:
+            Logger.warning(f'RemoteConfig: No config content found in the channel {ch}')
+
+        return data
 
     def get(self, option_name: str, default=None):
         """ Return a value from the remote config. """
