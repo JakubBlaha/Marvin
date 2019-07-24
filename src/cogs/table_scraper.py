@@ -3,23 +3,25 @@ import os
 from datetime import datetime
 from operator import itemgetter
 from tempfile import gettempdir
-from typing import Iterable
 
 import mechanize
 import tabula
 from PIL import Image
 from discord import Embed, File
+from discord.ext import tasks
 from discord.ext.commands import Cog, Context, command
 
+from cache import Cache
 from client import FreefClient
-from config import Config
+from config import Config, MOODLE_USERNAME, MOODLE_PASSWORD
 from logger import Logger
-from preload import Preloader
 from utils import ListToImageBuilder
 
 BASE_URL = 'https://moodle3.gvid.cz/course/view.php?id=3'
 DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/freefbot')
 MAX_ROWS_IN_PART = 4
+
+TAG = 'TableScraper'
 
 
 def download_pdf(username, password):
@@ -51,15 +53,15 @@ def download_pdf(username, password):
             return _local_path
 
 
-def pdf_to_list(path: str) -> str:
+def pdf_to_list(path: str) -> list:
     """ Read a pdf and return as a table. """
-    Logger.info(f'Command: Reading {path}..')
+    Logger.info(TAG, f'Reading {path} ...')
     data = tabula.read_pdf(path, 'json')[0]['data']
 
     return data
 
 
-def date_from_fname(fname: str) -> str:
+def date_from_pdf_name(fname: str) -> str:
     """ Return a date as a str. Example: 010119.ext -> 1. 1. 0019. """
     _date_enc = os.path.splitext(fname)[0]
     day, month, year = _date_enc[:2], _date_enc[2:4], _date_enc[4:]
@@ -228,19 +230,65 @@ class TableData:
 
 
 class TableScraper(Cog):
+    CACHE_SECONDS = 600
+    CACHE_KEY = 'substits'
+
     bot: FreefClient
-    _preloader: Preloader
+    data: list
+    data_date: str  # User will be told the date the data belongs to
 
     def __init__(self, bot: FreefClient):
         self.bot = bot
-        self._preloader = Preloader(bot.loop, self.preloader_feed,
-                                    (Config.username, Config.password))
+        self.data = []
+        self.data_date = 'Yet to load'
 
-    @staticmethod
-    def preloader_feed(username: str, password: str) -> Iterable:
-        """ The function to run in the preloader. """
-        _local_path = download_pdf(username, password)
-        return _local_path, pdf_to_list(_local_path)
+        # Start loop
+        self.bot.add_listener(self.on_ready)
+
+    async def on_ready(self):
+        self.reload_data.start()
+
+    # noinspection PyCallingNonCallable
+    @tasks.loop(seconds=CACHE_SECONDS)
+    async def reload_data(self):
+        # Do not download if cached data is unexpired
+        # Used when bot restarts frequently
+        cached = Cache.load(self.CACHE_KEY, self.__class__.CACHE_SECONDS)
+        if cached:
+            self.data, self.data_date = cached
+            Logger.info(TAG, 'Retrieved cached data.')
+            return
+
+        # Download
+        path = download_pdf(Config.get(MOODLE_USERNAME), Config.get(MOODLE_PASSWORD))
+
+        # Convert
+        data = pdf_to_list(path)
+
+        # Clean up
+        Logger.info(TAG, 'Preparing data ...')
+        table = TableData(data)
+        table.extract_table_cols(self.bot['substits_col_indexes'] or [])
+        table.add_headers(self.bot['substits_headers'] or [])
+        table.replace_contents(self.bot['substits_replace_contents'] or {})
+        table.process_arrows()
+        table.v_split_cells([0])
+        table.v_merge_cells()
+
+        # Save for later use
+        self.data = table.data
+
+        # Save date
+        filename = os.path.basename(path)
+        numbers = os.path.splitext(filename)[0]
+        day, month, year = numbers[:2], numbers[2:4], numbers[4:]
+        self.data_date = f'{day}. {month}. {datetime.now().year // 100}{year}'
+
+        Logger.info(TAG, 'Done')
+
+        # We are caching the data and the date simultaneously
+        # to ensure that they match
+        Cache.cache(self.CACHE_KEY, (self.data, self.data_date))
 
     @command(aliases=['supl', 'suply'])
     async def substits(self, ctx: Context, target='3.F'):
@@ -256,44 +304,29 @@ class TableScraper(Cog):
 
         await ctx.trigger_typing()
 
-        _local_path, _data = self._preloader.output
-        _fname = os.path.split(_local_path)[1]
-
-        # Process the data
-        _table = TableData(_data)
-        _table.extract_table_cols(self.bot['substits_col_indexes'] or [])
-        _table.add_headers(self.bot['substits_headers'] or [])
-        _table.replace_contents(self.bot['substits_replace_contents'] or {})
-        _table.process_arrows()
-        _table.v_split_cells([0])
-        _table.v_merge_cells()
-
-        _headers = _table.data[:1]
-        _data = _table.data[1:]
-
-        _embed = Embed()
+        headers = self.data[:1]
+        data = self.data[1:]
 
         # Filter data
         if target not in ('all', '.'):
-            _data = list(filter(lambda x: x[0] == target, _data))
+            data = list(filter(lambda x: x[0] == target, data))
 
-        # Embed
-        if not _data:
-            _embed.title = '**No substitutions!**   (╯°□°）╯︵ ┻━┻'
+        # Send embed
+        embed = Embed()
+        if not data:
+            embed.title = '**No substitutions!**   (╯°□°）╯︵ ┻━┻'
 
-        _embed.description = f'{ctx.author.display_name}, `{ctx.message.content}`'
-        await ctx.send(embed=_embed)
-
-        if not _data:
-            return
+        embed.description = f'{ctx.author.display_name}, `{ctx.message.content}`'
+        await ctx.send(embed=embed)
 
         # Generate, send the images
-        _builder = ListToImageBuilder(_headers + _data,
-                                      footer=date_from_fname(_fname))
-        _builder.set_header()
+        if not data:
+            return
 
-        # Send chunks
-        for img in _builder.generate():
+        builder = ListToImageBuilder(headers + data, footer=self.data_date)
+        builder.set_headers_font()
+
+        for img in builder.generate():
             await ctx.send(file=get_file(img))
 
 

@@ -123,7 +123,7 @@ class ListToImageBuilder:
                 self._row_sizes[ri] = max(self._row_sizes[ri], _h)
                 self._col_sizes[ci] = max(self._col_sizes[ci], _w)
 
-    def set_header(self, font: ImageFont.FreeTypeFont = None, row=0):
+    def set_headers_font(self, font: ImageFont.FreeTypeFont = None, row=0):
         """ Sets the header. """
         font = font or self._fnt_header
         for i in range(0, self._width):

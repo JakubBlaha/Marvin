@@ -1,70 +1,47 @@
-from typing import Callable
-from time import time
-import yaml
 import os
+from time import time
+
+import yaml
+
+from logger import Logger
 
 CACHE_PATH = 'cache/cache.yaml'
+TAG = 'Cache'
 
 
-class Cacher:
-    """ Cache the output of a function. """
-
-    _expire_time: int
-    _func: Callable
-    _args: tuple
-    _kw: dict
-
-    def __init__(self,
-                 func: Callable,
-                 args: tuple = (),
-                 kw: dict = None,
-                 expire_time: int = 600):
-        self._expire_time = expire_time
-        self._func = func
-        self._args = args
-        self._kw = kw or {}
-
-    @property
-    def output(self):
-        return LocalCacher.load(self._func.__name__,
-                                self._expire_time) or self.call()
-
-    def call(self, *args, **kw):
-        """
-        Call the function. If no args or kwargs are given, use the ones that
-        were specified on instantiation. Cache the output. Return the output.
-        """
-
-        if not (args and kw):
-            args = self._args
-            kw = self._kw
-
-        # Call
-        _output = self._func(*args, **kw)
-
-        # Cache to drive
-        LocalCacher.cache(self._func.__name__, _output)
-
-        return _output
-
-
-class LocalCacher:
+class Cache:
     @classmethod
     def cache(cls, key, value):
-        _data = cls._read_cache()
-        _data.update(cls._gen_cache(key, value))
-        cls._write_cache(_data)
+        """ Cache a key: value pair which can be retrieved later. """
+        data = cls._read_cache()
+        data[key] = {'stamp': time(), 'value': value}
+
+        cls._write_cache(data)
+
+        Logger.info(TAG, f'Cached {key}={value}')
 
     @classmethod
-    def load(cls, key, lasts: int):
-        _data = cls._read_cache()
-        _cached = _data.get(key, {})
-        return _cached.get(
-            'value',
-            None) if time() - _cached.get('stamp', 0) < lasts else None
+    def load(cls, key, lasts_seconds: int):
+        """ Return the cached value for the key. None if expired. """
+        data = cls._read_cache()
+        entry = data.get(key, {})
+
+        # Log if entry not found
+        if not entry:
+            Logger.info(TAG, f'No cached value for key {key} found')
+            return
+
+        if time() - entry.get('stamp', 0) < lasts_seconds:
+            Logger.info(TAG, f'Returned cached value for key {key}')
+            return entry.get('value')
+        else:
+            Logger.info(TAG, f'The cached value for key {key}')
+            return
 
     @staticmethod
     def _read_cache() -> dict:
+        Logger.info(TAG, 'Reading cache ...')
+
         try:
             with open(CACHE_PATH) as f:
                 return yaml.safe_load(f)
@@ -78,6 +55,4 @@ class LocalCacher:
         with open(CACHE_PATH, 'w') as f:
             yaml.safe_dump(cache, f, default_flow_style=True)
 
-    @staticmethod
-    def _gen_cache(key, value) -> dict:
-        return {key: {'stamp': time(), 'value': value}}
+        Logger.info(TAG, 'Updated cache')

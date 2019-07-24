@@ -11,9 +11,9 @@ from embed_excluder import EmbedExcluder
 from events_notifier import EventsNotifier
 from logger import Logger
 from message_fixer import MessageFixer
+from remote_config import LOCALE
 from remote_config import RemoteConfig
 from twitch_client import TwitchClient
-from remote_config import LOCALE
 
 
 class FreefClient(
