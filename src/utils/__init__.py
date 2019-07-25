@@ -46,7 +46,7 @@ class Datetime:
 
         # Replace month name with their abbr
         month_substring = string.split()[-1]
-        for abbr in month_abbrs:
+        for abbr in reversed(list(month_abbrs)):
             if String.contains_scattered(month_substring, abbr):
                 string = string.replace(month_substring, abbr)
                 break
@@ -80,7 +80,7 @@ class EmbedUtils:
         now = datetime.datetime.now()
 
         date = Datetime.from_string(embed.description)  # Convert
-        date.replace(year=now.year)  # Set the current year
+        date = date.replace(year=now.year)  # Set the current year
 
         return date < now.date()
 
