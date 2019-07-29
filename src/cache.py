@@ -38,6 +38,17 @@ class Cache:
             Logger.info(TAG, f'The cached value for key {key}')
             return
 
+    @classmethod
+    def clear_entry(cls, key):
+        """ Remove the specified entry from the cache. Return the cached value. None if not found. """
+        data = cls._read_cache()
+        value = data.pop(key, {})
+        cls._write_cache(data)
+
+        Logger.info(TAG, f'Cleared entry {key}')
+
+        return value.get('value')
+
     @staticmethod
     def _read_cache() -> dict:
         Logger.info(TAG, 'Reading cache ...')

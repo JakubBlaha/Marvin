@@ -3,7 +3,6 @@ import io
 import os
 import shutil
 import sys
-import time
 
 import colorama
 from discord import Client, TextChannel

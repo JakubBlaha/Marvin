@@ -7,8 +7,6 @@ from auto_reactor import AutoReactor
 from cleverbot_client import CleverbotClient
 from config import GUILD_ID, Config
 from control_panel_client import ControlPanelClient
-from embed_excluder import EmbedExcluder
-from events_notifier import EventsNotifier
 from logger import Logger
 from message_fixer import MessageFixer
 from remote_config import LOCALE
@@ -21,9 +19,7 @@ class FreefClient(
     ControlPanelClient,
     AutoReactor,
     CleverbotClient,
-    EventsNotifier,
     MessageFixer,
-    EmbedExcluder,
     RemoteConfig,
     Bot):
     _oos = False  # Out of service
@@ -36,12 +32,15 @@ class FreefClient(
         self.load_extension('commands')
         self.load_extension('cogs.table_scraper')
         self.load_extension('embeds')
+        self.load_extension('cogs.embed_manager')
 
-    async def on_ready(self):
+    async def on_connect(self):
+        await super().on_connect()
+
         self.guild = self.get_guild(Config.get(GUILD_ID))
 
+    async def on_ready(self):
         # Set the locale
-        loc = self[LOCALE]
         locale.setlocale(locale.LC_ALL, self[LOCALE])
 
         await super().on_ready()

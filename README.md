@@ -130,11 +130,14 @@ We can also use aliases for the subcommands. For example `t` will become `title`
 ![building_using_reactions](res/demo/embed_builder2.png)
 >At least creating the embed is fun!
 
-### The Embed excluder
-The *Embed excluder* will add the ❌ reaction to any outdated embed found in channels with the 🔔 emoji in their topic. Can be used as a sort of a indicator to remove outdated embeds more easily.
+### The Embed Manager
+At the moment, the bot can add ❌ reactions to seemingly outdated embeds in channels with the 🔔 emoji in their topic and list the upcoming events in the `#general`channel topic. We will implement more features soon!
 
 ![embed_with_an_x_mark](res/demo/embed_excluder.png)
->Pretty late to remove the embed actually ☺
+>Pretty late to remove the embed actually. ☺
+
+![event_notifier](res/demo/event_notifier.png)
+>I would forget, if my bot haven't told me.
 
 ### The Cleverbot integration
 This feature is just for fun, anything else. Simply tag the bot in your message and tell him something dumb. 
@@ -149,12 +152,6 @@ The Command panel is a feature, which provides the ability to execute commands m
 >Access your timetable more easily
 
 *The Command panel is a channel-specific feature, so use it in a dedicated channel only.*
-
-### The Event notifier
-The Event notifier will periodically scan each channel having the 🔔 emoji in it's topic every 10 minutes and edit the `general` channel's description so it contains a summary of all of the scanned embeds.
-
-![event_notifier](res/demo/event_notifier.png)
->I would forget, if my bot didn't tell me. Really. 😉
 
 ### The `!substits` command
 The table scraper is a sort of a personal feature, but can be easily modified if needed. The scraper downloads a pdf file from moodle, extracts a table from it and sends the data as a set of constructed images. All of the configuration but the *username* and *password*, which are stored in the *local config*, are stored in the *remote config*.
