@@ -11,11 +11,9 @@ from logger import Logger
 from message_fixer import MessageFixer
 from remote_config import LOCALE
 from remote_config import RemoteConfig
-from twitch_client import TwitchClient
 
 
 class FreefClient(
-    TwitchClient,
     ControlPanelClient,
     AutoReactor,
     CleverbotClient,
@@ -33,6 +31,7 @@ class FreefClient(
         self.load_extension('cogs.table_scraper')
         self.load_extension('embeds')
         self.load_extension('cogs.embed_manager')
+        self.load_extension('cogs.emotes')
 
     async def on_connect(self):
         await super().on_connect()
