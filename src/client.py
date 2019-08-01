@@ -2,9 +2,10 @@ import io
 import locale
 import logging
 import sys
+import traceback
 
-from discord import Game, Guild, Status
-from discord.ext.commands import Bot
+from discord import Game, Guild, Status, Embed
+from discord.ext.commands import Bot, Context
 
 from auto_reactor import AutoReactor
 from cleverbot_client import CleverbotClient
@@ -57,6 +58,26 @@ class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer
         # Log
         await self.reload_presence()
         logging.info(f'Client: Ready!')
+
+    async def on_command_error(self, ctx: Context, exception):
+        # Prepare embed title, part of the description
+        embed = Embed(title='⚠ Command error',
+                      description=f'There was an error executing the command `{ctx.message.clean_content}`. '
+                                  'Please tag @bot_developer and tell them what has happened.')
+
+        # Get the traceback as how it would show in the stdout
+        buffer = io.StringIO()
+        traceback.print_exception(None, exception, exception.__traceback__, file=buffer)
+
+        # Add the formatted traceback into the embed description,
+        # account the current description length and fill the rest
+        embed.description += f'```{buffer.getvalue()[-(2000 - len(embed.description)):]}```'
+
+        # Finally send the embed
+        await ctx.send(embed=embed)
+
+        # Also print to the stderr
+        await super().on_command_error(ctx, exception)
 
     async def reload_presence(self):
         await self.change_presence(activity=Game(
