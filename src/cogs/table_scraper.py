@@ -30,26 +30,26 @@ def download_pdf(username, password):
     os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
     # Setup the browser
-    logging.info('Mechanize: Preparing the browser..')
+    logger.info('Preparing the browser..')
     br = mechanize.Browser()
 
-    logging.info('Mechanize: Loading the initial page..')
+    logger.info('Loading the initial page..')
     br.open(BASE_URL)
 
     # Fill in the forms
-    logging.info('Mechanize: Filling in the form..')
+    logger.info('Filling in the form..')
     br.select_form(nr=0)
     br['username'] = username
     br['password'] = password
     br.submit()
 
     # Download the pdf
-    logging.info('Mechanize: Downloading the pdf..')
+    logger.info('Downloading the pdf..')
     for link in br.links():
         if '.pdf' in link.text:
             _local_path = os.path.join(DOWNLOAD_PATH, link.text)
             br.retrieve(link.url, _local_path)
-            logging.info(f'Mechanize: The pdf wa downloaded to {_local_path}')
+            logger.info(f'The pdf wa downloaded to {_local_path}')
             return _local_path
 
 
