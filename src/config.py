@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -18,6 +19,8 @@ STATUS = 'status'
 
 REQUIRED_ENTRIES = [TOKEN, GUILD_ID]
 
+logger = logging.getLogger('Config')
+
 
 class ConfigMeta(type):
     _FILENAME = 'config.yaml'
@@ -30,7 +33,7 @@ class ConfigMeta(type):
             cls.ensure_file()
             cls.reload()
         except Exception as e:
-            print('Failed to read the config file! Exiting.. \n', e)
+            logger.critical('Failed to read the config file! Exiting.. \n', e)
             sys.exit()
 
     def reload(cls):

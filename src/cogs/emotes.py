@@ -1,4 +1,5 @@
 import json
+import logging
 from urllib.request import urlopen
 
 from bs4 import BeautifulSoup
@@ -9,10 +10,9 @@ from discord.ext.commands import Cog, Context, command
 from cache import Cache
 from client import FreefClient
 from decorators import del_invoc
-from logger import Logger
 from timeout_message import TimeoutMessage
 
-TAG = 'EmoteCog'
+logger = logging.getLogger('EmoteCog')
 
 
 class EmoteCog(Cog):
@@ -41,7 +41,7 @@ class EmoteCog(Cog):
             self.emotes = cached
             return
 
-        Logger.info(TAG, 'Reloading emotes ...')
+        logger.info('Reloading emotes ...')
 
         self.emotes.clear()
 
@@ -60,11 +60,12 @@ class EmoteCog(Cog):
             url = url.replace('1x', '3x')  # get the largest possible size
             self.emotes[name] = url
 
-            # guild custom emotes
+        # guild custom emotes
+        # TODO we can use guild.emojis instead
         for emoji in self.bot.emojis:
             self.emotes[emoji.name] = emoji.url
 
-        Logger.info(TAG, 'Done')
+        logger.info('Done')
 
         # Cache
         Cache.cache(self.CACHE_KEY, self.emotes)

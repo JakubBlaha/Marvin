@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import logging
 from typing import Union, Optional, AsyncIterable
 
 import discord.utils
@@ -11,9 +12,8 @@ from discord.ext.commands import Cog, command, Context
 import utils
 from client import FreefClient
 from decorators import del_invoc, start_when_needed
-from logger import Logger
 
-TAG = 'EmbedManager'
+logger = logging.getLogger('EmbedManager')
 
 
 class DatedEmbed(Embed):
@@ -97,9 +97,9 @@ class EmbedManager(Cog):
                     if reaction.emoji == self.REACTION_OUTDATED:
                         async for user in reaction.users():
                             await embed.msg.remove_reaction(self.REACTION_OUTDATED, user)
-                            Logger.info(TAG, f'Removed {reaction.emoji} from user {user} on embed {embed.title}')
+                            logger.info(f'Removed {reaction.emoji} from user {user} on embed {embed.title}')
 
-        Logger.info(TAG, 'Marked outdated embeds.')
+        logger.info('Marked outdated embeds.')
 
     # noinspection PyUnusedLocal
     @command()
@@ -124,9 +124,9 @@ class EmbedManager(Cog):
         channel: TextChannel = discord.utils.get(self.bot.guild.text_channels, name='general')
 
         # Update the topic
-        await channel.edit(reason=TAG, topic=topic)
+        await channel.edit(reason=logger.name, topic=topic)
 
-        Logger.info(TAG, 'Edited topic based on the upcoming events.')
+        logger.info('Edited topic based on the upcoming events.')
 
     # noinspection PyUnusedLocal
     @command()
@@ -145,7 +145,7 @@ class EmbedManager(Cog):
         # async for embed in self.embeds:
         #       ... do your stuff ...
 
-        Logger.info(TAG, 'Synced embeds with google calendar. #TODO')  # TODO Remove TODO.
+        logger.info('Synced embeds with google calendar. #TODO')  # TODO Remove TODO.
 
     # noinspection PyUnusedLocal
     @command(hidden=True)  # TODO set hidden to False after implementation.

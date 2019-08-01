@@ -18,7 +18,7 @@ class Embed:
     )
 
     COMMAND_ERROR = discord.Embed(
-        title='⚠ Error occured!',
+        title='⚠ Error occurred!',
         description=
         'There was an error executing the command. Please tell the @bot_developer or contribute to the project.'
     )

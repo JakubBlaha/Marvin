@@ -1,32 +1,33 @@
-from asyncio import sleep, get_event_loop
+import logging
+from asyncio import get_event_loop
 
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver import Chrome, ChromeOptions
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
 
-from logger import Logger
+logger = logging.getLogger('Cleverbot')
 
 
 class Cleverbot(Chrome):
     def __init__(self):
         # Initialize options
-        Logger.info('Cleverbot: Initializing driver options..')
+        logger.debug('Initializing driver options..')
         _opts = ChromeOptions()
         _opts.add_argument('--headless')
         _opts.add_argument('--log-level=3')  # fatal
 
         # Initialize the browser
-        Logger.info('Cleverbot: Initializing browser..')
+        logger.debug('Initializing browser..')
         super().__init__(options=_opts)
 
         # Get the url
-        Logger.info('Cleverbot: Loading cleverbot..')
+        logger.debug('Loading cleverbot..')
         self.get('https://www.cleverbot.com')
 
         # Locate the input box
-        Logger.info('Cleverbot: Locating elements..')
+        logger.debug('Locating elements..')
         self.input_box = self.find_element_by_xpath(
             '//*[@id="avatarform"]/input[1]')
 

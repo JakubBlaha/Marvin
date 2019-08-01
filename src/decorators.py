@@ -1,6 +1,7 @@
 import asyncio
 import gc
 import inspect
+import logging
 import time
 
 from discord import Embed, NotFound, Role
@@ -8,7 +9,6 @@ from discord.ext import tasks
 from discord.ext.commands import Context
 
 from cache import Cache
-from logger import Logger
 from timeout_message import TimeoutMessage
 
 
@@ -89,6 +89,8 @@ def start_when_needed(*args, **kw):
     :param kw: The kwargs to use when starting the loop.
     """
 
+    logger = logging.getLogger('LoopStarter')
+
     def decorator(loop: tasks.Loop):
         # Inject an instance of the class when instantiated to the loop
         _current_frame = inspect.currentframe()
@@ -131,7 +133,7 @@ def start_when_needed(*args, **kw):
 
         if not entry:
             loop.start(*args, **kw)
-            Logger.info(f'LoopStarter: {loop.coro.__name__} will be started immediately.')
+            logger.info(f'{loop.coro.__name__} will be started immediately.')
             return loop
 
         last_executed = int(entry.get('stamp', 0))
@@ -143,7 +145,7 @@ def start_when_needed(*args, **kw):
             await asyncio.sleep(will_last_seconds)
             loop.start()
 
-        Logger.info(f'LoopStarter: {loop.coro.__name__} was scheduled to start in {will_last_seconds} seconds.')
+        logger.info(f'{loop.coro.__name__} was scheduled to start in {will_last_seconds} seconds.')
         loop.loop.create_task(starter())
 
         return loop

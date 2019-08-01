@@ -1,8 +1,9 @@
+import logging
+
 import yaml
 from discord import Client, TextChannel, Guild, utils
 
 from config import Config, GUILD_ID
-from logger import Logger
 
 # Constants
 LOCALE = 'locale'
@@ -18,6 +19,8 @@ HOMEWORK_CHANNEL_ID = 'homework_channel_id'
 TIMETABLE = 'timetable'
 
 TAG = 'RemoteConfig'
+
+logger = logging.getLogger('RemoteConfig')
 
 
 class RemoteConfig(Client):
@@ -41,8 +44,7 @@ class RemoteConfig(Client):
         pass
 
     async def reload_config(self, channel_name='config'):
-        Logger.info(
-            f'RemoteConfig: Reloading the config from channel {channel_name}')
+        logger.info(f'Reloading the config from channel {channel_name}')
 
         # Get the config channel
         await self.fetch_guild(Config.get(GUILD_ID))
@@ -68,27 +70,25 @@ class RemoteConfig(Client):
             try:
                 partial_data = yaml.safe_load(content)
             except Exception:
-                Logger.warning(TAG, f'Converting message {msg.id} to yaml failed!')
+                logger.warning(f'Converting message {msg.id} to yaml failed!')
                 continue
 
             # Update the real data
             try:
                 data.update(partial_data)
             except ValueError:
-                Logger.warning(TAG, f'Converting message {msg.id} to dict failed!')
+                logger.warning(f'Converting message {msg.id} to dict failed!')
 
         # Warn if content could not be loaded
         if not data:
-            Logger.warning(f'RemoteConfig: No config content found in the channel {ch}')
+            logger.warning(f'No config content found in the channel {ch}')
 
         return data
 
     def get(self, option_name: str, default=None):
         """ Return a value from the remote config. """
         if not self.data:
-            Logger.warning(
-                f'RemoteConfig: Attempt to get value {option_name} before the '
-                'data could be loaded!')
+            logger.warning(f'Attempt to get value {option_name} before the ''data could be loaded!')
 
         return self.data.get(option_name, default)
 

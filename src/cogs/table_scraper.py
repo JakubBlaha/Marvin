@@ -1,4 +1,5 @@
 import io
+import logging
 import os
 from datetime import datetime
 from operator import itemgetter
@@ -14,14 +15,13 @@ from discord.ext.commands import Cog, Context, command
 from cache import Cache
 from client import FreefClient
 from config import Config, MOODLE_USERNAME, MOODLE_PASSWORD
-from logger import Logger
 from utils import ListToImageBuilder
 
 BASE_URL = 'https://moodle3.gvid.cz/course/view.php?id=3'
 DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/freefbot')
 MAX_ROWS_IN_PART = 4
 
-TAG = 'TableScraper'
+logger = logging.getLogger('TableScraper')
 
 
 def download_pdf(username, password):
@@ -30,32 +30,32 @@ def download_pdf(username, password):
     os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
     # Setup the browser
-    Logger.info('Mechanize: Preparing the browser..')
+    logging.info('Mechanize: Preparing the browser..')
     br = mechanize.Browser()
 
-    Logger.info('Mechanize: Loading the initial page..')
+    logging.info('Mechanize: Loading the initial page..')
     br.open(BASE_URL)
 
     # Fill in the forms
-    Logger.info('Mechanize: Filling in the form..')
+    logging.info('Mechanize: Filling in the form..')
     br.select_form(nr=0)
     br['username'] = username
     br['password'] = password
     br.submit()
 
     # Download the pdf
-    Logger.info('Mechanize: Downloading the pdf..')
+    logging.info('Mechanize: Downloading the pdf..')
     for link in br.links():
         if '.pdf' in link.text:
             _local_path = os.path.join(DOWNLOAD_PATH, link.text)
             br.retrieve(link.url, _local_path)
-            Logger.info(f'Mechanize: The pdf wa downloaded to {_local_path}')
+            logging.info(f'Mechanize: The pdf wa downloaded to {_local_path}')
             return _local_path
 
 
 def pdf_to_list(path: str) -> list:
     """ Read a pdf and return as a table. """
-    Logger.info(TAG, f'Reading {path} ...')
+    logger.info(f'Reading {path} ...')
     data = tabula.read_pdf(path, 'json')[0]['data']
 
     return data
@@ -256,7 +256,7 @@ class TableScraper(Cog):
         cached = Cache.load(self.CACHE_KEY, self.__class__.CACHE_SECONDS)
         if cached:
             self.data, self.data_date = cached
-            Logger.info(TAG, 'Retrieved cached data.')
+            logger.info('Retrieved cached data.')
             return
 
         # Download
@@ -266,7 +266,7 @@ class TableScraper(Cog):
         data = pdf_to_list(path)
 
         # Clean up
-        Logger.info(TAG, 'Preparing data ...')
+        logger.info('Preparing data ...')
         table = TableData(data)
         table.extract_table_cols(self.bot['substits_col_indexes'] or [])
         table.add_headers(self.bot['substits_headers'] or [])
@@ -284,7 +284,7 @@ class TableScraper(Cog):
         day, month, year = numbers[:2], numbers[2:4], numbers[4:]
         self.data_date = f'{day}. {month}. {datetime.now().year // 100}{year}'
 
-        Logger.info(TAG, 'Done')
+        logger.info('Done')
 
         # We are caching the data and the date simultaneously
         # to ensure that they match

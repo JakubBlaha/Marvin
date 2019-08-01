@@ -1,12 +1,12 @@
+import logging
 import os
 from time import time
 
 import yaml
 
-from logger import Logger
-
 CACHE_PATH = 'cache/cache.yaml'
-TAG = 'Cache'
+
+logger = logging.getLogger('Cache')
 
 
 class Cache:
@@ -18,7 +18,7 @@ class Cache:
 
         cls._write_cache(data)
 
-        Logger.info(TAG, f'Cached {key}={value}')
+        logger.debug(f'Cached {key}={value}')
 
     @classmethod
     def load(cls, key, lasts_seconds: int):
@@ -28,14 +28,14 @@ class Cache:
 
         # Log if entry not found
         if not entry:
-            Logger.info(TAG, f'No cached value for key {key} found')
+            logger.debug(f'No cached value for key {key} found')
             return
 
         if time() - entry.get('stamp', 0) < lasts_seconds:
-            Logger.info(TAG, f'Returned cached value for key {key}')
+            logger.debug(f'Returned cached value for key {key}')
             return entry.get('value')
         else:
-            Logger.info(TAG, f'The cached value for key {key}')
+            logger.debug(f'The cached value for key {key}')
             return
 
     @classmethod
@@ -45,13 +45,13 @@ class Cache:
         value = data.pop(key, {})
         cls._write_cache(data)
 
-        Logger.info(TAG, f'Cleared entry {key}')
+        logger.debug(f'Cleared entry {key}')
 
         return value.get('value')
 
     @staticmethod
     def _read_cache() -> dict:
-        Logger.info(TAG, 'Reading cache ...')
+        logger.debug('Reading cache ...')
 
         try:
             with open(CACHE_PATH) as f:
@@ -66,4 +66,4 @@ class Cache:
         with open(CACHE_PATH, 'w') as f:
             yaml.safe_dump(cache, f, default_flow_style=True)
 
-        Logger.info(TAG, 'Updated cache')
+        logger.debug('Updated cache')

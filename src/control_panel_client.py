@@ -1,10 +1,10 @@
+import logging
 from asyncio import sleep
 
 from discord import TextChannel, Message, Embed, RawReactionActionEvent
 from discord.errors import NotFound
 from discord.ext.commands import Bot
 
-from logger import Logger
 from remote_config import RemoteConfig
 
 EMOJI_COMMAND_MAP = {
@@ -17,6 +17,8 @@ EMOJI_COMMAND_MAP = {
 }
 
 TAG = 'CommandPanel'
+
+logger = logging.getLogger('CommandPanel')
 
 
 class ControlPanelClient(RemoteConfig, Bot):
@@ -36,20 +38,20 @@ class ControlPanelClient(RemoteConfig, Bot):
         async for msg in self._channel.history():
             if msg.embeds and msg.embeds[0].to_dict() == embed.to_dict():
                 self._msg = await self._channel.fetch_message(msg.id)
-                Logger.info(TAG, f'Adopted message {msg.id}')
+                logger.info(f'Adopted message {msg.id}')
                 break
             else:
                 await msg.delete()
         else:
             # Send the message if no matching one was found
-            Logger.info(TAG, 'Could not find a message that could be adopted. Will send a new one ...')
+            logger.info('Could not find a message that could be adopted. Will send a new one ...')
             self._msg = await self._channel.send(embed=embed)
 
         # Add reactions
-        Logger.info(TAG, 'Adding reactions ...')
+        logger.info('Adding reactions ...')
         await self.reset_reactions()
 
-        Logger.info(TAG, 'Initialization completed.')
+        logger.info('Initialization completed.')
 
     async def reset_reactions(self):
         # msg: Message = await self._channel.fetch_message(self._msg.id)

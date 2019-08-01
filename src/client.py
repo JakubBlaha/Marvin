@@ -1,4 +1,7 @@
+import io
 import locale
+import logging
+import sys
 
 from discord import Game, Guild, Status
 from discord.ext.commands import Bot
@@ -7,19 +10,26 @@ from auto_reactor import AutoReactor
 from cleverbot_client import CleverbotClient
 from config import GUILD_ID, Config
 from control_panel_client import ControlPanelClient
-from logger import Logger
 from message_fixer import MessageFixer
 from remote_config import LOCALE
 from remote_config import RemoteConfig
 
+# Logging
+log_format = '[%(levelname)-8s] [%(name)-16s] %(message)s'
+logging.basicConfig(level=logging.INFO, format=log_format, stream=sys.stdout)
+logging.getLogger('discord.gateway').setLevel(logging.ERROR)
+logging.getLogger('discord.client').setLevel(logging.ERROR)
 
-class FreefClient(
-    ControlPanelClient,
-    AutoReactor,
-    CleverbotClient,
-    MessageFixer,
-    RemoteConfig,
-    Bot):
+# !log handler
+root = logging.getLogger()
+handler = logging.StreamHandler(io.StringIO())
+handler.setFormatter(logging.Formatter(log_format))
+root.addHandler(handler)
+
+logger = logging.getLogger('Client')
+
+
+class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer, RemoteConfig, Bot):
     _oos = False  # Out of service
     guild: Guild
 
@@ -46,7 +56,7 @@ class FreefClient(
 
         # Log
         await self.reload_presence()
-        Logger.info(f'Client: Ready!')
+        logging.info(f'Client: Ready!')
 
     async def reload_presence(self):
         await self.change_presence(activity=Game(
@@ -63,15 +73,10 @@ class FreefClient(
 
         self._oos = not self._oos
 
-        Logger.info(f'Client: Toggled out of service {self._oos}')
+        logging.info(f'Client: Toggled out of service {self._oos}')
 
 
 if __name__ == '__main__':
     # Client
     client = FreefClient(command_prefix='!')
-
-    # Logger
-    Logger.client = client
-
-    # Run client
     client.run(Config.token)

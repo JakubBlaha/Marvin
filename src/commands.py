@@ -1,4 +1,6 @@
 import datetime
+import logging
+import traceback
 from calendar import day_abbr
 from random import randint, random
 
@@ -11,9 +13,10 @@ import utils
 from client import FreefClient
 from decorators import del_invoc, required_role
 from emojis import Emojis
-from logger import Logger
 from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL, TIMETABLE
 from timeout_message import TimeoutMessage
+
+logger = logging.getLogger('Commands')
 
 
 async def reply_command(ctx: Context, send=True, include_invoc=True, include_author=True, **kw) -> Embed:
@@ -165,8 +168,9 @@ class Commands(Cog):
         Return the current log consisting of sys.stdout and sys.stderr.
         """
 
-        await reply_command(ctx, description=f'```{Logger.get_log()[-1980:]}```')
-        Logger.info(f'Command: Sent logs to `{ctx.channel.name}` channel')
+        log = logging.getLogger().handlers[1].stream.getvalue()
+        await reply_command(ctx, description=f'```{log[-2000:]}```')
+        logger.info(f'Sent logs to `{ctx.channel.name}` channel')
 
     @command()
     @del_invoc

@@ -1,18 +1,18 @@
+import logging
 import re
 
 from discord import Client, Message
 
 from cleverbot import Cleverbot
-from logger import Logger
+
+logger = logging.getLogger('CleverbotClient')
 
 
 class CleverbotClient(Client):
-    TAG = 'CleverbotClient'
-
     cb: Cleverbot = None
 
     async def _init_cb(self):
-        Logger.info(self.TAG, 'Initializing ...')
+        logger.info('Initializing ...')
         self.cb = await self.loop.run_in_executor(None, Cleverbot)
 
     async def on_message(self, msg: Message):
@@ -37,7 +37,7 @@ class CleverbotClient(Client):
         content = re.sub('<.*?>', '', content)
 
         # Log
-        Logger.info(self.TAG, f'Received message input: *{content}*')
+        logger.info(f'Received message input: *{content}*')
 
         # Trigger typing
         await msg.channel.trigger_typing()
@@ -46,7 +46,7 @@ class CleverbotClient(Client):
         reply = await self.cb.communicate(content)
 
         # Log
-        Logger.info(self.TAG, f'Received reply: *{reply}*')
+        logger.info(f'Received reply: *{reply}*')
 
         # Send the reply
         await msg.channel.send(reply)
