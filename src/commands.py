@@ -1,6 +1,5 @@
 import datetime
 import logging
-import traceback
 from calendar import day_abbr
 from random import randint, random
 
@@ -12,7 +11,6 @@ import common
 import utils
 from client import FreefClient
 from decorators import del_invoc, required_role
-from emojis import Emojis
 from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL, TIMETABLE
 from timeout_message import TimeoutMessage
 
@@ -232,18 +230,13 @@ class Commands(Cog):
         try:
             await ctx.channel.delete_messages(msgs)
         except HTTPException:
-            await TimeoutMessage(ctx, 5).send(common.Embed.COMMAND_ERROR)
+            await TimeoutMessage(ctx).send(common.Embed.COMMAND_ERROR)
             return
 
         # Tell the user if some messages could not be deleted
         if n > 0:
-            await TimeoutMessage(ctx, 5).send(embed=common.Embed.TOO_OLD_MESSAGES)
+            await TimeoutMessage(ctx).send(embed=common.Embed.TOO_OLD_MESSAGES)
 
 
 def setup(bot):
     bot.add_cog(Commands(bot))
-
-    async def on_ready():
-        Emojis.reload(bot)
-
-    bot.add_listener(on_ready)

@@ -55,7 +55,7 @@ class Cache:
 
         try:
             with open(CACHE_PATH) as f:
-                return yaml.safe_load(f)
+                return yaml.safe_load(f) or {}
         except FileNotFoundError:
             return {}
 

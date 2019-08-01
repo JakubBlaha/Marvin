@@ -39,6 +39,7 @@ class EmoteCog(Cog):
         cached = Cache.load(self.CACHE_KEY, self.CACHE_SECONDS)
         if cached:
             self.emotes = cached
+            logger.info('Retrieved cached emotes ...')
             return
 
         logger.info('Reloading emotes ...')
@@ -61,9 +62,11 @@ class EmoteCog(Cog):
             self.emotes[name] = url
 
         # guild custom emotes
-        # TODO we can use guild.emojis instead
-        for emoji in self.bot.emojis:
-            self.emotes[emoji.name] = emoji.url
+        await self.bot.wait_until_ready()
+
+        for emoji in self.bot.guild.emojis:
+            # noinspection PyProtectedMember
+            self.emotes[emoji.name] = emoji.url._url
 
         logger.info('Done')
 
@@ -74,7 +77,7 @@ class EmoteCog(Cog):
     @del_invoc
     async def reload_emotes(self, ctx: Context):
         await self.reload_emotes_loop.coro()
-        await TimeoutMessage(ctx, 5).send('✅ Emotes have been successfully reloaded.')
+        await TimeoutMessage(ctx).send('✅ Emotes have been successfully reloaded.')
 
     async def on_message(self, msg: Message):
         if any([not msg.content, msg.author == self.bot.user]):
