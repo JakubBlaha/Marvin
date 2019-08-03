@@ -1,3 +1,7 @@
+import io
+from typing import Union, Generator
+
+import discord
 from PIL import Image, ImageDraw, ImageFont
 from PIL.ImageFont import FreeTypeFont
 
@@ -109,6 +113,10 @@ class ListToImageBuilder:
         self._col_sizes = [0] * self._width
         self._row_sizes = [0] * self._height
 
+        # Make sure all rows are the same size so we do not get an IndexError
+        for row in self.data:
+            row += [''] * (len(self.data[0]) - len(row))
+
         # Loop rows
         for ri in range(self._height):
             # Loop cells/cols
@@ -124,13 +132,27 @@ class ListToImageBuilder:
                 self._col_sizes[ci] = max(self._col_sizes[ci], _w)
 
     def set_headers_font(self, font: ImageFont.FreeTypeFont = None, row=0):
-        """ Sets the header. """
+        """ Sets the header font. """
         font = font or self._fnt_header
         for i in range(0, self._width):
             self.font_map.set_at(i, row, font)
 
-    def generate(self):
-        """ Generator yielding images from the data. """
+    def generate(self, convert_to_file=False) -> Generator[Union[discord.File, Image.Image], None, None]:
+        """ Generator yielding images from the data.
+        :param convert_to_file: Whether to directly yield discord File objects.
+        :return: File or Image
+        """
+        # Prepare converting function
+        if convert_to_file:
+            def convert(img: Image.Image):
+                _buffer = io.BytesIO()
+                img.save(_buffer, 'PNG')
+                _buffer.seek(0)
+                return discord.File(_buffer, 'img.png')
+        else:
+            def convert(img: Image.Image):
+                return img
+
         # Total image width
         _total_img_width = sum(self._col_sizes) + self.h_space
 
@@ -166,7 +188,7 @@ class ListToImageBuilder:
             self._img = self._img.crop((0, t, _total_img_width, b))
 
             # Yield chunk image
-            yield self._img
+            yield convert(self._img)
             self._reset_image()
 
         # Footer
@@ -179,7 +201,7 @@ class ListToImageBuilder:
                         font=self._fnt_footer)
         self._img = self._img.crop(
             (0, 0, _total_img_width, self._img.getbbox()[3]))
-        yield self._img
+        yield convert(self._img)
         self._reset_image()
 
     def get_chunks(self):

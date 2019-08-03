@@ -22,21 +22,26 @@ class Cache:
 
     @classmethod
     def load(cls, key, lasts_seconds: int):
-        """ Return the cached value for the key. None if expired. """
+        """ Return the cached value for the key.
+
+        :param key: The key.
+        :param lasts_seconds: The amount of seconds the value should last. None will be returned if the cached value
+            has already expired. Set to 0 if the cached value should never expire.
+        :return: Cached value for key. None if expired.
+        """
         data = cls._read_cache()
         entry = data.get(key, {})
 
         # Log if entry not found
         if not entry:
-            logger.debug(f'No cached value for key {key} found')
+            logger.debug(f'No cached value for key {key} found.')
             return
 
-        if time() - entry.get('stamp', 0) < lasts_seconds:
-            logger.debug(f'Returned cached value for key {key}')
+        if lasts_seconds == 0 or time() - entry.get('stamp', 0) < lasts_seconds:
+            logger.debug(f'Returned cached value for key {key}.')
             return entry.get('value')
-        else:
-            logger.debug(f'The cached value for key {key}')
-            return
+
+        logger.debug(f'The cached value for key {key} has expired.')
 
     @classmethod
     def clear_entry(cls, key):

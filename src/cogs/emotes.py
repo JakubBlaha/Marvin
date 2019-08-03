@@ -5,12 +5,14 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 from discord import Embed, Message
 from discord.ext import tasks
-from discord.ext.commands import Cog, Context, command
+from discord.ext.commands import Cog, Context, group
 
 from cache import Cache
 from client import FreefClient
+from commands import reply_command
 from decorators import del_invoc
 from timeout_message import TimeoutMessage
+from utils import ListToImageBuilder
 
 logger = logging.getLogger('EmoteCog')
 
@@ -34,12 +36,12 @@ class EmoteCog(Cog):
 
     # noinspection PyCallingNonCallable
     @tasks.loop(seconds=CACHE_SECONDS)
-    async def reload_emotes_loop(self):
+    async def reload_emotes_loop(self, force=False):
         # TODO use walrus operator in 3.8
         cached = Cache.load(self.CACHE_KEY, self.CACHE_SECONDS)
-        if cached:
+        if not force and cached:
             self.emotes = cached
-            logger.info('Retrieved cached emotes ...')
+            logger.info('Retrieved cached emotes.')
             return
 
         logger.info('Reloading emotes ...')
@@ -70,14 +72,13 @@ class EmoteCog(Cog):
 
         logger.info('Done')
 
-        # Cache
-        Cache.cache(self.CACHE_KEY, self.emotes)
-
-    @command(hidden=True)
-    @del_invoc
-    async def reload_emotes(self, ctx: Context):
-        await self.reload_emotes_loop.coro()
-        await TimeoutMessage(ctx).send('✅ Emotes have been successfully reloaded.')
+        # We can still use the cached value if new data could not be retrieved
+        cached = Cache.load(self.CACHE_KEY, 0)
+        if self.emotes:
+            # Cache
+            Cache.cache(self.CACHE_KEY, self.emotes)
+        elif cached:  # TODO change to walrus in 3.8
+            self.emotes = cached
 
     async def on_message(self, msg: Message):
         if any([not msg.content, msg.author == self.bot.user]):
@@ -107,6 +108,41 @@ class EmoteCog(Cog):
             content = content.replace(emote, '')
         if not content.strip():
             await msg.delete()
+
+    @group()
+    @del_invoc
+    async def emote(self, ctx: Context):
+        """ List all the custom emotes with images. """
+        # Return if subcommand was invoked
+        if ctx.invoked_subcommand:
+            return
+
+        string = ''.join(map(str, ctx.guild.emojis))
+        string += '\n\n... these custom, global twitch emotes and BTTV emotes.'
+        string += '\n\n**Try it:** type `OhMyDog` into the chat or `!emote list` to list all available emotes.'
+
+        await reply_command(ctx, description=string)
+
+    @emote.command(hidden=True)
+    @del_invoc
+    async def reload(self, ctx: Context):
+        await self.reload_emotes_loop.coro(self, True)
+        await TimeoutMessage(ctx).send('✅ Emotes have been successfully reloaded.')
+
+    @emote.command()
+    async def list(self, ctx: Context):
+        """ List all the available emote names. Without images this time. We cannot spam the network too much. """
+        emotes = sorted(list(self.emotes.keys()))
+        tabular_data = [emotes[i: i + 3] for i in range(0, len(emotes), 3)]
+
+        builder = ListToImageBuilder(tabular_data)
+
+        await reply_command(ctx, title='List of all available emotes:', include_invoc=False)
+
+        for img in builder.generate(convert_to_file=True):
+            await ctx.send(file=img)
+
+        await reply_command(ctx, include_author=False)
 
 
 def setup(bot: FreefClient):

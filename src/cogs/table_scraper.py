@@ -1,4 +1,3 @@
-import io
 import logging
 import os
 from datetime import datetime
@@ -7,8 +6,7 @@ from tempfile import gettempdir
 
 import mechanize
 import tabula
-from PIL import Image
-from discord import Embed, File
+from discord import Embed
 from discord.ext import tasks
 from discord.ext.commands import Cog, Context, command
 
@@ -67,14 +65,6 @@ def date_from_pdf_name(fname: str) -> str:
     day, month, year = _date_enc[:2], _date_enc[2:4], _date_enc[4:]
 
     return f'{day}. {month}. {datetime.now().year // 100}{year}'
-
-
-def get_file(img: Image.Image) -> File:
-    _buffer = io.BytesIO()
-    img.save(_buffer, 'PNG')
-    _buffer.seek(0)
-
-    return File(_buffer, 'img.png')
 
 
 class TableData:
@@ -326,8 +316,8 @@ class TableScraper(Cog):
         builder = ListToImageBuilder(headers + data, footer=self.data_date)
         builder.set_headers_font()
 
-        for img in builder.generate():
-            await ctx.send(file=get_file(img))
+        for img in builder.generate(convert_to_file=True):
+            await ctx.send(file=img)
 
 
 def setup(bot):
