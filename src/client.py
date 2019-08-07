@@ -11,6 +11,7 @@ from auto_reactor import AutoReactor
 from cleverbot_client import CleverbotClient
 from config import GUILD_ID, Config
 from control_panel_client import ControlPanelClient
+from help import CustomHelpCommand
 from message_fixer import MessageFixer
 from remote_config import LOCALE
 from remote_config import RemoteConfig
@@ -99,5 +100,5 @@ class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer
 
 if __name__ == '__main__':
     # Client
-    client = FreefClient(command_prefix='!')
+    client = FreefClient(command_prefix='!', help_command=CustomHelpCommand())
     client.run(Config.token)

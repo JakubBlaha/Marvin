@@ -50,7 +50,7 @@ async def reply_command(ctx: Context, send=True, include_invoc=True, include_aut
     return embed
 
 
-class Commands(Cog):
+class Commands(Cog, name='General'):
     bot: FreefClient
 
     def __init__(self, bot):
@@ -157,7 +157,7 @@ class Commands(Cog):
                             **(await utils.EmbedUtils.channel_summary(
                                 ctx.bot.get_channel(ctx.bot[HOMEWORK_CHANNEL_ID]))).to_dict())
 
-    @command()
+    @command(hidden=True)
     @del_invoc
     async def log(self, ctx):
         """

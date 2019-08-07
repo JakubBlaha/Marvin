@@ -102,7 +102,7 @@ class EmbedManager(Cog):
         logger.info('Marked outdated embeds.')
 
     # noinspection PyUnusedLocal
-    @command()
+    @command(hidden=True)
     @del_invoc
     async def mark_embeds(self, ctx: Context):
         """ Put the ❌ emoji over outdated events immediately. """
@@ -129,7 +129,7 @@ class EmbedManager(Cog):
         logger.info('Edited topic based on the upcoming events.')
 
     # noinspection PyUnusedLocal
-    @command()
+    @command(hidden=True)
     @del_invoc
     async def general_topic(self, ctx: Context):
         """ Put the upcoming events to the #general topic immediately. """
@@ -148,7 +148,7 @@ class EmbedManager(Cog):
         logger.info('Synced embeds with google calendar. #TODO')  # TODO Remove TODO.
 
     # noinspection PyUnusedLocal
-    @command(hidden=True)  # TODO set hidden to False after implementation.
+    @command(hidden=True)
     @del_invoc
     async def sync_calendar(self, ctx: Context):
         """ Sync the calendar immediately. """

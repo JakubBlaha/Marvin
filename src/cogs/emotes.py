@@ -17,7 +17,7 @@ from utils import ListToImageBuilder
 logger = logging.getLogger('EmoteCog')
 
 
-class EmoteCog(Cog):
+class EmoteCog(Cog, name='Emotes'):
     """ Watch emote names in messages of guild members and send emotes according to them. """
 
     bot: FreefClient

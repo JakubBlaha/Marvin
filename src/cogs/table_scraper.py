@@ -219,7 +219,7 @@ class TableData:
                 self.data.remove(row)
 
 
-class TableScraper(Cog):
+class TableScraper(Cog, name='Substitutions'):
     CACHE_SECONDS = 600
     CACHE_KEY = 'substits'
 

@@ -499,13 +499,15 @@ class EmbedBuilder:
         return self
 
 
-class EmbedCog(Cog):
+class EmbedCog(Cog, name='Embed Builder'):
+    """ Build and edit embeds. """
+
     @group()
     @list_subcommands
     @del_invoc
     async def embed(self, ctx: Context):
         """
-        An ambed builder.
+        An embed builder.
 
         Available subcommands:
             new, edit
@@ -546,7 +548,7 @@ class EmbedCog(Cog):
             !embed edit 0 title MyAwesomeTitle
 
         Available subcommands:
-            title, description, footer, fields
+            title, desc, footer, fields
         """
 
         # Convert index
@@ -605,14 +607,15 @@ class EmbedCog(Cog):
 
         await EmbedBuilder(ctx, ctx.msg).set_url(url)
 
-    @edit.command(aliases=['desc', 'd'])
+    @edit.command(aliases=['d'])
     @require_msg
-    async def description(self, ctx, *, description):
+    async def desc(self, ctx, *, description):
+        # We cannot use `description` here, because it interferes with the cog.description property.
         """
         Edit the embed description.
 
         Example:
-            !embed edit 0 description MyAwesomeDescription
+            !embed edit 0 desc MyAwesomeDescription
         """
 
         await EmbedBuilder(ctx, ctx.msg).set_description(description)
