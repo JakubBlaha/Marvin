@@ -1,53 +1,20 @@
-import datetime
 import logging
 from calendar import day_abbr
 from random import randint, random
 
-from discord import Embed, HTTPException
+from discord import NotFound
 from discord.ext.commands import Context, Cog, command
 from simpleeval import simple_eval
 
 import common
 import utils
 from client import FreefClient
+from cogs.command_output import CommandOutput
 from decorators import del_invoc, required_role
 from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL, TIMETABLE
 from timeout_message import TimeoutMessage
 
 logger = logging.getLogger('Commands')
-
-
-async def reply_command(ctx: Context, send=True, include_invoc=True, include_author=True, **kw) -> Embed:
-    """
-    Send the command output in the context channel, include the invocation
-    message and the author. Return the built embed.
-
-    :param ctx: The command context.
-    :param send: Whether to send the command or return the embed only.
-    :param include_invoc: Whether to include the invocation message in the
-        embed description.
-    :param include_author: Whether to include the author name in the embed.
-    :param kw: The additional kwargs to build the embed from.
-    :return: An embed representing a command reply.
-    """
-
-    embed = Embed.from_dict(kw)
-
-    # Add the invocation message
-    if include_invoc:
-        embed.description = embed.description or ''  # Ensure string
-        embed.description += '\n' if embed.description.endswith('```') else '\n\n'  # Somewhat nicer formatting
-        embed.description += f'`{ctx.message.clean_content}`'  # Append the invoc message
-
-    # Add the author
-    if include_author:
-        embed.set_author(name=ctx.author.display_name, icon_url=ctx.author.avatar_url)
-
-    # Send the embed
-    if send:
-        await ctx.send(embed=embed)
-
-    return embed
 
 
 class Commands(Cog, name='General'):
@@ -59,14 +26,21 @@ class Commands(Cog, name='General'):
     @command()
     @del_invoc
     async def repeat(self, ctx, string: str, n: int = 10):
-        """ Repeat the given message n times. Maximum is 50. """
-        await reply_command(ctx, include_invoc=False, description=string * min(n, 50))
+        """
+        Repeat the given message *n* times.
+
+        The output will be stripped down to `2000` characters. The last string repeated
+        will never be broken up. You can think of it as an integer division.
+        """
+
+        n_fit = min(2000 // len(string), n)
+        await CommandOutput(ctx, invoc=False, description=string * n_fit).send(register=False)
 
     @command(aliases=['table', 'rozvrh'])
     @del_invoc
     async def timetable(self, ctx):
         """ Send an image of our timetable. """
-        await reply_command(ctx, image={'url': ctx.bot[TIMETABLE_URL] or 'https://example.com'})
+        await CommandOutput(ctx, image={'url': ctx.bot[TIMETABLE_URL] or 'https://example.com'}).send()
 
     @command()
     @del_invoc
@@ -89,7 +63,7 @@ class Commands(Cog, name='General'):
 
         string = f'**{prefix}:** {", ".join(subjs)}'
 
-        await reply_command(ctx, description=string)
+        await CommandOutput(ctx, description=string).send()
 
     @command()
     @del_invoc
@@ -120,7 +94,7 @@ class Commands(Cog, name='General'):
 
         string = f'**Out:** {", ".join(out_subjs)}\n**In:** {", ".join(in_subjs)}'
 
-        await reply_command(ctx, description=string)
+        await CommandOutput(ctx, description=string).send()
 
     @command()
     @del_invoc
@@ -138,24 +112,24 @@ class Commands(Cog, name='General'):
         except Exception as ex:
             ret = f':warning: **Failed to evaluate** :warning:\n```{ex}```'
 
-        await reply_command(ctx, description=ret)
+        await CommandOutput(ctx, description=ret).send()
 
     @command(aliases=['ex', 'test', 'testy'])
     @del_invoc
     async def exam(self, ctx):
         """ Output pending exams. """
-        await reply_command(ctx,
-                            **(await utils.EmbedUtils.channel_summary(
-                                ctx.bot.get_channel(ctx.bot[EXAM_CHANNEL_ID]))).to_dict())
+        channel = ctx.bot.get_channel(ctx.bot[EXAM_CHANNEL_ID])
+        embed = await utils.EmbedUtils.channel_summary(channel)
+        await CommandOutput(ctx, **embed.to_dict()).send()
 
     # noinspection SpellCheckingInspection
     @command(aliases=['hw', 'ukol', 'ukoly'])
     @del_invoc
     async def homework(self, ctx):
         """ Output pending homeworks. """
-        await reply_command(ctx,
-                            **(await utils.EmbedUtils.channel_summary(
-                                ctx.bot.get_channel(ctx.bot[HOMEWORK_CHANNEL_ID]))).to_dict())
+        channel = ctx.bot.get_channel(ctx.bot[HOMEWORK_CHANNEL_ID])
+        embed = await utils.EmbedUtils.channel_summary(channel)
+        await CommandOutput(ctx, **embed.to_dict()).send()
 
     @command(hidden=True)
     @del_invoc
@@ -167,7 +141,10 @@ class Commands(Cog, name='General'):
         """
 
         log = logging.getLogger().handlers[1].stream.getvalue()
-        await reply_command(ctx, description=f'```{log[-2000:]}```')
+        log = log[-2000:]
+        log = f'```{log}```'
+
+        await CommandOutput(ctx, description=log).send()
         logger.info(f'Sent logs to `{ctx.channel.name}` channel')
 
     @command()
@@ -190,7 +167,8 @@ class Commands(Cog, name='General'):
         else:
             res = random()
 
-        await reply_command(ctx, description=f'```python\n{res}```')
+        # await reply_command(ctx, description=f'```python\n{res}```')
+        await CommandOutput(ctx, description=f'```python\n{res}```').send()
 
     # noinspection PyUnusedLocal
     @command(hidden=True)
@@ -207,35 +185,19 @@ class Commands(Cog, name='General'):
 
     @command(hidden=True, aliases=['del'])
     @required_role(role_id=535515495420657665)
-    async def delete(self, ctx: Context, n=1):
+    async def delete(self, ctx: Context, n: int = 1):
         """ Delete the last *n* messages. One by default. """
-        # We should delete the invocation message first
-        await ctx.message.delete()
-
-        n = int(n)
-
-        # Get messages to delete. Max 14 days old.
-        msgs = []
-        async for msg in ctx.channel.history():
-            if utils.MessageUtils.age(msg) > datetime.timedelta(days=14):
-                break
-
-            msgs.append(msg)
-
-            n -= 1
-            if n == 0:
-                break
-
-        # Delete the messages
+        # We need to delete the number of messages + the invocation message.
+        n += 1
+        deleted = []
         try:
-            await ctx.channel.delete_messages(msgs)
-        except HTTPException:
+            deleted = await ctx.channel.purge(limit=n)
+        except NotFound:
             await TimeoutMessage(ctx).send(common.Embed.COMMAND_ERROR)
-            return
 
         # Tell the user if some messages could not be deleted
-        if n > 0:
-            await TimeoutMessage(ctx).send(embed=common.Embed.TOO_OLD_MESSAGES)
+        if len(deleted) < n:
+            await TimeoutMessage(ctx).send(embed=common.Embed.DELETE_MESSAGES_ERROR)
 
 
 def setup(bot):

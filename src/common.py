@@ -12,13 +12,23 @@ class Embed:
         'All indexes are counted from *0*, the most recent for message and the most top for embed fields!'
     )
 
-    TOO_OLD_MESSAGES = discord.Embed(
+    DELETE_MESSAGES_ERROR = discord.Embed(
         title='⚠ Failed to delete some messages!',
-        description='Can only delete messages 14 days old an younger. Sorry. API thing... '
+        description='I could not delete the messages, sorry. :frowning: '
     )
 
     COMMAND_ERROR = discord.Embed(
         title='⚠ Error occurred!',
         description=
         'There was an error executing the command. Please tell the @bot_developer or contribute to the project.'
+    )
+
+    EMPTY_CHANNEL = discord.Embed(
+        title='Am I blind?',
+        description='⚠ No messages in the channel were found!'
+    )
+
+    NO_COMMAND_EXECUTED_YET = discord.Embed(
+        title='Oops!',
+        description='⚠ I cannot remember that you would execute a command. Please do so.'
     )

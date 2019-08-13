@@ -9,7 +9,7 @@ from discord.ext.commands import Cog, Context, group
 
 from cache import Cache
 from client import FreefClient
-from commands import reply_command
+from cogs.command_output import CommandOutput
 from decorators import del_invoc
 from timeout_message import TimeoutMessage
 from utils import ListToImageBuilder
@@ -121,7 +121,7 @@ class EmoteCog(Cog, name='Emotes'):
         string += '\n\n... these custom, global twitch emotes and BTTV emotes.'
         string += '\n\n**Try it:** type `OhMyDog` into the chat or `!emote list` to list all available emotes.'
 
-        await reply_command(ctx, description=string)
+        await CommandOutput(ctx, description=string).send()
 
     @emote.command(hidden=True)
     @del_invoc
@@ -137,12 +137,13 @@ class EmoteCog(Cog, name='Emotes'):
 
         builder = ListToImageBuilder(tabular_data)
 
-        await reply_command(ctx, title='List of all available emotes:', include_invoc=False)
+        await CommandOutput(ctx, invoc=False, title='List of all available emotes:').send(register=False)
 
         for img in builder.generate(convert_to_file=True):
             await ctx.send(file=img)
 
-        await reply_command(ctx, include_author=False)
+        # We only send the invocation message here
+        await CommandOutput(ctx, description=f'Listed **{len(emotes)}** emotes.', author=False).send(register=False)
 
 
 def setup(bot: FreefClient):

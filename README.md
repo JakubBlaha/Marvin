@@ -66,7 +66,7 @@ password: ...           # moodle password
 ```
 
 ### The remote config
-The remote config feature allows to store the bot configuration in a separate discord channel named `config` in the *yaml* format. The last 100 messages will be considered.
+The remote config feature allows to add the bot configuration in a separate discord channel named `config` in the *yaml* format. The last 100 messages will be considered.
 
 ```yaml
 # General
@@ -164,3 +164,6 @@ The twitch client watches for messages with emote names in them and replaces the
 
 ![twitch_client](res/demo/twitch.png)
 >What would be the point of our gamer lifes without them?
+
+### The console-like behavior
+The bot does execute commands as you would expect, but in addition to that, messages, that are edited and contain commands, invoke the commands either. This behavior is useful in situations when the user miss-types a command. The bot also offers the `!re` command, which re-executes the last command respectively to the user who uses it. The new command output overwrites the output before for some commands.

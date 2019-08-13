@@ -44,6 +44,7 @@ class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer
         self.load_extension('embeds')
         self.load_extension('cogs.embed_manager')
         self.load_extension('cogs.emotes')
+        self.load_extension('cogs.console_behavior')
 
     async def on_connect(self):
         await super().on_connect()
