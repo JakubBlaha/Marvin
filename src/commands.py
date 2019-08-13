@@ -9,7 +9,7 @@ from simpleeval import simple_eval
 import common
 import utils
 from client import FreefClient
-from cogs.command_output import CommandOutput
+from command_output import CommandOutput
 from decorators import del_invoc, required_role
 from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL, TIMETABLE
 from timeout_message import TimeoutMessage

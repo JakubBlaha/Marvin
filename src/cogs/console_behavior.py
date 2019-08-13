@@ -6,7 +6,7 @@ from discord.ext.commands import Cog, command, Context
 
 import common
 from client import FreefClient
-from cogs.command_output import CommandOutputManager
+from command_output import CommandOutputManager
 from timeout_message import TimeoutMessage
 
 logger = logging.getLogger('ConsoleCog')

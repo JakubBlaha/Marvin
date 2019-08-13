@@ -9,7 +9,7 @@ from discord.ext.commands import Cog, Context, group
 
 from cache import Cache
 from client import FreefClient
-from cogs.command_output import CommandOutput
+from command_output import CommandOutput
 from decorators import del_invoc
 from timeout_message import TimeoutMessage
 from utils import ListToImageBuilder
