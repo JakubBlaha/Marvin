@@ -4,6 +4,7 @@ from discord import Embed, Color
 from discord.ext.commands import DefaultHelpCommand, Cog, Command, Group
 
 from timeout_message import TimeoutMessage
+from utils import WideEmbed
 
 
 class DummyCog(Cog):
@@ -72,13 +73,13 @@ class CustomHelpCommand(DefaultHelpCommand):
 
     async def send_cog_help(self, cog: Cog):
         # Make the embed
-        embed = Embed(title=(f'Category: **{cog.qualified_name}**' + '\u2800' * 100).replace(' ', '\u2007'),
-                      # We are putting large amount of unbreakable spaces in the embed title
-                      # so all the embeds have the same size. Then we are replacing all spaces
-                      # in the string (including the cog name) with unbreakable spaces, so all
-                      # the content stays on the same line.
-                      description=f'*{cog.description.strip()}*' if cog.description else None,
-                      color=ColorCycler.next())
+        embed = WideEmbed(title=f'Category: **{cog.qualified_name}**',
+                          # We are putting large amount of unbreakable spaces in the embed title
+                          # so all the embeds have the same size. Then we are replacing all spaces
+                          # in the string (including the cog name) with unbreakable spaces, so all
+                          # the content stays on the same line.
+                          description=f'*{cog.description.strip()}*' if cog.description else None,
+                          color=ColorCycler.next())
 
         # Iter through commands, add embed fields
         # for command in sorted(cog.get_commands(), key=lambda x: x.name):

@@ -6,6 +6,7 @@ from discord import Embed, User, Message
 from discord.ext.commands import Context
 
 from client import FreefClient
+from utils import WideEmbed
 
 
 class CommandOutputManager:
@@ -29,13 +30,15 @@ class CommandOutput:
     embed: Embed = None
     msg: Message = None
 
-    def __init__(self, ctx: Context, invoc: Union[bool, str] = True, author: Union[bool, User] = True, **kw):
+    def __init__(self, ctx: Context, invoc: Union[bool, str] = True, author: Union[bool, User] = True, wide=False,
+                 **kw):
         """
         Create a command output, which will be stored in the CommandOutputManager for later use.
 
         :param ctx: The context of the command.
         :param invoc: Whether to automatically include the invocation string or the string to use.
         :param author: Whether to automatically include the author or the author to use.
+        :param wide: Whether a wide embed should be used.
         :param kw: Additional embed keyword arguments which will be used to build the embed.
         """
 
@@ -43,7 +46,10 @@ class CommandOutput:
         self.ctx = ctx
 
         # Build embed
-        self.embed = Embed.from_dict(kw)
+        if wide:
+            self.embed = WideEmbed.from_dict(kw)
+        else:
+            self.embed = Embed.from_dict(kw)
         # Add the invocation message to the end of the description
         if invoc:
             invoc = invoc if isinstance(invoc, str) else ctx.message.clean_content

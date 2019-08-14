@@ -12,7 +12,7 @@ from timeout_message import TimeoutMessage
 logger = logging.getLogger('ConsoleCog')
 
 
-class ConsoleBehavior(Cog, name='Console\u2011like behavior'):
+class ConsoleBehavior(Cog, name='Console-like behavior'):
     """
     This cog makes it possible to re-execute commands on message edit, so people don't need to spam commands
     when the command is typed wrong. Plus we can easily edit messages using the up arrow which mimics the
