@@ -1,16 +1,17 @@
 import logging
 from calendar import day_abbr
 from random import randint, random
+from typing import Optional
 
 from discord import NotFound
-from discord.ext.commands import Context, Cog, command
+from discord.ext.commands import Context, Cog, command, has_role
 from simpleeval import simple_eval
 
 import common
 import utils
 from client import FreefClient
 from command_output import CommandOutput
-from decorators import del_invoc, required_role
+from decorators import del_invoc
 from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL, TIMETABLE
 from timeout_message import TimeoutMessage
 
@@ -149,15 +150,14 @@ class Commands(Cog, name='General'):
 
     @command()
     @del_invoc
-    async def random(self, ctx, arg1: int = None, arg2: int = None):
+    async def random(self, ctx, arg1: Optional[int] = None, arg2: Optional[int] = None):
         """
         Gives a random number depending on the arguments.
 
         Up to two arguments can be passed into this function. If both arguments
-        are omitted, the given number will be in a range from 0 to 1. If one
-        argument is given, the given number will be in a range from 0 to arg1.
-        If both arguments are given, the given number will be in a range from
-        arg1 to arg2.
+        are omitted, the given number will be in range `0` to `1`. If one
+        argument is given, the given number will be in range `0` to `arg1`.
+        If both arguments are given, the given number will be in range `arg1` to `arg2`.
         """
 
         if arg1 and arg2:
@@ -167,7 +167,6 @@ class Commands(Cog, name='General'):
         else:
             res = random()
 
-        # await reply_command(ctx, description=f'```python\n{res}```')
         await CommandOutput(ctx, description=f'```python\n{res}```').send()
 
     # noinspection PyUnusedLocal
@@ -184,7 +183,7 @@ class Commands(Cog, name='General'):
         await self.bot.reload_config()
 
     @command(hidden=True, aliases=['del'])
-    @required_role(role_id=535515495420657665)
+    @has_role('moderator')
     async def delete(self, ctx: Context, n: int = 1):
         """ Delete the last *n* messages. One by default. """
         # We need to delete the number of messages + the invocation message.

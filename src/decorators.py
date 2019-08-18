@@ -4,7 +4,7 @@ import inspect
 import logging
 import time
 
-from discord import Embed, NotFound, Role
+from discord import Embed, NotFound
 from discord.ext import tasks
 from discord.ext.commands import Context
 
@@ -43,7 +43,7 @@ def list_subcommands(fn: callable):
             _e = Embed(title='Available subcommands',
                        description=', '.join(
                            map(lambda x: f'`{x.name}`', ctx.command.commands)))
-            await TimeoutMessage(ctx, 5).send(embed=_e)
+            await TimeoutMessage(ctx).send(embed=_e)
 
         return await fn(self, ctx, *args, **kw)
 
@@ -52,31 +52,6 @@ def list_subcommands(fn: callable):
     wrapper.__signature__ = inspect.signature(fn)
 
     return wrapper
-
-
-def required_role(role_id: int):
-    """ Execute only when the user meets the role requirements. Otherwise, inform him. """
-
-    def decorator(fn: callable):
-        async def wrapper(self, ctx: Context, *args, **kw):
-            req_role: Role = ctx.guild.get_role(role_id)
-            if req_role not in ctx.author.roles:
-                embed = Embed(title='⚠ Invalid role!',
-                              description=('You do not meet the role requirements. '
-                                           f'This command is for **{req_role.name}** users only. '
-                                           'Your command will not be executed.'))
-                await TimeoutMessage(ctx, 5).send(embed=embed)
-                return
-
-            return await fn(self, ctx, *args, **kw)
-
-        wrapper.__name__ = fn.__name__
-        wrapper.__doc__ = fn.__doc__
-        wrapper.__signature__ = inspect.signature(fn)
-
-        return wrapper
-
-    return decorator
 
 
 def start_when_needed(*args, **kw):
