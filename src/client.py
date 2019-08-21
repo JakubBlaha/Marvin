@@ -14,6 +14,7 @@ from errors import ErrorHandler
 from help import CustomHelpCommand
 from message_fixer import MessageFixer
 from remote_config import LOCALE, RemoteConfig
+from timetable import Timetable
 
 # Logging
 log_format = '[%(levelname)-8s] [%(name)-16s] %(message)s'
@@ -47,9 +48,15 @@ class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer
         self.load_extension('cogs.console_behavior')
 
     async def on_connect(self):
+        # Reload config
         await super().on_connect()
 
+        # Get guild
         self.guild = self.get_guild(Config.get(GUILD_ID))
+
+        # Reload timetable
+        Timetable.reload(self['timetable'])
+        pass
 
     async def on_ready(self):
         # Set the locale

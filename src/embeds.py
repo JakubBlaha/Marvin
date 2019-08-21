@@ -79,7 +79,7 @@ class EmbedBuilder:
 
     The class handles all the user input and embed building including the info
     presented to the user and the final embed, also referred as a preview. Lot
-    of the methods return `self` to allow method chaining.
+    of the methods return `cls` to allow method chaining.
 
     Attributes:
         ctx (discord.ext.commands.Context): The context of the invocation command.

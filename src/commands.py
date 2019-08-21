@@ -12,8 +12,9 @@ import utils
 from client import FreefClient
 from command_output import CommandOutput
 from decorators import del_invoc
-from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL, TIMETABLE
+from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL
 from timeout_message import TimeoutMessage
+from timetable import Timetable
 
 logger = logging.getLogger('Commands')
 
@@ -45,30 +46,34 @@ class Commands(Cog, name='General'):
 
     @command()
     @del_invoc
-    async def subj(self, ctx):
+    async def subj(self, ctx, day_index: int = None):
         """
         Gives the subjects to prepare for.
 
         If it's already after the lunch, gives the subjects of the following
         day, otherwise gives the subjects for the current day. The subjects
         are given in an alphabetical order.
+
+        If `day_index` is given (0 for monday), the output will be given for
+        that day.
         """
 
-        day_index = utils.Datetime.shifted_weekday()
+        if day_index is None:
+            day_index = utils.Datetime.shifted_weekday()
 
-        subjs = self.bot[TIMETABLE][day_index]  # Get day subjs
-        subjs = set(subjs) - set('-')  # Remove spare time
-        subjs = sorted(list(subjs))  # Sort alphabetically
+        day = Timetable[day_index]
+        subjs = set(day.without_dupes)
+        names = list(map(lambda x: x.name, subjs))
 
         prefix = day_abbr[day_index]
 
-        string = f'**{prefix}:** {", ".join(subjs)}'
+        string = f'**{prefix}:**' + '\n'.join([''] + names)
 
         await CommandOutput(ctx, description=string).send()
 
     @command()
     @del_invoc
-    async def bag(self, ctx, day_index=None):
+    async def bag(self, ctx, day_index: int = None):
         """
         Tell me which subjects to put in my bag and take out of my bag
         for the next school day.
@@ -77,23 +82,24 @@ class Commands(Cog, name='General'):
         that day.
         """
 
-        omit = set('-')
+        if day_index is None:
+            day_index = utils.Datetime.shifted_weekday()
+        day_index = min(day_index, 5) % 5  # Omit weekend
 
-        day_index = day_index or utils.Datetime.shifted_weekday()
-        day_index = min(int(day_index), 5) % 5  # do not include weekend
+        days = Timetable.days[:5]  # Omit weekend
 
-        timetable = self.bot[TIMETABLE][:5]  # do not include weekend
+        passed_day = days[day_index - 1].without_dupes
+        pending_day = days[day_index].without_dupes
 
-        passed_subjs = set(timetable[day_index - 1]) - omit
-        pending_subjs = set(timetable[day_index]) - omit
+        # Subtract
+        out_subjs = [i for i in passed_day.subjs if i not in pending_day.subjs]
+        in_subjs = [i for i in pending_day.subjs if i not in passed_day.subjs]
 
-        out_subjs = passed_subjs - pending_subjs  # take out of the bag
-        in_subjs = pending_subjs - passed_subjs  # put in the bag
-
-        out_subjs = sorted(list(out_subjs))  # sort alphabetically
-        in_subjs = sorted(list(in_subjs))
-
-        string = f'**Out:** {", ".join(out_subjs)}\n**In:** {", ".join(in_subjs)}'
+        # Build string
+        string = '**Out:**\n'
+        string += '\n'.join(map(lambda x: x.name, out_subjs))
+        string += '\n\n**In:**\n'
+        string += '\n'.join(map(lambda x: x.name, in_subjs))
 
         await CommandOutput(ctx, description=string).send()
 

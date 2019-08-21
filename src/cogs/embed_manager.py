@@ -142,7 +142,7 @@ class EmbedManager(Cog):
         # TODO Put the sync code here. See below.
 
         # Possible implementation
-        # async for embed in self.embeds:
+        # async for embed in cls.embeds:
         #       ... do your stuff ...
 
         logger.info('Synced embeds with google calendar. #TODO')  # TODO Remove TODO.

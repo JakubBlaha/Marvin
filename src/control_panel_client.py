@@ -54,7 +54,7 @@ class ControlPanelClient(RemoteConfig, Bot):
         logger.info('Initialization completed.')
 
     async def reset_reactions(self):
-        # msg: Message = await self._channel.fetch_message(self._msg.id)
+        # msg: Message = await cls._channel.fetch_message(cls._msg.id)
 
         # Clear not desired reactions
         for reaction in self._msg.reactions:

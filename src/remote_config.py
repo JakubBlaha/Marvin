@@ -18,8 +18,6 @@ EXAM_CHANNEL_ID = 'exam_channel_id'
 HOMEWORK_CHANNEL_ID = 'homework_channel_id'
 TIMETABLE = 'timetable'
 
-TAG = 'RemoteConfig'
-
 logger = logging.getLogger('RemoteConfig')
 
 
@@ -95,7 +93,7 @@ class RemoteConfig(Client):
     def __getitem__(self, key: str):
         """
         Similar to the `get` method, but shorter syntax can be used.
-        Return the value found for the `key` argument from `self.data`, default `None`.
+        Return the value found for the `key` argument from `cls.data`, default `None`.
         """
 
         return self.get(key)
