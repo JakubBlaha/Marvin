@@ -112,7 +112,7 @@ class EmoteCog(Cog, name='Emotes'):
     @group()
     @del_invoc
     async def emote(self, ctx: Context):
-        """ List all the custom emotes with images. """
+        """ List all the custom emotes along with their images. """
         # Return if subcommand was invoked
         if ctx.invoked_subcommand:
             return

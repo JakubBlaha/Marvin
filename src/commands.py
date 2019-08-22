@@ -29,7 +29,7 @@ class Commands(Cog, name='General'):
     @del_invoc
     async def repeat(self, ctx, string: str, n: int = 10):
         """
-        Repeat the given message *n* times.
+        Repeat the given message `n` times.
 
         The output will be stripped down to `2000` characters. The last string repeated
         will never be broken up. You can think of it as an integer division.
@@ -54,7 +54,7 @@ class Commands(Cog, name='General'):
         day, otherwise gives the subjects for the current day. The subjects
         are given in an alphabetical order.
 
-        If `day_index` is given (0 for monday), the output will be given for
+        If `day_index` is given (`0` for monday), the output will be given for
         that day.
         """
 
@@ -78,7 +78,7 @@ class Commands(Cog, name='General'):
         Tell me which subjects to put in my bag and take out of my bag
         for the next school day.
 
-        If `day_index` is given (0 for monday), the output will be given for
+        If `day_index` is given (`0` for monday), the output will be given for
         that day.
         """
 
@@ -110,8 +110,7 @@ class Commands(Cog, name='General'):
         Evaluates a python expression.
 
         Evaluates a python expression. If the evaluation fails,
-        outputs the error code. It is not possible to access variables
-        or functions. Example: 25**(1/2) -> 5.0
+        output the exception traceback. Uses safe eval. Example: `25**(1/2)` -> `5.0`
         """
 
         try:
@@ -143,8 +142,6 @@ class Commands(Cog, name='General'):
     async def log(self, ctx):
         """
         Return the current log.
-
-        Return the current log consisting of sys.stdout and sys.stderr.
         """
 
         log = logging.getLogger().handlers[1].stream.getvalue()
@@ -191,7 +188,7 @@ class Commands(Cog, name='General'):
     @command(hidden=True, aliases=['del'])
     @has_role('moderator')
     async def delete(self, ctx: Context, n: int = 1):
-        """ Delete the last *n* messages. One by default. """
+        """ Delete the last `n` messages. `1` by default. """
         # We need to delete the number of messages + the invocation message.
         n += 1
         deleted = []

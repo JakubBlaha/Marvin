@@ -105,14 +105,14 @@ class EmbedManager(Cog):
     @command(hidden=True)
     @del_invoc
     async def mark_embeds(self, ctx: Context):
-        """ Put the ❌ emoji over outdated events immediately. """
+        """ Put the `❌` emoji over outdated events immediately. """
         await self.mark_loop.coro()
 
     # noinspection PyCallingNonCallable
     @start_when_needed()
     @tasks.loop(minutes=10)
     async def update_upcoming_loop(self):
-        """ List the upcoming embeds in the `general` channel topic. """
+        """ List the upcoming embeds in the `#general` channel topic. """
         # Create the topic string outta the embeds
         topic = '**Upcoming:** '
         async for embed in self.embeds:
@@ -132,7 +132,7 @@ class EmbedManager(Cog):
     @command(hidden=True)
     @del_invoc
     async def general_topic(self, ctx: Context):
-        """ Put the upcoming events to the #general topic immediately. """
+        """ Put the upcoming events to the `#general` topic immediately. """
         await self.update_upcoming_loop.coro()
 
     # noinspection PyCallingNonCallable

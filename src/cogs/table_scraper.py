@@ -285,11 +285,11 @@ class TableScraper(Cog, name='Substitutions'):
         """
         Outputs the latest substitutions.
 
-        The substitutions are pulled from moodle3.gvid.cz using mechanize,
+        The substitutions are pulled from https://moodle3.gvid.cz using mechanize,
         logging in with username and password from the config file and clicking
         the last pdf link. Then transformed to text using tabula-py. If you
         want to output all substitutions instead of only the targeted,
-        type '.' or 'all' as the target argument.
+        type `.` or `all` as the target argument.
         """
 
         await ctx.trigger_typing()
