@@ -3,7 +3,7 @@ import locale
 import logging
 import sys
 
-from discord import Game, Guild, Status
+from discord import Guild
 from discord.ext.commands import Bot, Context
 
 from auto_reactor import AutoReactor
@@ -46,6 +46,7 @@ class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer
         self.load_extension('cogs.embed_manager')
         self.load_extension('cogs.emotes')
         self.load_extension('cogs.console_behavior')
+        self.load_extension('cogs.presence')
 
     async def on_connect(self):
         # Reload config
@@ -59,34 +60,12 @@ class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer
         pass
 
     async def on_ready(self):
-        # Set the locale
         locale.setlocale(locale.LC_ALL, self[LOCALE])
-
         await super().on_ready()
-
-        # Log
-        await self.reload_presence()
         logging.info(f'Client: Ready!')
 
     async def on_command_error(self, ctx: Context, exception):
         await self.error_handler.handle(ctx, exception)
-
-    async def reload_presence(self):
-        await self.change_presence(activity=Game(
-            Config.get('presence', 'Hello world!')),
-            status=getattr(Status, str(Config.status),
-                           Status.online))
-
-    async def toggle_oos(self):
-        if self._oos:
-            await self.reload_presence()
-        else:
-            await self.change_presence(activity=Game('❗ Out of service ❗'),
-                                       status=Status.do_not_disturb)
-
-        self._oos = not self._oos
-
-        logging.info(f'Client: Toggled out of service {self._oos}')
 
 
 if __name__ == '__main__':

@@ -175,13 +175,6 @@ class Commands(Cog, name='General'):
     # noinspection PyUnusedLocal
     @command(hidden=True)
     @del_invoc
-    async def toggle_oos(self, ctx):
-        """ Toggle out of service. """
-        await self.bot.toggle_oos()
-
-    # noinspection PyUnusedLocal
-    @command(hidden=True)
-    @del_invoc
     async def reload_config(self, ctx):
         await self.bot.reload_config()
 

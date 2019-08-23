@@ -52,7 +52,7 @@ There needs to be a `config.yaml` file in the root folder with some critical inf
 ```yaml
 token: ...
 guild_id: ...
-presence: Hello world!  # The text that will be shown as playing a game
+presences: [['Hello world!', online]]  # Additional presences that will be added after the presences in the remote config
 status: online          # A string representing an attribute of the discord.Status class
 
 # Logging
@@ -71,6 +71,7 @@ The remote config feature allows to add the bot configuration in a separate disc
 ```yaml
 # General
 locale: en-us  # The locale that will be used for various purposes
+presences: [['!help', idle]]  # A list of presence the bot will cycle through. One for 10 seconds. The format is [name, Status[online, idle, invisible, dnd]]. Additional presences can be added using the local config.
 
 # The Control Panel
 control_panel_channel_id: ...
@@ -79,8 +80,20 @@ control_panel_channel_id: ...
 auto_reactor_channel_ids: [...]
 auto_reactor_reaction_ids: [...]
 
-# The !table command
+# COMMANDS
+# !table
 timetable_url: https://www.example.com
+#!subj, !bag
+timetable:
+# Days
+ -  # Monday - Subjects
+# - [Short, Long name, HM - 0905 for 9:55 - 24h format]
+  - [M, Maths, 0800]
+  - [P, Physics, 0900]
+ -  # Tuesday
+  - ...
+  - ...
+
 
 # The !substits command
 substits_col_indexes: [...]       # Considered columns
