@@ -49,7 +49,7 @@ class EmoteCog(Cog, name='Emotes'):
         self.emotes.clear()
 
         # twitchemotes
-        response = urlopen('https://twitchemotes.com/')
+        response = await self.bot.loop.run_in_executor(None, urlopen, 'https://twitchemotes.com/')
         soup = BeautifulSoup(response.read(), 'html.parser')
         for a in soup.find_all('img', {'class': 'emote expandable-emote'}):
             name, url = a.attrs['data-regex'], a.attrs['src']
@@ -57,7 +57,7 @@ class EmoteCog(Cog, name='Emotes'):
             self.emotes[name] = url
 
         # BTTV
-        response = urlopen('https://api.betterttv.net/1/emotes')
+        response = await self.bot.loop.run_in_executor(None, urlopen, 'https://api.betterttv.net/1/emotes')
         for emote in json.loads(response.read())['emotes']:
             name, url = emote['regex'], 'https:' + emote['url']
             url = url.replace('1x', '3x')  # get the largest possible size

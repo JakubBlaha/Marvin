@@ -251,10 +251,11 @@ class TableScraper(Cog, name='Substitutions'):
             return
 
         # Download
-        path = download_pdf(Config.get(MOODLE_USERNAME), Config.get(MOODLE_PASSWORD))
+        path = await self.bot.loop.run_in_executor(None, download_pdf, Config.get(MOODLE_USERNAME),
+                                                   Config.get(MOODLE_PASSWORD))
 
         # Convert
-        data = pdf_to_list(path)
+        data = await self.bot.loop.run_in_executor(None, pdf_to_list, path)
 
         # Clean up
         logger.info('Preparing data ...')
