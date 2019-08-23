@@ -51,8 +51,8 @@ class CommandOutput:
         else:
             self.embed = Embed.from_dict(kw)
         # Add the invocation message to the end of the description
+        invoc = invoc if isinstance(invoc, str) else ctx.message.clean_content
         if invoc:
-            invoc = invoc if isinstance(invoc, str) else ctx.message.clean_content
             self.embed.description = _desc = self.embed.description or ''
             self.embed.description += '\n' if _desc.endswith('```') else '\n\n'
             self.embed.description += f'`{invoc}`'

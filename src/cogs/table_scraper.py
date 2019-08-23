@@ -6,13 +6,14 @@ from tempfile import gettempdir
 
 import mechanize
 import tabula
-from discord import Embed
 from discord.ext import tasks
 from discord.ext.commands import Cog, Context, command
 
 from cache import Cache
 from client import FreefClient
+from command_output import CommandOutput
 from config import Config, MOODLE_USERNAME, MOODLE_PASSWORD
+from decorators import del_invoc
 from utils import ListToImageBuilder
 
 BASE_URL = 'https://moodle3.gvid.cz/course/view.php?id=3'
@@ -281,7 +282,8 @@ class TableScraper(Cog, name='Substitutions'):
         Cache.cache(self.CACHE_KEY, (self.data, self.data_date))
 
     @command(aliases=['supl', 'suply'])
-    async def substits(self, ctx: Context, target='3.F'):
+    @del_invoc
+    async def substits(self, ctx: Context, target=None):
         """
         Outputs the latest substitutions.
 
@@ -297,27 +299,32 @@ class TableScraper(Cog, name='Substitutions'):
         headers = self.data[:1]
         data = self.data[1:]
 
+        # Get target
+        if not target:
+            target = self.bot['default_substits_target'] or '.'
+
         # Filter data
         if target not in ('all', '.'):
             data = list(filter(lambda x: x[0] == target, data))
 
-        # Send embed
-        embed = Embed()
+        # Tell, if there are no data matching the filter
         if not data:
-            embed.title = '**No substitutions!**   (╯°□°）╯︵ ┻━┻'
-
-        embed.description = f'{ctx.author.display_name}, `{ctx.message.content}`'
-        await ctx.send(embed=embed)
-
-        # Generate, send the images
-        if not data:
+            await CommandOutput(ctx, title='**No substitutions!**   (╯°□°）╯︵ ┻━┻').send()
             return
 
-        builder = ListToImageBuilder(headers + data, footer=self.data_date)
+        # Send header
+        await CommandOutput(ctx, wide=True, invoc=False,
+                            title=f'The substitution list for day **{self.data_date}**').send(register=False)
+
+        # Generate, send the images
+        builder = ListToImageBuilder(headers + data)
         builder.set_headers_font()
 
         for img in builder.generate(convert_to_file=True):
             await ctx.send(file=img)
+
+        # Send footer
+        await CommandOutput(ctx, wide=True, author=False, title=f'**{len(data)}** entries 👆').send(register=False)
 
 
 def setup(bot):
