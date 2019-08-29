@@ -1,77 +1,53 @@
 import logging
-import os
 import sys
+from typing import List, Tuple
 
 import yaml
-
-# Name constants / code completion help
-TOKEN = 'token'
-GUILD_ID = 'guild_id'
-
-MOODLE_USERNAME = 'username'
-MOODLE_PASSWORD = 'password'
-
-PRESENCE = 'presence'
-STATUS = 'status'
-
-LOGLEVEL = 'loglevel'
-MODULELOG = 'modulelog'
-
-REQUIRED_ENTRIES = [TOKEN, GUILD_ID]
 
 logger = logging.getLogger('Config')
 
 
 class ConfigMeta(type):
-    _FILENAME = 'config.yaml'
-    _store = {}
+    _override_annotations = {}
 
-    def __init__(cls, *args, **kw):
-        super().__init__(*args, **kw)
+    def __init__(cls, *args):
+        super().__init__(*args)
 
-        try:
-            cls.ensure_file()
-            cls.reload()
-        except Exception as e:
-            logger.critical('Failed to read the config file! Exiting.. \n', e)
-            sys.exit()
+        # Load config
+        with open('config.yaml') as f:
+            data = yaml.safe_load(f)
 
-    def reload(cls):
-        with open(cls._FILENAME, encoding='utf-8') as f:
-            cls._store = yaml.safe_load(f)
+        # Set values
+        for k, v in data.items():
+            if k not in cls.__annotations__:
+                logger.warning(f'Setting redundant config value `{k}`! Is it a typo?')
 
-        if cls._store is None:
-            cls._store = {}
+            setattr(cls, k, v)
 
-        cls._data_ok()
+        # Check all the values are filled in and the correct type
+        for name, expected_type in {**cls.__annotations__, **cls._override_annotations}.items():
+            if not hasattr(cls, name):
+                logger.critical(f'Required value `{name}` has not been set in the config!')
+                sys.exit()
 
-    def _data_ok(cls):
-        local_keys = cls._store.keys()
-
-        for entry in REQUIRED_ENTRIES:
-            if entry not in local_keys:
-                raise ValueError(f'{entry} not present in {cls._FILENAME}')
-
-    def ensure_file(cls):
-        if not os.path.isfile(cls._FILENAME):
-            raise FileNotFoundError(f'{cls._FILENAME} not found! Exiting..')
-
-    def __getattr__(cls, name: str):
-        return cls._store.get(name)
-
-    def __setattr__(cls, name: str, value):
-        if name.startswith('_'):
-            return type.__setattr__(cls, name, value)
-        cls._store[name] = value
-
-    def save(cls):
-        with open(cls._FILENAME, 'w') as f:
-            yaml.dump(cls._store, f)
-
-    def get(cls, name, default=None):
-        """ Use instead of `getattr`. """
-        return cls._store.get(name, default)
+            value_type = type(getattr(cls, name))
+            if value_type != expected_type:
+                logger.critical(
+                    f'Value `{name}` in the config has not the expected type ({expected_type})'
+                    f' but a type of {value_type}!')
+                sys.exit()
 
 
 class Config(metaclass=ConfigMeta):
-    pass
+    # Critical values
+    token: str
+    guild_id: int
+
+    # Optional values
+    moodle_username: str = ''
+    moodle_password: str = ''
+    presences: List[Tuple[str, str]] = []
+    loglevel: int = logging.WARNING
+    modulelog: bool = False
+
+    _override_annotations = {'presences': list}

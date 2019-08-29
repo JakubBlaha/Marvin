@@ -21,11 +21,7 @@ class PresenceCycler(Cog):
     async def restart(self):
         # We are gonna retrieve the presence list here
         self.presences = self.bot['presences'] or []
-
-        # Append local presence TODO 3.8 walrus
-        local = Config.get('presence')
-        if local:
-            self.presences.append(local)
+        self.presences.extend(Config.presences)
 
         # Restart the loop
         self.loop.start()

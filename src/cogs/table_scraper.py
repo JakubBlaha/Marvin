@@ -15,7 +15,7 @@ from discord.ext.commands import Cog, Context, command
 from cache import Cache
 from client import FreefClient
 from command_output import CommandOutput
-from config import Config, MOODLE_USERNAME, MOODLE_PASSWORD
+from config import Config
 from decorators import del_invoc
 from utils import ListToImageBuilder
 
@@ -258,8 +258,8 @@ class TableScraper(Cog, name='Substitutions'):
 
         # Download
         kwargs = self.bot['substits_kwargs']
-        args = kwargs['login_url'], kwargs['course_url'], kwargs['link_regex'], Config.get(MOODLE_USERNAME), Config.get(
-            MOODLE_PASSWORD)
+        args = kwargs['login_url'], kwargs['course_url'], kwargs[
+            'link_regex'], Config.moodle_username, Config.moodle_password
         path = await self.bot.loop.run_in_executor(None, download_pdf, *args)
 
         if not path:

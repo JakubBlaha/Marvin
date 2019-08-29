@@ -3,7 +3,7 @@ import logging
 import yaml
 from discord import Client, TextChannel, Guild, utils
 
-from config import Config, GUILD_ID
+from config import Config
 
 # Constants
 LOCALE = 'locale'
@@ -45,8 +45,8 @@ class RemoteConfig(Client):
         logger.info(f'Reloading the config from channel {channel_name}')
 
         # Get the config channel
-        await self.fetch_guild(Config.get(GUILD_ID))
-        guild = self.get_guild(Config.get(GUILD_ID))
+        await self.fetch_guild(Config.guild_id)
+        guild = self.get_guild(Config.guild_id)
         channel = await self.fetch_channel(utils.get(guild.channels, name=channel_name).id)
 
         # Load the config

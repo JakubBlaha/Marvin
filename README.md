@@ -50,10 +50,9 @@ more ..| 🎆 🌟 🎇 ⭐ ✨
 ### The local config
 There needs to be a `config.yaml` file in the root folder with some critical information.
 ```yaml
-token: ...
-guild_id: ...
+token: ...  # The discord app API token
+guild_id: ...  # The id of your guild
 presences: [['Hello world!', online]]  # Additional presences that will be added after the presences in the remote config
-status: online          # A string representing an attribute of the discord.Status class
 
 # Logging
 loglevel: 30  # warning (default)
@@ -61,8 +60,8 @@ modulelog: False  # When set to true will enable logs from some external modules
 
 # COMMANDS
 # !substits
-username: ...  # moodle username
-password: ...  # moodle password
+moodle_username: ...  # moodle username
+moodle_password: ...  # moodle password
 ```
 
 ### The remote config
