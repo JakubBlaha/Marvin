@@ -6,21 +6,15 @@ name = "pypi"
 [packages]
 pyyaml = "*"
 tabula-py = "*"
-tabulate = "*"
 simpleeval = "*"
 pandas = "*"
-yapf = "*"
-mechanize = "*"
 discord-py = "*"
 selenium = "*"
-emoji = "*"
 pillow = "*"
 "bs4" = "*"
-termcolor = "*"
-colorama = "*"
+requests = "*"
 
 [dev-packages]
-yapf = "*"
 
 [requires]
 python_version = "3.7"

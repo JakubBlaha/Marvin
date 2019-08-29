@@ -11,11 +11,11 @@ GUILD_ID = 'guild_id'
 MOODLE_USERNAME = 'username'
 MOODLE_PASSWORD = 'password'
 
-LOG_CHANNEL_ID = 'log_channel_id'
-DISABLE_LOGS = 'disable_logs'
-
 PRESENCE = 'presence'
 STATUS = 'status'
+
+LOGLEVEL = 'loglevel'
+MODULELOG = 'modulelog'
 
 REQUIRED_ENTRIES = [TOKEN, GUILD_ID]
 

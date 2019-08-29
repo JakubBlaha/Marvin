@@ -18,9 +18,12 @@ from timetable import Timetable
 
 # Logging
 log_format = '[%(levelname)-8s] [%(name)-16s] %(message)s'
-logging.basicConfig(level=logging.INFO, format=log_format, stream=sys.stdout)
-logging.getLogger('discord.gateway').setLevel(logging.ERROR)
-logging.getLogger('discord.client').setLevel(logging.ERROR)
+logging.basicConfig(level=Config.get('loglevel'), format=log_format, stream=sys.stdout)
+if not Config.get('modulelog', False):
+    logging.getLogger('discord.gateway').disabled = True
+    logging.getLogger('discord.client').disabled = True
+    logging.getLogger('discord.http').disabled = True
+    logging.getLogger('websockets.protocol').disabled = True
 
 # !log handler
 root = logging.getLogger()

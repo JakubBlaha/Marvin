@@ -1,10 +1,13 @@
 import logging
 import os
+import re
 from datetime import datetime
 from operator import itemgetter
 from tempfile import gettempdir
+from typing import Optional
 
-import mechanize
+import bs4
+import requests
 import tabula
 from discord.ext import tasks
 from discord.ext.commands import Cog, Context, command
@@ -16,40 +19,43 @@ from config import Config, MOODLE_USERNAME, MOODLE_PASSWORD
 from decorators import del_invoc
 from utils import ListToImageBuilder
 
-BASE_URL = 'https://moodle3.gvid.cz/course/view.php?id=3'
 DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/freefbot')
-MAX_ROWS_IN_PART = 4
 
 logger = logging.getLogger('TableScraper')
 
 
-def download_pdf(username, password):
-    """ Download the latest pdf file. Return its local path. """
+def download_pdf(login_url: str, course_url: str, link_regex: str, username: str, password: str) -> Optional[str]:
     # Make the download directory
     os.makedirs(DOWNLOAD_PATH, exist_ok=True)
 
-    # Setup the browser
-    logger.info('Preparing the browser..')
-    br = mechanize.Browser()
+    # Create session
+    session = requests.Session()
 
-    logger.info('Loading the initial page..')
-    br.open(BASE_URL)
+    # Login
+    logger.debug('Logging into moodle ...')
+    session.post(login_url, data={'username': username, 'password': password})
 
-    # Fill in the forms
-    logger.info('Filling in the form..')
-    br.select_form(nr=0)
-    br['username'] = username
-    br['password'] = password
-    br.submit()
+    # Load course
+    logger.debug('Loading course ...')
+    html = session.get(course_url).text
 
-    # Download the pdf
-    logger.info('Downloading the pdf..')
-    for link in br.links():
-        if '.pdf' in link.text:
-            _local_path = os.path.join(DOWNLOAD_PATH, link.text)
-            br.retrieve(link.url, _local_path)
-            logger.info(f'The pdf wa downloaded to {_local_path}')
-            return _local_path
+    # Extract first (latest) link
+    logger.debug('Getting link ...')
+    soup = bs4.BeautifulSoup(html, 'html.parser')
+    links = [a for a in soup.find_all('a') if re.match(link_regex, a.text)]
+
+    if not links:
+        return
+
+    # Download pdf
+    logger.debug('Downloading pdf ...')
+    content = session.get(links[0].get('href')).content
+
+    pdf_path = os.path.join(DOWNLOAD_PATH, links[0].text)
+    with open(pdf_path, 'wb') as f:
+        f.write(content)
+
+    return pdf_path
 
 
 def pdf_to_list(path: str) -> list:
@@ -251,14 +257,20 @@ class TableScraper(Cog, name='Substitutions'):
             return
 
         # Download
-        path = await self.bot.loop.run_in_executor(None, download_pdf, Config.get(MOODLE_USERNAME),
-                                                   Config.get(MOODLE_PASSWORD))
+        kwargs = self.bot['substits_kwargs']
+        args = kwargs['login_url'], kwargs['course_url'], kwargs['link_regex'], Config.get(MOODLE_USERNAME), Config.get(
+            MOODLE_PASSWORD)
+        path = await self.bot.loop.run_in_executor(None, download_pdf, *args)
+
+        if not path:
+            logger.warning('Path to the downloaded pdf was not returned. Cannot process it further!')
+            return
 
         # Convert
         data = await self.bot.loop.run_in_executor(None, pdf_to_list, path)
 
         # Clean up
-        logger.info('Preparing data ...')
+        logger.debug('Preparing data ...')
         table = TableData(data)
         table.extract_table_cols(self.bot['substits_col_indexes'] or [])
         table.add_headers(self.bot['substits_headers'] or [])
@@ -276,7 +288,7 @@ class TableScraper(Cog, name='Substitutions'):
         day, month, year = numbers[:2], numbers[2:4], numbers[4:]
         self.data_date = f'{day}. {month}. {datetime.now().year // 100}{year}'
 
-        logger.info('Done')
+        logger.debug('Done')
 
         # We are caching the data and the date simultaneously
         # to ensure that they match
@@ -288,11 +300,9 @@ class TableScraper(Cog, name='Substitutions'):
         """
         Outputs the latest substitutions.
 
-        The substitutions are pulled from https://moodle3.gvid.cz using mechanize,
-        logging in with username and password from the config file and clicking
-        the last pdf link. Then transformed to text using tabula-py. If you
-        want to output all substitutions instead of only the targeted,
-        type `.` or `all` as the target argument.
+        The last pdf file from the remote-configured course is pulled using the local-config credentials
+        and converted to a table. If you wanna get the full substitution list (not a filtered one, as by default),
+        type `!substits .` or `!substits all` instead.
         """
 
         await ctx.trigger_typing()
@@ -315,7 +325,7 @@ class TableScraper(Cog, name='Substitutions'):
 
         # Send header
         await CommandOutput(ctx, wide=True, invoc=False,
-                            title=f'The substitution list for day **{self.data_date}**').send(register=False)
+                            title=f'The substitution list for the day **{self.data_date}**').send(register=False)
 
         # Generate, send the images
         builder = ListToImageBuilder(headers + data)

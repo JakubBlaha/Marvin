@@ -56,13 +56,13 @@ presences: [['Hello world!', online]]  # Additional presences that will be added
 status: online          # A string representing an attribute of the discord.Status class
 
 # Logging
-disable_logs: False
-log_channel_id: ...
-channel_log_flush_interval: 10
+loglevel: 30  # warning (default)
+modulelog: False  # When set to true will enable logs from some external modules disabled by default
 
-# Command specific
-username: ...           # moodle username
-password: ...           # moodle password
+# COMMANDS
+# !substits
+username: ...  # moodle username
+password: ...  # moodle password
 ```
 
 ### The remote config
@@ -99,6 +99,10 @@ timetable:
 substits_col_indexes: [...]       # Considered columns
 substits_headers: [...]           # Custom table headers
 substits_replace_contents: {...}  # Pairs of original -> replaced keywords in the table
+substits_kwargs:
+ login_url: ...  # The url to the moodle login form
+ course_url: ...  # The url to the substits course
+ link_regex: .*\.pdf  # The regex used to get the latest pdf link
 ```
 
 ### The embed builder
