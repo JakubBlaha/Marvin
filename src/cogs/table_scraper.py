@@ -15,8 +15,8 @@ from discord.ext.commands import Cog, Context, command
 from cache import Cache
 from client import FreefClient
 from command_output import CommandOutput
-from config import Config
 from decorators import del_invoc
+from remote_config import RemoteConfig
 from utils import ListToImageBuilder
 
 DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/freefbot')
@@ -257,9 +257,9 @@ class TableScraper(Cog, name='Substitutions'):
             return
 
         # Download
-        kwargs = self.bot['substits_kwargs']
+        kwargs = RemoteConfig.substits_kwargs
         args = kwargs['login_url'], kwargs['course_url'], kwargs[
-            'link_regex'], Config.moodle_username, Config.moodle_password
+            'link_regex'], RemoteConfig.moodle_username, RemoteConfig.moodle_password
         path = await self.bot.loop.run_in_executor(None, download_pdf, *args)
 
         if not path:
@@ -272,9 +272,9 @@ class TableScraper(Cog, name='Substitutions'):
         # Clean up
         logger.debug('Preparing data ...')
         table = TableData(data)
-        table.extract_table_cols(self.bot['substits_col_indexes'] or [])
-        table.add_headers(self.bot['substits_headers'] or [])
-        table.replace_contents(self.bot['substits_replace_contents'] or {})
+        table.extract_table_cols(RemoteConfig.substits_col_indexes)
+        table.add_headers(RemoteConfig.substits_headers)
+        table.replace_contents(RemoteConfig.substits_replace_contents)
         table.process_arrows()
         table.v_split_cells([0])
         table.v_merge_cells()
@@ -312,7 +312,7 @@ class TableScraper(Cog, name='Substitutions'):
 
         # Get target
         if not target:
-            target = self.bot['default_substits_target'] or '.'
+            target = RemoteConfig.default_substits_target
 
         # Filter data
         if target not in ('all', '.'):

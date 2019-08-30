@@ -6,6 +6,7 @@ from discord.ext.tasks import loop
 
 from client import FreefClient
 from config import Config
+from remote_config import RemoteConfig
 
 
 class PresenceCycler(Cog):
@@ -20,7 +21,7 @@ class PresenceCycler(Cog):
 
     async def restart(self):
         # We are gonna retrieve the presence list here
-        self.presences = self.bot['presences'] or []
+        self.presences = RemoteConfig.presences
         self.presences.extend(Config.presences)
 
         # Restart the loop

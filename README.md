@@ -57,15 +57,13 @@ presences: [['Hello world!', online]]  # Additional presences that will be added
 # Logging
 loglevel: 30  # warning (default)
 modulelog: False  # When set to true will enable logs from some external modules disabled by default
-
-# COMMANDS
-# !substits
-moodle_username: ...  # moodle username
-moodle_password: ...  # moodle password
+remote_config_channel_name: config  # The name of the channel to load the remote config from. This is `config` by default.
 ```
 
 ### The remote config
 The remote config feature allows to add the bot configuration in a separate discord channel named `config` in the *yaml* format. The last 100 messages will be considered.
+
+> The entry `moodle_password` needs to be encrypted in order to keep it public and secure. The encryption key will be the token of the discord application. Use the `!encrypt` command to get the encrypted version of your password and place it to the correct entry in the  remote config. Use this command **only in the DM channel** to prevent anyone from stealing your credentials.
 
 ```yaml
 # General
@@ -93,11 +91,12 @@ timetable:
   - ...
   - ...
 
-
 # The !substits command
 substits_col_indexes: [...]       # Considered columns
 substits_headers: [...]           # Custom table headers
 substits_replace_contents: {...}  # Pairs of original -> replaced keywords in the table
+moodle_username: ...  # The username to your moodle account
+moodle_password: ...  # The password to your moodle account encrypted with the !encrypt command
 substits_kwargs:
  login_url: ...  # The url to the moodle login form
  course_url: ...  # The url to the substits course

@@ -12,7 +12,7 @@ import utils
 from client import FreefClient
 from command_output import CommandOutput
 from decorators import del_invoc
-from remote_config import EXAM_CHANNEL_ID, HOMEWORK_CHANNEL_ID, TIMETABLE_URL
+from remote_config import RemoteConfig
 from timeout_message import TimeoutMessage
 from timetable import Timetable
 
@@ -42,7 +42,7 @@ class Commands(Cog, name='General'):
     @del_invoc
     async def timetable(self, ctx):
         """ Send an image of our timetable. """
-        await CommandOutput(ctx, image={'url': ctx.bot[TIMETABLE_URL] or 'https://example.com'}).send()
+        await CommandOutput(ctx, image={'url': RemoteConfig.timetable_url}).send()
 
     @command()
     @del_invoc
@@ -124,7 +124,7 @@ class Commands(Cog, name='General'):
     @del_invoc
     async def exam(self, ctx):
         """ Output pending exams. """
-        channel = ctx.bot.get_channel(ctx.bot[EXAM_CHANNEL_ID])
+        channel = ctx.bot.get_channel(RemoteConfig.exam_channel_id)
         embed = await utils.EmbedUtils.channel_summary(channel)
         await CommandOutput(ctx, **embed.to_dict()).send()
 
@@ -133,7 +133,7 @@ class Commands(Cog, name='General'):
     @del_invoc
     async def homework(self, ctx):
         """ Output pending homeworks. """
-        channel = ctx.bot.get_channel(ctx.bot[HOMEWORK_CHANNEL_ID])
+        channel = ctx.bot.get_channel(RemoteConfig.homework_channel_id)
         embed = await utils.EmbedUtils.channel_summary(channel)
         await CommandOutput(ctx, **embed.to_dict()).send()
 
@@ -171,12 +171,6 @@ class Commands(Cog, name='General'):
             res = random()
 
         await CommandOutput(ctx, description=f'```python\n{res}```').send()
-
-    # noinspection PyUnusedLocal
-    @command(hidden=True)
-    @del_invoc
-    async def reload_config(self, ctx):
-        await self.bot.reload_config()
 
     @command(hidden=True, aliases=['del'])
     @has_role('moderator')

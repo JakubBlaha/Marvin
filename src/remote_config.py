@@ -1,99 +1,124 @@
 import logging
+from typing import List, Dict, Tuple
 
 import yaml
-from discord import Client, TextChannel, Guild, utils
+from discord import TextChannel, utils
+from discord.ext.commands import Cog, group, Context
 
-from config import Config
-
-# Constants
-LOCALE = 'locale'
-CONTROL_PANEL_CHANNEL_ID = 'control_panel_channel_id'
-AUTO_REACTOR_CHANNEL_IDS = 'auto_reactor_channel_ids'
-AUTO_REACTOR_REACTION_IDS = 'auto_reactor_reaction_ids'
-TIMETABLE_URL = 'timetable_url'
-SUBSTITS_COL_INDEXES = 'substits_col_indexes'
-SUBSTITS_HEADERS = 'substits_headers'
-SUBSTITS_REPLACE_CONTENTS = 'substits_replace_contents'
-EXAM_CHANNEL_ID = 'exam_channel_id'
-HOMEWORK_CHANNEL_ID = 'homework_channel_id'
-TIMETABLE = 'timetable'
+from config import Config, ConfigMeta
+from decorators import list_subcommands, del_invoc
+from secure_config import EncryptedString
+from timeout_message import TimeoutMessage
 
 logger = logging.getLogger('RemoteConfig')
 
 
-class RemoteConfig(Client):
+async def config_from_channel(ch: TextChannel) -> dict:
+    """ Return a dict built from yaml-formatted messages in the channel. """
+    data = {}
+    async for msg in ch.history():
+        content = msg.clean_content
+
+        # Clean up
+        content = content.replace('```yaml', '').replace('```', '')
+
+        # Convert
+        # noinspection PyBroadException
+        try:
+            partial_data = yaml.safe_load(content)
+        except Exception:
+            logger.warning(f'Converting message {msg.id} to yaml failed!')
+            continue
+
+        # Update the real data
+        try:
+            data.update(partial_data)
+        except ValueError:
+            logger.warning(f'Converting message {msg.id} to dict failed!')
+
+    # Warn if content could not be loaded
+    if not data:
+        logger.warning(f'No config content found in the channel {ch}')
+
+    return data
+
+
+class RemoteConfigMeta(ConfigMeta):
     """
     This class allows to access the config values in a discord channel, which's
     name is `config` by default. This allows multiple instances in different
     environments to all have the same config setup shared together.
 
-    This class should be used as a first base class to any subclass requiring
-    this feature. Make sure the method `reload_config` is called before accessing
-    any values. It is called in the `on_ready` coroutine by default.
+    This file has to be added as an extension. Then values can be accessed lie so.
+
+        from remote_config import RemoteConfig\n
+        name = RemoteConfig.name
     """
-    data = {}
-    guild: Guild
 
+    def __init__(cls, *args):
+        # We need to stop the base class from loading the config from `config.yaml`
+        type.__init__(cls, *args)
+
+    def from_data(cls, data: dict):
+        super().from_data(data)
+
+        # Resolve encrypted strings
+        for name, expected_type in cls.__annotations__.items():
+            value = getattr(cls, name)
+            if expected_type is EncryptedString and value:
+                setattr(cls, name, EncryptedString(value))
+
+
+class RemoteConfig(metaclass=RemoteConfigMeta):
+    # Optional entries
+    locale: str = 'en-US'
+    control_panel_channel_id: int = None
+    auto_reactor_channel_ids: List[int] = []
+    auto_reactor_reaction_ids: List[int] = []
+    timetable_url: str = 'https://example.com'
+    substits_col_indexes: List[int] = []
+    substits_headers: List[str] = []
+    substits_replace_contents: Dict[str, str] = {}
+    substits_kwargs: Dict[str, str] = {}
+    default_substits_target: str = '.'
+    exam_channel_id: int = None
+    homework_channel_id: int = None
+    timetable: List[List[Tuple[str, str, str]]] = []
+    presences: List[Tuple[str, str]] = []
+    moodle_username: str = ''
+    moodle_password: EncryptedString = ''
+
+
+class RemoteConfigCog(Cog):
+    def __init__(self, bot):
+        self.bot = bot
+
+    @Cog.listener()
     async def on_connect(self):
-        await self.reload_config()
-
-    async def on_ready(self):
-        # Placeholder
-        pass
-
-    async def reload_config(self, channel_name='config'):
-        logger.info(f'Reloading the config from channel {channel_name}')
+        logger.info(f'Reloading the config from channel `{Config.remote_config_channel_name}`')
 
         # Get the config channel
-        await self.fetch_guild(Config.guild_id)
-        guild = self.get_guild(Config.guild_id)
-        channel = await self.fetch_channel(utils.get(guild.channels, name=channel_name).id)
+        await self.bot.fetch_guild(Config.guild_id)
+        guild = self.bot.get_guild(Config.guild_id)
+        channel = await self.bot.fetch_channel(utils.get(guild.channels, name=Config.remote_config_channel_name).id)
 
         # Load the config
-        self.data = await self._get_yaml_from_channel(channel)
+        data = await config_from_channel(channel)
+        RemoteConfig.from_data(data)
 
-    @staticmethod
-    async def _get_yaml_from_channel(ch: TextChannel) -> dict:
-        """ Return a dict taken from the latest message in the yaml format. """
-        # Get the latest message
-        data = {}
-        async for msg in ch.history():
-            content = msg.clean_content
+    @group(hidden=True)
+    @list_subcommands
+    async def config(self, ctx: Context):
+        pass
 
-            # Clean up
-            content = content.replace('```yaml', '').replace('```', '')
+    # noinspection PyUnusedLocal
+    @config.command(hidden=True)
+    @del_invoc
+    async def reload(self, ctx: Context):
+        """ Reload the remote config. """
+        await self.on_connect()
+        await TimeoutMessage(ctx).send('✅ The config has been reloaded!')
 
-            # Convert
-            # noinspection PyBroadException
-            try:
-                partial_data = yaml.safe_load(content)
-            except Exception:
-                logger.warning(f'Converting message {msg.id} to yaml failed!')
-                continue
 
-            # Update the real data
-            try:
-                data.update(partial_data)
-            except ValueError:
-                logger.warning(f'Converting message {msg.id} to dict failed!')
-
-        # Warn if content could not be loaded
-        if not data:
-            logger.warning(f'No config content found in the channel {ch}')
-
-        return data
-
-    def get(self, option_name: str, default=None):
-        """ Return a value from the remote config. """
-        if not self.data:
-            logger.warning(f'Attempt to get value {option_name} before the ''data could be loaded!')
-
-        return self.data.get(option_name, default)
-
-    def __getitem__(self, key: str):
-        """
-        Similar to the `get` method, but shorter syntax can be used.
-        Return the value found for the `key` argument from `cls.data`, default `None`.
-        """
-
-        return self.get(key)
+def setup(bot):
+    bot.add_cog(RemoteConfigCog(bot))

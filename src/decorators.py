@@ -4,7 +4,7 @@ import inspect
 import logging
 import time
 
-from discord import Embed, NotFound
+from discord import Embed, NotFound, Forbidden
 from discord.ext import tasks
 from discord.ext.commands import Context
 
@@ -44,6 +44,10 @@ def list_subcommands(fn: callable):
                        description=', '.join(
                            map(lambda x: f'`{x.name}`', ctx.command.commands)))
             await TimeoutMessage(ctx).send(embed=_e)
+            try:
+                await ctx.message.delete()
+            except (NotFound, Forbidden):
+                pass
 
         return await fn(self, ctx, *args, **kw)
 

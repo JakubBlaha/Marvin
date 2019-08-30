@@ -21,7 +21,7 @@ TAG = 'CommandPanel'
 logger = logging.getLogger('CommandPanel')
 
 
-class ControlPanelClient(RemoteConfig, Bot):
+class ControlPanelClient(Bot):
     _channel: TextChannel
     _msg: Message = None
 
@@ -29,7 +29,7 @@ class ControlPanelClient(RemoteConfig, Bot):
         await super().on_ready()
 
         # Get the channel
-        self._channel = self.get_channel(self['control_panel_channel_id'])
+        self._channel = self.get_channel(RemoteConfig.control_panel_channel_id)
 
         # Build the embed
         embed = self._generate_embed(EMOJI_COMMAND_MAP)

@@ -13,7 +13,7 @@ from control_panel_client import ControlPanelClient
 from errors import ErrorHandler
 from help import CustomHelpCommand
 from message_fixer import MessageFixer
-from remote_config import LOCALE, RemoteConfig
+from remote_config import RemoteConfig
 from timetable import Timetable
 
 # Logging
@@ -34,8 +34,7 @@ root.addHandler(handler)
 logger = logging.getLogger('Client')
 
 
-class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer, RemoteConfig, Bot):
-    _oos = False  # Out of service
+class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer, Bot):
     guild: Guild
     error_handler = ErrorHandler()
 
@@ -43,6 +42,7 @@ class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer
         super().__init__(*args, **kw)
 
         # Load extensions
+        self.load_extension('remote_config')
         self.load_extension('commands')
         self.load_extension('cogs.table_scraper')
         self.load_extension('embeds')
@@ -50,20 +50,18 @@ class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer
         self.load_extension('cogs.emotes')
         self.load_extension('cogs.console_behavior')
         self.load_extension('cogs.presence')
+        self.load_extension('secure_config')
 
     async def on_connect(self):
-        # Reload config
-        await super().on_connect()
-
         # Get guild
         self.guild = self.get_guild(Config.guild_id)
 
         # Reload timetable
-        Timetable.reload(self['timetable'])
+        Timetable.reload(RemoteConfig.timetable)
         pass
 
     async def on_ready(self):
-        locale.setlocale(locale.LC_ALL, self[LOCALE])
+        locale.setlocale(locale.LC_ALL, RemoteConfig.locale)
         await super().on_ready()
         logger.info(f'Client: Ready!')
 

@@ -3,12 +3,13 @@ from discord import Client, Message
 from remote_config import RemoteConfig
 
 
-class AutoReactor(RemoteConfig, Client):
-    async def on_ready(self):
-        await super().on_ready()
+class AutoReactor(Client):
+    _channels: list
+    _reactions: list
 
-        self._channels = self['auto_reactor_channel_ids'] or []
-        self._reactions = self['auto_reactor_reaction_ids'] or []
+    async def on_ready(self):
+        self._channels = RemoteConfig.auto_reactor_channel_ids
+        self._reactions = RemoteConfig.auto_reactor_reaction_ids
 
     async def on_message(self, msg: Message):
         await super().on_message(msg)
