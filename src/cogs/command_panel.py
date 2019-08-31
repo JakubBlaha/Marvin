@@ -3,8 +3,9 @@ from asyncio import sleep
 
 from discord import TextChannel, Message, Embed, RawReactionActionEvent
 from discord.errors import NotFound
-from discord.ext.commands import Bot
+from discord.ext.commands import Cog
 
+from client import FreefClient
 from remote_config import RemoteConfig
 
 EMOJI_COMMAND_MAP = {
@@ -21,13 +22,18 @@ TAG = 'CommandPanel'
 logger = logging.getLogger('CommandPanel')
 
 
-class ControlPanelClient(Bot):
+class CommandPanel(Cog):
+    bot: FreefClient
     _channel: TextChannel
     _msg: Message = None
 
+    def __init__(self, bot: FreefClient):
+        self.bot = bot
+
+    @Cog.listener()
     async def on_ready(self):
         # Get the channel
-        self._channel = self.get_channel(RemoteConfig.control_panel_channel_id)
+        self._channel = self.bot.get_channel(RemoteConfig.command_panel_channel_id)
 
         # Build the embed
         embed = self._generate_embed(EMOJI_COMMAND_MAP)
@@ -36,33 +42,36 @@ class ControlPanelClient(Bot):
         async for msg in self._channel.history():
             if msg.embeds and msg.embeds[0].to_dict() == embed.to_dict():
                 self._msg = await self._channel.fetch_message(msg.id)
-                logger.info(f'Adopted message {msg.id}')
+                logger.debug(f'Adopted message {msg.id}')
                 break
             else:
                 await msg.delete()
         else:
             # Send the message if no matching one was found
-            logger.info('Could not find a message that could be adopted. Will send a new one ...')
+            logger.debug('Could not find a message that could be adopted. Will send a new one ...')
             self._msg = await self._channel.send(embed=embed)
 
         # Add reactions
-        logger.info('Adding reactions ...')
         await self.reset_reactions()
 
-        logger.info('Initialization completed.')
+        logger.debug('Initialization completed.')
 
     async def reset_reactions(self):
-        # msg: Message = await cls._channel.fetch_message(cls._msg.id)
+        logger.debug('Resetting reactions ...')
 
         # Clear not desired reactions
+        added_emojis = []
         for reaction in self._msg.reactions:
-            async for user in reaction.users():
-                if user != self.user or reaction.emoji not in EMOJI_COMMAND_MAP:
+            if reaction.emoji not in EMOJI_COMMAND_MAP:
+                async for user in reaction.users():
                     await self._msg.remove_reaction(reaction.emoji, user)
+            else:
+                added_emojis.append(reaction.emoji)
 
         # Add missing reactions
         for emoji in EMOJI_COMMAND_MAP:
-            await self._msg.add_reaction(emoji)
+            if emoji not in added_emojis:
+                await self._msg.add_reaction(emoji)
 
     def _generate_embed(self, command_map: dict) -> Embed:
         """ Return an embed based on the `command_map` argument. """
@@ -80,13 +89,14 @@ class ControlPanelClient(Bot):
         Return a short command description based on the `command_name`
         argument.
         """
-        return self.get_command(command_name).help.split('\n')[0].strip()
+        return self.bot.get_command(command_name).help.split('\n')[0].strip()
 
+    @Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
-        emoji, user = payload.emoji.name, self.get_user(payload.user_id)
+        emoji, user = payload.emoji.name, self.bot.get_user(payload.user_id)
 
         # Skip own reactions
-        if user.id == self.user.id:
+        if user.id == self.bot.user.id:
             return
 
         # Skip other than the command panel message
@@ -94,26 +104,25 @@ class ControlPanelClient(Bot):
             return
 
         # Simulate the context
-        _context = await self.get_context(self._msg)
+        _context = await self.bot.get_context(self._msg)
         _context.author = user
         _context.is_private = True
 
         # Invoke the command
         try:
-            await self.get_command(EMOJI_COMMAND_MAP[emoji]).invoke(_context)
+            await self.bot.get_command(EMOJI_COMMAND_MAP[emoji]).invoke(_context)
         except KeyError:
             pass
 
         # Reset reactions
         await self._msg.remove_reaction(emoji, user)
 
+    @Cog.listener()
     async def on_message(self, msg: Message):
         # Remove any messages posted to the configured channel after a time
         # period
 
-        await super().on_message(msg)
-
-        # Skip if control panel message was not set yet, is not assigned yet
+        # Skip if command panel message was not set yet, is not assigned yet
         if not self._msg:
             return
 
@@ -135,3 +144,7 @@ class ControlPanelClient(Bot):
             await msg.delete()
         except NotFound:
             pass
+
+
+def setup(bot: FreefClient):
+    bot.add_cog(CommandPanel(bot))

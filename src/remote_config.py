@@ -72,7 +72,7 @@ class RemoteConfigMeta(ConfigMeta):
 class RemoteConfig(metaclass=RemoteConfigMeta):
     # Optional entries
     locale: str = 'en-US'
-    control_panel_channel_id: int = None
+    command_panel_channel_id: int = None
     auto_reactor_channel_ids: List[int] = []
     auto_reactor_reaction_ids: List[int] = []
     timetable_url: str = 'https://example.com'

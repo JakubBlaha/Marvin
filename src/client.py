@@ -8,7 +8,6 @@ from discord.ext.commands import Bot, Context
 
 from cleverbot_client import CleverbotClient
 from config import Config
-from control_panel_client import ControlPanelClient
 from errors import ErrorHandler
 from help import CustomHelpCommand
 from message_fixer import MessageFixer
@@ -33,7 +32,7 @@ root.addHandler(handler)
 logger = logging.getLogger('Client')
 
 
-class FreefClient(ControlPanelClient, CleverbotClient, MessageFixer, Bot):
+class FreefClient(CleverbotClient, MessageFixer, Bot):
     guild: Guild
     error_handler = ErrorHandler()
 
@@ -50,6 +49,7 @@ class FreefClient(ControlPanelClient, CleverbotClient, MessageFixer, Bot):
         self.load_extension('cogs.console_behavior')
         self.load_extension('cogs.presence')
         self.load_extension('cogs.auto_reactor')
+        self.load_extension('cogs.command_panel')
         self.load_extension('secure_config')
 
     async def on_connect(self):
@@ -60,9 +60,9 @@ class FreefClient(ControlPanelClient, CleverbotClient, MessageFixer, Bot):
         Timetable.reload(RemoteConfig.timetable)
         pass
 
+    # noinspection PyMethodMayBeStatic
     async def on_ready(self):
         locale.setlocale(locale.LC_ALL, RemoteConfig.locale)
-        await super().on_ready()
         logger.info(f'Client: Ready!')
 
     async def on_command_error(self, ctx: Context, exception):

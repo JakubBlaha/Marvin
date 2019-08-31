@@ -70,8 +70,8 @@ The remote config feature allows to add the bot configuration in a separate disc
 locale: en-us  # The locale that will be used for various purposes
 presences: [['!help', idle]]  # A list of presence the bot will cycle through. One for 10 seconds. The format is [name, Status[online, idle, invisible, dnd]]. Additional presences can be added using the local config.
 
-# The Control Panel
-control_panel_channel_id: ...
+# The Command Panel
+command_panel_channel_id: ...
 
 # The auto Reactor
 auto_reactor_channel_ids: [...]
