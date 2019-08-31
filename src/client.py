@@ -6,7 +6,6 @@ import sys
 from discord import Guild
 from discord.ext.commands import Bot, Context
 
-from auto_reactor import AutoReactor
 from cleverbot_client import CleverbotClient
 from config import Config
 from control_panel_client import ControlPanelClient
@@ -34,7 +33,7 @@ root.addHandler(handler)
 logger = logging.getLogger('Client')
 
 
-class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer, Bot):
+class FreefClient(ControlPanelClient, CleverbotClient, MessageFixer, Bot):
     guild: Guild
     error_handler = ErrorHandler()
 
@@ -50,6 +49,7 @@ class FreefClient(ControlPanelClient, AutoReactor, CleverbotClient, MessageFixer
         self.load_extension('cogs.emotes')
         self.load_extension('cogs.console_behavior')
         self.load_extension('cogs.presence')
+        self.load_extension('cogs.auto_reactor')
         self.load_extension('secure_config')
 
     async def on_connect(self):

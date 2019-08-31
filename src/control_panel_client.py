@@ -26,8 +26,6 @@ class ControlPanelClient(Bot):
     _msg: Message = None
 
     async def on_ready(self):
-        await super().on_ready()
-
         # Get the channel
         self._channel = self.get_channel(RemoteConfig.control_panel_channel_id)
 

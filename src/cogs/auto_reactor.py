@@ -1,21 +1,27 @@
-from discord import Client, Message
+from discord import Message
+from discord.ext.commands import Cog
 
+from client import FreefClient
 from remote_config import RemoteConfig
 
 
-class AutoReactor(Client):
+class AutoReactor(Cog):
+    bot: FreefClient
     _channels: list
     _reactions: list
 
+    def __init__(self, bot: FreefClient):
+        self.bot = bot
+
+    @Cog.listener()
     async def on_ready(self):
         self._channels = RemoteConfig.auto_reactor_channel_ids
         self._reactions = RemoteConfig.auto_reactor_reaction_ids
 
+    @Cog.listener()
     async def on_message(self, msg: Message):
-        await super().on_message(msg)
-
         # Skip own messages
-        if msg.author == self.user:
+        if msg.author == self.bot.user:
             return
 
         # Skip not configured channels
@@ -24,4 +30,8 @@ class AutoReactor(Client):
 
         # Add reactions
         for id_ in self._reactions:
-            await msg.add_reaction(self.get_emoji(id_))
+            await msg.add_reaction(self.bot.get_emoji(id_))
+
+
+def setup(bot: FreefClient):
+    bot.add_cog(AutoReactor(bot))
