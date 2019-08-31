@@ -115,6 +115,8 @@ class EmbedUtils:
             _embed.color = Color.green()
         else:
             _embed.color = Color.red()
+            _embed.description = _embed.description or ''
+            _embed.description = f'More information can be found in {channel.mention}.'
 
         return _embed
 
