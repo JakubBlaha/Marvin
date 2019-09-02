@@ -101,6 +101,9 @@ substits_kwargs:
  login_url: ...  # The url to the moodle login form
  course_url: ...  # The url to the substits course
  link_regex: .*\.pdf  # The regex used to get the latest pdf link
+
+# Cleverbot/chatbot
+chatbot_memory_seconds: 120  # How long should be the bot able to respond to messages it is not tagged in after the last valid message
 ```
 
 ### The embed builder
@@ -155,7 +158,10 @@ At the moment, the bot can add ❌ reactions to seemingly outdated embeds in cha
 >I would forget, if my bot haven't told me.
 
 ### The Cleverbot integration
-This feature is just for fun, anything else. Simply tag the bot in your message and tell him something dumb. 
+This feature is just for fun, anything else. Simply tag the bot in your message and tell him something dumb. The remote config allows to set how long the bot should act like it was tagged in a message even it he was not. This will be reset with every message. The default is `120` seconds. The command `!shut up` can be used in order to suspend the conversation with the bot immediately.
+```yaml
+chatbot_memory_seconds: 120
+```
 
 ![cleverbot_integration](res/demo/cleverbot.png)
 >Pretty need, heh?

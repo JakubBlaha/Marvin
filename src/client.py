@@ -6,7 +6,6 @@ import sys
 from discord import Guild
 from discord.ext.commands import Bot, Context
 
-from cleverbot_client import CleverbotClient
 from config import Config
 from errors import ErrorHandler
 from help import CustomHelpCommand
@@ -31,7 +30,7 @@ root.addHandler(handler)
 logger = logging.getLogger('Client')
 
 
-class FreefClient(CleverbotClient, Bot):
+class FreefClient(Bot):
     guild: Guild
     error_handler = ErrorHandler()
 
@@ -51,6 +50,7 @@ class FreefClient(CleverbotClient, Bot):
         self.load_extension('cogs.auto_reactor')
         self.load_extension('cogs.command_panel')
         self.load_extension('cogs.message_fixer')
+        self.load_extension('cogs.cleverbot')
 
     async def on_connect(self):
         # Get guild

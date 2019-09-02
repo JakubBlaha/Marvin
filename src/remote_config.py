@@ -87,6 +87,7 @@ class RemoteConfig(metaclass=RemoteConfigMeta):
     presences: List[Tuple[str, str]] = []
     moodle_username: str = ''
     moodle_password: EncryptedString = ''
+    chatbot_memory_seconds: int = 120
 
 
 class RemoteConfigCog(Cog):
