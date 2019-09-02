@@ -5,7 +5,7 @@ from discord import Message, User
 from discord.ext.commands import Cog, command, Context
 
 import common
-from client import FreefClient
+from client import Marvin
 from command_output import CommandOutputManager
 from timeout_message import TimeoutMessage
 
@@ -19,12 +19,12 @@ class ConsoleBehavior(Cog, name='Console-like behavior'):
     behavior of most consoles. Adds the `!re` command, so commands can be re-executed faster.
     """
 
-    bot: FreefClient
+    bot: Marvin
 
     # A dict storing pairs of [user: last command invocation context]
     _cache: Dict[User, Context] = None
 
-    def __init__(self, bot: FreefClient):
+    def __init__(self, bot: Marvin):
         self.bot = bot
         self._cache = {}
 
@@ -69,5 +69,5 @@ class ConsoleBehavior(Cog, name='Console-like behavior'):
                 logger.info(f'Command output of a command {cached_ctx.command} could not be retrieved!')
 
 
-def setup(bot: FreefClient):
+def setup(bot: Marvin):
     bot.add_cog(ConsoleBehavior(bot))

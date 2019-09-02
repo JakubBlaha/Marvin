@@ -5,7 +5,7 @@ from discord import TextChannel, Message, Embed, RawReactionActionEvent
 from discord.errors import NotFound
 from discord.ext.commands import Cog
 
-from client import FreefClient
+from client import Marvin
 from remote_config import RemoteConfig
 
 EMOJI_COMMAND_MAP = {
@@ -23,11 +23,11 @@ logger = logging.getLogger('CommandPanel')
 
 
 class CommandPanel(Cog):
-    bot: FreefClient
+    bot: Marvin
     _channel: TextChannel
     _msg: Message = None
 
-    def __init__(self, bot: FreefClient):
+    def __init__(self, bot: Marvin):
         self.bot = bot
 
     @Cog.listener()
@@ -146,5 +146,5 @@ class CommandPanel(Cog):
             pass
 
 
-def setup(bot: FreefClient):
+def setup(bot: Marvin):
     bot.add_cog(CommandPanel(bot))

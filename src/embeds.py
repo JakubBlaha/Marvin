@@ -518,7 +518,7 @@ class EmbedCog(Cog, name='Embed Builder'):
     @embed.command()
     async def new(self, ctx: Context):
         """
-        Build an embed with the help of freefbot.
+        Build an embed with the help of Marvin.
 
         You will be asked to enter a title, descriptions, color and embed
         fields. The available colors are listed at the discord API

@@ -13,13 +13,13 @@ from discord.ext import tasks
 from discord.ext.commands import Cog, Context, command
 
 from cache import Cache
-from client import FreefClient
+from client import Marvin
 from command_output import CommandOutput
 from decorators import del_invoc
 from remote_config import RemoteConfig
 from utils import ListToImageBuilder
 
-DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/freefbot')
+DOWNLOAD_PATH = os.path.abspath(gettempdir() + '/marvin')
 
 logger = logging.getLogger('TableScraper')
 
@@ -230,11 +230,11 @@ class TableScraper(Cog, name='Substitutions'):
     CACHE_SECONDS = 600
     CACHE_KEY = 'substits'
 
-    bot: FreefClient
+    bot: Marvin
     data: list
     data_date: str  # User will be told the date the data belongs to
 
-    def __init__(self, bot: FreefClient):
+    def __init__(self, bot: Marvin):
         self.bot = bot
         self.data = []
         self.data_date = 'Yet to load'

@@ -4,16 +4,16 @@ from discord import Game, Status
 from discord.ext.commands import Cog
 from discord.ext.tasks import loop
 
-from client import FreefClient
+from client import Marvin
 from config import Config
 from remote_config import RemoteConfig
 
 
 class PresenceCycler(Cog):
-    bot: FreefClient
+    bot: Marvin
     presences: List[Tuple[str, str]]  # [name, status[online, offline, idle, dnd]]
 
-    def __init__(self, bot: FreefClient):
+    def __init__(self, bot: Marvin):
         self.bot = bot
         self.presences = []
 
@@ -39,5 +39,5 @@ class PresenceCycler(Cog):
         await self.bot.change_presence(activity=Game(name=name), status=status)
 
 
-def setup(bot: FreefClient):
+def setup(bot: Marvin):
     bot.add_cog(PresenceCycler(bot))

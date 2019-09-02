@@ -3,7 +3,7 @@ import asyncio
 from discord import Message, Embed, NotFound
 from discord.ext.commands import Cog
 
-from client import FreefClient
+from client import Marvin
 
 CHARS: dict = {
     '2': 'ě',
@@ -50,9 +50,9 @@ def fix_content(s: str) -> str:
 
 class MessageFixer(Cog):
     REACTION = '\u274c'
-    bot: FreefClient
+    bot: Marvin
 
-    def __init__(self, bot: FreefClient):
+    def __init__(self, bot: Marvin):
         self.bot = bot
 
     @Cog.listener()
@@ -65,8 +65,8 @@ class MessageFixer(Cog):
         if msg.content.startswith(self.bot.command_prefix):
             return
 
-        # don't fix messages directed to freefbot/cleverbot
-        if '@freefbot' in msg.clean_content:
+        # don't fix messages directed to the bot
+        if (await self.bot.get_context(msg)).me.display_name in msg.clean_content:
             return
 
         fixed_content = fix_content(msg.content)
@@ -94,7 +94,7 @@ class MessageFixer(Cog):
             await msg.delete()
 
 
-def setup(bot: FreefClient):
+def setup(bot: Marvin):
     bot.add_cog(MessageFixer(bot))
 
 

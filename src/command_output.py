@@ -5,12 +5,12 @@ from typing import Union, Dict
 from discord import Embed, User, Message
 from discord.ext.commands import Context
 
-from client import FreefClient
+from client import Marvin
 from utils import WideEmbed
 
 
 class CommandOutputManager:
-    bot: FreefClient = None
+    bot: Marvin = None
 
     store: Dict[Context, CommandOutput] = {}
 

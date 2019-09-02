@@ -8,7 +8,7 @@ from discord.ext import tasks
 from discord.ext.commands import Cog, Context, group
 
 from cache import Cache
-from client import FreefClient
+from client import Marvin
 from command_output import CommandOutput
 from decorators import del_invoc
 from timeout_message import TimeoutMessage
@@ -20,13 +20,13 @@ logger = logging.getLogger('EmoteCog')
 class EmoteCog(Cog, name='Emotes'):
     """ Watch emote names in messages of guild members and send emotes according to them. """
 
-    bot: FreefClient
+    bot: Marvin
     emotes: dict
 
     CACHE_KEY = 'emotes'
     CACHE_SECONDS = 600
 
-    def __init__(self, bot: FreefClient):
+    def __init__(self, bot: Marvin):
         self.bot = bot
         self.emotes = {}
 
@@ -147,5 +147,5 @@ class EmoteCog(Cog, name='Emotes'):
             register=False)
 
 
-def setup(bot: FreefClient):
+def setup(bot: Marvin):
     bot.add_cog(EmoteCog(bot))

@@ -9,7 +9,7 @@ from simpleeval import simple_eval
 
 import common
 import utils
-from client import FreefClient
+from client import Marvin
 from command_output import CommandOutput
 from decorators import del_invoc
 from remote_config import RemoteConfig
@@ -20,7 +20,7 @@ logger = logging.getLogger('Commands')
 
 
 class Commands(Cog, name='General'):
-    bot: FreefClient
+    bot: Marvin
 
     def __init__(self, bot):
         self.bot = bot

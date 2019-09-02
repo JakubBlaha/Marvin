@@ -12,7 +12,7 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 
-from client import FreefClient
+from client import Marvin
 from decorators import list_subcommands
 from remote_config import RemoteConfig
 
@@ -38,13 +38,13 @@ class Memory:
 
 
 class Cleverbot(Cog, name='Chatting'):
-    bot: FreefClient
+    bot: Marvin
     memory: Memory
     driver: Chrome = None
     context: Context = None
     _input_box: WebElement
 
-    def __init__(self, bot: FreefClient):
+    def __init__(self, bot: Marvin):
         self.bot = bot
         self.memory = Memory()
 
@@ -107,8 +107,8 @@ class Cleverbot(Cog, name='Chatting'):
 
         # Clean content up, remove html since that causes errors
         # content = msg.clean_content
-        content = msg.content
-        content = content.replace('@freefbot', '')
+        content = msg.clean_content
+        content = content.replace(f'@{self.context.me.display_name}', '')
         content = content.encode('ascii', 'ignore').decode('ascii')
         content = re.sub('<.*?>', '', content)
 
@@ -143,5 +143,5 @@ class Cleverbot(Cog, name='Chatting'):
         await ctx.send(await self.communicate('shut up') + ' I am quiet now. 😢')
 
 
-def setup(bot: FreefClient):
+def setup(bot: Marvin):
     bot.add_cog(Cleverbot(bot))

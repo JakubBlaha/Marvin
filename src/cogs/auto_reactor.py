@@ -1,16 +1,16 @@
 from discord import Message
 from discord.ext.commands import Cog
 
-from client import FreefClient
+from client import Marvin
 from remote_config import RemoteConfig
 
 
 class AutoReactor(Cog):
-    bot: FreefClient
+    bot: Marvin
     _channels: list
     _reactions: list
 
-    def __init__(self, bot: FreefClient):
+    def __init__(self, bot: Marvin):
         self.bot = bot
 
     @Cog.listener()
@@ -33,5 +33,5 @@ class AutoReactor(Cog):
             await msg.add_reaction(self.bot.get_emoji(id_))
 
 
-def setup(bot: FreefClient):
+def setup(bot: Marvin):
     bot.add_cog(AutoReactor(bot))

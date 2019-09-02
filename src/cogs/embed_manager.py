@@ -10,7 +10,7 @@ from discord.ext import tasks
 from discord.ext.commands import Cog, command, Context
 
 import utils
-from client import FreefClient
+from client import Marvin
 from decorators import del_invoc, start_when_needed
 
 logger = logging.getLogger('EmbedManager')
@@ -57,9 +57,9 @@ class EmbedManager(Cog):
     REACTION_OUTDATED = '❌'
     CHANNEL_EMOJI = '🔔'
 
-    bot: FreefClient
+    bot: Marvin
 
-    def __init__(self, bot: FreefClient):
+    def __init__(self, bot: Marvin):
         self.bot = bot
 
     @property
@@ -157,6 +157,6 @@ class EmbedManager(Cog):
         # This comment can be deleted.
 
 
-def setup(bot: FreefClient):
+def setup(bot: Marvin):
     cog = EmbedManager(bot)
     bot.add_cog(cog)

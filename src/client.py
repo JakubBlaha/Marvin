@@ -30,7 +30,7 @@ root.addHandler(handler)
 logger = logging.getLogger('Client')
 
 
-class FreefClient(Bot):
+class Marvin(Bot):
     guild: Guild
     error_handler = ErrorHandler()
 
@@ -71,5 +71,5 @@ class FreefClient(Bot):
 
 if __name__ == '__main__':
     # Client
-    client = FreefClient(command_prefix=Config.command_prefix, help_command=CustomHelpCommand())
+    client = Marvin(command_prefix=Config.command_prefix, help_command=CustomHelpCommand())
     client.run(Config.token)

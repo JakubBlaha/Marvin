@@ -1,7 +1,9 @@
-# freefbot
+# Marvin
 ![logo](res/logo.png)
 
-A simple discord bot made for personal purposes in python using [discord.py](https://github.com/Rapptz/discord.py). This bot is focused on class discord servers for students, however can be easily modified for your own purposes.
+Marvin is a simple discord bot made for personal purposes in python using [discord.py](https://github.com/Rapptz/discord.py). This bot is focused on class discord servers for students, however can be easily modified for your own purposes.
+
+*Note: Marvin is still called freefbot in some places. This is because the bot was renamed.*
 
 ## Setup
 There is no public server hosting this bot, therefore you need to run it yourself on your RPi or something. Follow the instructions below.
@@ -10,12 +12,12 @@ There is no public server hosting this bot, therefore you need to run it yoursel
  - Install **Python 3.7** and `pipenv` if you haven't already.
  - Clone the project.
 ```bash
-git clone https://github.com/JakubBlaha/freefbot.git
+git clone https://github.com/JakubBlaha/Marvin.git
 ```
  - Create the [`config.yaml`](#the-local-config) file with your API key and the [`config`](#the-remote-config) channel in your discord server as shown below. 
  - Setup the virtual environment.
  ```bash
- cd freefbot
+ cd Marvin
  pipenv install
  ```
  - Activate the virtual environment and run the bot.
