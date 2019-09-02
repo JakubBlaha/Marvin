@@ -1,7 +1,9 @@
 import asyncio
 
 from discord import Message, Embed, NotFound
-from discord.ext.commands import Bot
+from discord.ext.commands import Cog
+
+from client import FreefClient
 
 CHARS: dict = {
     '2': 'ě',
@@ -46,18 +48,21 @@ def fix_content(s: str) -> str:
     return s
 
 
-class MessageFixer(Bot):
+class MessageFixer(Cog):
     REACTION = '\u274c'
+    bot: FreefClient
 
+    def __init__(self, bot: FreefClient):
+        self.bot = bot
+
+    @Cog.listener()
     async def on_message(self, msg: Message):
-        await super().on_message(msg)
-
         # don't fix own messages
-        if msg.author == self.user:
+        if msg.author == self.bot.user:
             return
 
         # don't fix commands
-        if msg.content.startswith(self.command_prefix):
+        if msg.content.startswith(self.bot.command_prefix):
             return
 
         # don't fix messages directed to freefbot/cleverbot
@@ -76,10 +81,10 @@ class MessageFixer(Bot):
             return reaction.message == msg and reaction.emoji == self.REACTION and user == msg.author
 
         try:
-            await self.wait_for('reaction_add', timeout=5, check=check)
+            await self.bot.wait_for('reaction_add', timeout=5, check=check)
         except asyncio.TimeoutError:
             try:
-                await msg.remove_reaction(self.REACTION, self.user)
+                await msg.remove_reaction(self.REACTION, self.bot.user)
             except NotFound:
                 pass
         else:
@@ -87,6 +92,10 @@ class MessageFixer(Bot):
             embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
             await msg.channel.send(embed=embed)
             await msg.delete()
+
+
+def setup(bot: FreefClient):
+    bot.add_cog(MessageFixer(bot))
 
 
 if __name__ == "__main__":

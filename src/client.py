@@ -10,7 +10,6 @@ from cleverbot_client import CleverbotClient
 from config import Config
 from errors import ErrorHandler
 from help import CustomHelpCommand
-from message_fixer import MessageFixer
 from remote_config import RemoteConfig
 from timetable import Timetable
 
@@ -32,7 +31,7 @@ root.addHandler(handler)
 logger = logging.getLogger('Client')
 
 
-class FreefClient(CleverbotClient, MessageFixer, Bot):
+class FreefClient(CleverbotClient, Bot):
     guild: Guild
     error_handler = ErrorHandler()
 
@@ -41,6 +40,7 @@ class FreefClient(CleverbotClient, MessageFixer, Bot):
 
         # Load extensions
         self.load_extension('remote_config')
+        self.load_extension('secure_config')
         self.load_extension('commands')
         self.load_extension('cogs.table_scraper')
         self.load_extension('embeds')
@@ -50,7 +50,7 @@ class FreefClient(CleverbotClient, MessageFixer, Bot):
         self.load_extension('cogs.presence')
         self.load_extension('cogs.auto_reactor')
         self.load_extension('cogs.command_panel')
-        self.load_extension('secure_config')
+        self.load_extension('cogs.message_fixer')
 
     async def on_connect(self):
         # Get guild
