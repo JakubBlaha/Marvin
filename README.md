@@ -1,5 +1,5 @@
 # Marvin
-![logo](res/logo.png)
+![logo](res/Marvin-BG.png)
 
 Marvin is a simple discord bot made for personal purposes in python using [discord.py](https://github.com/Rapptz/discord.py). This bot is focused on class discord servers for students, however can be easily modified for your own purposes.
 
