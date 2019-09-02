@@ -71,5 +71,5 @@ class FreefClient(Bot):
 
 if __name__ == '__main__':
     # Client
-    client = FreefClient(command_prefix='!', help_command=CustomHelpCommand())
+    client = FreefClient(command_prefix=Config.command_prefix, help_command=CustomHelpCommand())
     client.run(Config.token)

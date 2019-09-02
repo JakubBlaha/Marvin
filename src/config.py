@@ -61,3 +61,4 @@ class Config(metaclass=ConfigMeta):
     loglevel: int = logging.WARNING
     modulelog: bool = False
     remote_config_channel_name: str = 'config'
+    command_prefix: str = '!'
