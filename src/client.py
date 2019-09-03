@@ -10,7 +10,6 @@ from config import Config
 from errors import ErrorHandler
 from help import CustomHelpCommand
 from remote_config import RemoteConfig
-from timetable import Timetable
 
 # Logging
 log_format = '[%(levelname)-8s] [%(name)-16s] %(message)s'
@@ -55,10 +54,6 @@ class Marvin(Bot):
     async def on_connect(self):
         # Get guild
         self.guild = self.get_guild(Config.guild_id)
-
-        # Reload timetable
-        Timetable.reload(RemoteConfig.timetable)
-        pass
 
     # noinspection PyMethodMayBeStatic
     async def on_ready(self):

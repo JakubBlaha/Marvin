@@ -1,60 +1,69 @@
 import logging
-import sys
-from typing import List, Tuple
+from typing import List, Tuple, Any
 
 import yaml
 
 logger = logging.getLogger('Config')
 
+ANNOTATION_CONVERTING_OVERRIDES = {'List': list, 'Tuple': tuple, 'Dict': dict}
 
-class ConfigMeta(type):
+
+class EmptyValue:
+    pass
+
+
+class ConfigBase:
     """
-    Loads a config file as attributes of the subclass of this class.
+    This class allows to access the config values in a discord channel, which's
+    name is `config` by default. This allows multiple instances in different
+    environments to all have the same config setup shared together.
+
+    This file has to be added as an extension. Then values can be accessed lie so.
+
+        from remote_config import RemoteConfig\n
+        name = RemoteConfig.name
+
+    Attributes:
+        failed_conversions: A list of (name, value, exception) tuples containing the conversions that failed.
     """
 
-    def __init__(cls, *args):
-        """
-        Will load the config data from `config.yaml`. Can be overridden in order to load from another sources.
-        The `from_data` method then needs to be called explicitly.
-        """
+    failed_conversions: List[Tuple[str, Any, Exception]]  # name, value, exception
 
-        super().__init__(*args)
+    def __init__(self, data: dict):
+        self.failed_conversions = []
 
-        # Load config
-        with open('config.yaml') as f:
-            data = yaml.safe_load(f)
-        cls.from_data(data)
+        for name, expected_type in self.__annotations__.items():
+            # Get the actual value
+            default = getattr(self, name)
+            value = data.get(name, default)
 
-    def from_data(cls, data: dict):
-        """ Set the attributes from the given data. This needs to be called explicitly if __init__ is overridden. """
-        # Set values
-        for k, v in data.items():
-            if k not in cls.__annotations__:
-                logger.warning(f'Setting redundant config value `{k}`! Is it a typo?')
-
-            setattr(cls, k, v)
-
-        # Check all the values are filled in and the correct type
-        for name, expected_type in cls.__annotations__.items():
-            if not hasattr(cls, name):
-                logger.critical(f'Required value `{name}` has not been set in the config!')
-                sys.exit()
-
-            # Skip check if typing was used for annotating
-            if getattr(expected_type, '_name', None) in ('List', 'Tuple', 'Dict', 'EncryptedString'):
+            if default == value:
                 continue
 
-            value_type = type(getattr(cls, name))
-            if value_type != expected_type:
-                logger.warning(
-                    f'Value `{name}` in the config has not the expected type ({expected_type})'
-                    f' but a type of {value_type}!')
+            if value is EmptyValue:
+                logger.warning(f'Entry {name} not present in the data!')
+                continue
+
+            # See if there is an override for the conversion type
+            expected_type = ANNOTATION_CONVERTING_OVERRIDES.get(
+                getattr(expected_type, '_name', None),
+                expected_type)
+
+            if not isinstance(value, expected_type):
+                # Try to convert the value to the type specified by the type annotations
+                try:
+                    value = expected_type(value)
+                except Exception as ex:
+                    logger.warning(f'Could not convert entry {name}: {value} to type {expected_type}, {ex}!')
+                    self.failed_conversions.append((name, value, ex))
+
+            setattr(self, name, value)
 
 
-class Config(metaclass=ConfigMeta):
+class LocalConfig(ConfigBase):
     # Critical values
-    token: str
-    guild_id: int
+    token: str = EmptyValue
+    guild_id: int = EmptyValue
 
     # Optional values
     presences: List[Tuple[str, str]] = []
@@ -62,3 +71,8 @@ class Config(metaclass=ConfigMeta):
     modulelog: bool = False
     remote_config_channel_name: str = 'config'
     command_prefix: str = '!'
+
+
+# Config: LocalConfig
+with open('config.yaml') as f:
+    Config = LocalConfig(yaml.safe_load(f))

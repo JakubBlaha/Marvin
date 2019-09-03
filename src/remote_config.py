@@ -2,13 +2,14 @@ import logging
 from typing import List, Dict, Tuple
 
 import yaml
-from discord import TextChannel, utils
+from discord import utils, TextChannel
 from discord.ext.commands import Cog, group, Context
 
-from config import Config, ConfigMeta
+from config import ConfigBase, Config
 from decorators import list_subcommands, del_invoc
 from secure_config import EncryptedString
 from timeout_message import TimeoutMessage
+from timetable import Timetable
 
 logger = logging.getLogger('RemoteConfig')
 
@@ -43,33 +44,8 @@ async def config_from_channel(ch: TextChannel) -> dict:
     return data
 
 
-class RemoteConfigMeta(ConfigMeta):
-    """
-    This class allows to access the config values in a discord channel, which's
-    name is `config` by default. This allows multiple instances in different
-    environments to all have the same config setup shared together.
-
-    This file has to be added as an extension. Then values can be accessed lie so.
-
-        from remote_config import RemoteConfig\n
-        name = RemoteConfig.name
-    """
-
-    def __init__(cls, *args):
-        # We need to stop the base class from loading the config from `config.yaml`
-        type.__init__(cls, *args)
-
-    def from_data(cls, data: dict):
-        super().from_data(data)
-
-        # Resolve encrypted strings
-        for name, expected_type in cls.__annotations__.items():
-            value = getattr(cls, name)
-            if expected_type is EncryptedString and value:
-                setattr(cls, name, EncryptedString(value))
-
-
-class RemoteConfig(metaclass=RemoteConfigMeta):
+# noinspection PyPep8Naming
+class RemoteConfig_(ConfigBase):
     # Optional entries
     locale: str = 'en-US'
     command_panel_channel_id: int = None
@@ -83,14 +59,20 @@ class RemoteConfig(metaclass=RemoteConfigMeta):
     default_substits_target: str = '.'
     exam_channel_id: int = None
     homework_channel_id: int = None
-    timetable: List[List[Tuple[str, str, str]]] = []
+    timetable: Timetable = None
     presences: List[Tuple[str, str]] = []
     moodle_username: str = ''
     moodle_password: EncryptedString = ''
     chatbot_memory_seconds: int = 120
 
 
+# TEMPORARY
+RemoteConfig = RemoteConfig_({})
+
+
 class RemoteConfigCog(Cog):
+    config = RemoteConfig
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -105,7 +87,8 @@ class RemoteConfigCog(Cog):
 
         # Load the config
         data = await config_from_channel(channel)
-        RemoteConfig.from_data(data)
+
+        RemoteConfig.__init__(data)
 
     @group(hidden=True)
     @list_subcommands

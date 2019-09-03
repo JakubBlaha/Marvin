@@ -32,8 +32,6 @@ def decrypt(string: str) -> str:
 
 
 class EncryptedString(str):
-    _name = 'EncryptedString'
-
     def __new__(cls, content):
         return super().__new__(cls, decrypt(content))
 

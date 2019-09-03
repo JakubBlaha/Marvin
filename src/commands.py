@@ -14,7 +14,6 @@ from command_output import CommandOutput
 from decorators import del_invoc
 from remote_config import RemoteConfig
 from timeout_message import TimeoutMessage
-from timetable import Timetable
 
 logger = logging.getLogger('Commands')
 
@@ -61,13 +60,13 @@ class Commands(Cog, name='General'):
         if day_index is None:
             day_index = utils.Datetime.shifted_weekday()
 
-        day = Timetable[day_index]
+        day = RemoteConfig.timetable[day_index]
         subjs = set(day.without_dupes)
         names = list(map(lambda x: x.name, subjs))
 
         prefix = day_abbr[day_index]
 
-        string = f'**{prefix}:**' + '\n'.join([''] + names)
+        string = f'**{prefix}:**' + '\n ▸ '.join([''] + names)
 
         await CommandOutput(ctx, description=string).send()
 
@@ -86,7 +85,7 @@ class Commands(Cog, name='General'):
             day_index = utils.Datetime.shifted_weekday()
         day_index = min(day_index, 5) % 5  # Omit weekend
 
-        days = Timetable.days[:5]  # Omit weekend
+        days = RemoteConfig.timetable.days[:5]  # Omit weekend
 
         passed_day = days[day_index - 1].without_dupes
         pending_day = days[day_index].without_dupes
@@ -96,10 +95,10 @@ class Commands(Cog, name='General'):
         in_subjs = [i for i in pending_day.subjs if i not in passed_day.subjs]
 
         # Build string
-        string = '**Out:**\n'
-        string += '\n'.join(map(lambda x: x.name, out_subjs))
-        string += '\n\n**In:**\n'
-        string += '\n'.join(map(lambda x: x.name, in_subjs))
+        string = '**Out:**\n ▸ '
+        string += '\n ▸ '.join(map(lambda x: x.name, out_subjs))
+        string += '\n\n**In:**\n ▸ '
+        string += '\n ▸ '.join(map(lambda x: x.name, in_subjs))
 
         await CommandOutput(ctx, description=string).send()
 

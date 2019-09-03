@@ -86,30 +86,28 @@ class Day:
         yield from self.subjs
 
 
-class TimetableMeta(type):
-    days: List[Day] = []
-
-    def reload(cls, data: List[List[Tuple[str, str, str]]]):
-        """
-        Reload the Days and the Subjects from the given data. The data should be in the following format.
-        days[subjects[abbreviation, full name, starting time e. g. 0905 for 9:05]]
-        """
-        data = (data + [[]] * 7)[:7]  # Make sure the data is at least 7 empty days long.
-        cls.days = [Day(day) for day in data]
-
-    def __getitem__(cls, item: int) -> Day:
-        """ Return the corresponding Day object. """
-        return cls.days[item]
-
-    def __iter__(cls) -> Day:
-        yield from cls.days
-
-
-# noinspection PyUnresolvedReferences
-class Timetable(metaclass=TimetableMeta):
+class Timetable:
     """
     Represents a timetable.
 
     Attributes:
         days: A list of Day objects representing different days.
     """
+
+    days: List[Day] = []
+
+    def __init__(self, data: List[List[Tuple[str, str, str]]]):
+        """
+        Build an instance from the given data. The data should be in the following format.
+        days[subjects[abbreviation, full name, starting time e. g. 0905 for 9:05]]
+        """
+
+        data = (data + [[]] * 7)[:7]  # Make sure the data is at least 7 empty days long.
+        self.days = [Day(day) for day in data]
+
+    def __getitem__(self, item: int) -> Day:
+        """ Return the corresponding Day object. """
+        return self.days[item]
+
+    def __iter__(self) -> Day:
+        yield from self.days
