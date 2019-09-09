@@ -60,6 +60,7 @@ presences: [['Hello world!', online]]  # Additional presences that will be added
 loglevel: 30  # warning (default)
 modulelog: False  # When set to true will enable logs from some external modules disabled by default
 remote_config_channel_name: config  # The name of the channel to load the remote config from. This is `config` by default.
+load_dev_config: False  # Whether messages starting with `dev` in the config channel should be loaded.
 
 command_prefix: "!"
 ```

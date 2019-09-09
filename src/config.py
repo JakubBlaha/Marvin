@@ -71,6 +71,7 @@ class LocalConfig(ConfigBase):
     modulelog: bool = False
     remote_config_channel_name: str = 'config'
     command_prefix: str = '!'
+    load_dev_config: bool = False
 
 
 # Config: LocalConfig

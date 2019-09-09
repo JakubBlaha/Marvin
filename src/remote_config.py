@@ -14,14 +14,26 @@ from timetable import Timetable
 logger = logging.getLogger('RemoteConfig')
 
 
-async def config_from_channel(ch: TextChannel) -> dict:
-    """ Return a dict built from yaml-formatted messages in the channel. """
+async def config_from_channel(ch: TextChannel, load_dev: bool = False) -> dict:
+    """ Return a dict built from yaml-formatted messages in the channel.
+    :param ch: The text channel the config should be taken from.
+    :param load_dev: Whether dev config should be loaded. These are messages
+        starting with `dev`.
+    :return:
+    """
+
     data = {}
-    async for msg in ch.history():
+    async for msg in ch.history(oldest_first=True):
         content = msg.clean_content
 
+        _is_dev = content.startswith('dev')
+        if _is_dev and not load_dev:
+            continue
+        elif _is_dev:
+            logger.debug(f'Loaded message {content[:50]}')
+
         # Clean up
-        content = content.replace('```yaml', '').replace('```', '')
+        content = content.replace('```yaml', '').replace('```', '').replace('dev', '')
 
         # Convert
         # noinspection PyBroadException
@@ -86,7 +98,7 @@ class RemoteConfigCog(Cog):
         channel = await self.bot.fetch_channel(utils.get(guild.channels, name=Config.remote_config_channel_name).id)
 
         # Load the config
-        data = await config_from_channel(channel)
+        data = await config_from_channel(channel, load_dev=Config.load_dev_config)
 
         RemoteConfig.__init__(data)
 
