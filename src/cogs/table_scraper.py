@@ -96,6 +96,7 @@ class TableData:
         self.data = list(map(list, zip(*cols)))
 
     def extract_table_cols(self, col_indexes: list):
+        # TODO We probably wanna do this similarly to the filter_rows method
         """
         Extract given columns.
 
@@ -109,6 +110,25 @@ class TableData:
 
         self.data = [[col['text'] for col in itemgetter(*col_indexes)(row)]
                      for row in self.data]
+
+    def filter_rows(self, regex: str, separator: str = '#'):
+        """
+        Filter rows by a given regex, the rows matching the regex will be preserved. The regex check will be run on
+        a row as a whole and every cell in the checked string will start with the string specified in the separator
+        parameter.
+
+        :param regex: The regex pattern that rows will be checked with. If the row matches the regex, it will be
+            preserved.
+        :param separator: The separator that every cell will start with when joined into a whole string.
+        """
+
+        joined_rows = [separator + separator.join(row) for row in self.data]
+        filtered_indexes = []
+        for index, row in enumerate(joined_rows):
+            if re.match(regex, row):
+                filtered_indexes.append(index)
+
+        self.data = [self.data[i] for i in filtered_indexes]
 
     def add_headers(self, headers: list):
         """
@@ -151,7 +171,7 @@ class TableData:
             for index, cell in enumerate(row):
                 row[index] = cell.split('->', 1)[-1]
 
-    def v_split_cells(self, col_indexes: list):
+    def v_split_cells(self, col_index: int):
         """
         Splits merged cells into individual rows vertically.
 
@@ -163,37 +183,33 @@ class TableData:
             col_indexes: A list containing the column indexes to be split.
         """
 
-        _data = self.get_cols()
+        # cols = self.get_cols()
+        # col = cols[0]
+        #
+        # empty = 0
+        # for index, cell in enumerate(col):
+        #     # Add to the counter if empty
+        #     if not cell:
+        #         empty += 1
+        #         continue
+        #
+        #     for i in range(1, empty + 1):
+        #         if index - i >= 0:
+        #             col[index - i] = cell
+        #         if index + i < len(col):
+        #             col[index + i] = cell
+        #     empty = 0
+        #     print(col)
+        #
+        # self.set_cols(cols)
 
-        # Split cols
-        for col in [_data[i] for i in col_indexes]:
-            _range = 1
-            _bases = [(i, c) for i, c in enumerate(col) if c]
-
-            while '' in col:
-                for index, cell in _bases:
-                    # Ensure in bounds
-                    if (index - _range) < 0 or (index + _range) >= len(col):
-                        continue
-
-                    # Ensure both sides are empty
-                    if col[index - _range] or col[index + _range]:
-                        continue
-
-                    col[index + _range] = cell
-                    col[index - _range] = cell
-
-                _range += 1
-
-        self.set_cols(_data)
-
-        # Delete columns that would only represent the merged cell
-        # Find first col index not present in the list
-        _base_col_index = min(
-            set(range(max(col_indexes) + 2)) - set(col_indexes))
-        for row in self.data:
-            if not row[_base_col_index]:
-                self.data.remove(row)
+        # # Delete columns that would only represent the merged cell
+        # # Find first col index not present in the list
+        # _base_col_index = min(
+        #     set(range(max(col_indexes) + 2)) - set(col_indexes))
+        # for row in self.data:
+        #     if not row[_base_col_index]:
+        #         self.data.remove(row)
 
     def v_merge_cells(self, up: bool = True):
         """
@@ -243,6 +259,8 @@ class TableScraper(Cog, name='Substitutions'):
         self.bot.add_listener(self.on_ready)
 
     async def on_ready(self):
+        # HOTFIX
+        return
         self.reload_data.start()
 
     # noinspection PyCallingNonCallable
@@ -273,10 +291,11 @@ class TableScraper(Cog, name='Substitutions'):
         logger.debug('Preparing data ...')
         table = TableData(data)
         table.extract_table_cols(RemoteConfig.substits_col_indexes)
+        table.filter_rows(r'^#(\d\.[A-Z]|#)')  # We are matching a class notation or an empty cell
         table.add_headers(RemoteConfig.substits_headers)
         table.replace_contents(RemoteConfig.substits_replace_contents)
         table.process_arrows()
-        table.v_split_cells([0])
+        table.v_split_cells(0)
         table.v_merge_cells()
 
         # Save for later use
@@ -304,6 +323,9 @@ class TableScraper(Cog, name='Substitutions'):
         and converted to a table. If you wanna get the full substitution list (not a filtered one, as by default),
         type `!substits .` or `!substits all` instead.
         """
+
+        await ctx.send('> Sorry, I am sick and therefore **this command** is **temporarily disabled**. FeelsBadMan.')
+        return
 
         await ctx.trigger_typing()
 
