@@ -76,6 +76,8 @@ class RemoteConfig_(ConfigBase):
     moodle_username: str = ''
     moodle_password: EncryptedString = ''
     chatbot_memory_seconds: int = 120
+    chart_studio_username: str = ''
+    chart_studio_token: EncryptedString = ''
 
 
 # TEMPORARY
