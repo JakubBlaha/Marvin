@@ -1,12 +1,13 @@
+import datetime
 import logging
 import re
-import time
-from typing import Dict, Optional
+import warnings
+from typing import Dict
 
-from discord import Message
+from discord import Message, User
 from discord.ext.commands import Cog, Context, group
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver import PhantomJS
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
@@ -20,27 +21,45 @@ logger = logging.getLogger('Cleverbot')
 
 
 class Memory:
-    """ Will remember the people who ere chatting with cleverbot. """
-    _timestamps: Dict[int, float] = {}  # id: timestamp
+    """ Stores the user context and decides whether the bot should respond based on the last message. """
+    _user_ids: Dict[int, Context] = {}
 
-    def remembers(self, user_id: int) -> bool:
-        """ Whether the bot should respond to a message he is not tagged in. The new timestamp will be registered. """
-        return user_id in self._timestamps and time.time() - self._timestamps[
-            user_id] < RemoteConfig.chatbot_memory_seconds
+    def should_respond(self, user: User, ctx: Context):
+        """ Whether the bot should respond to the message without mentioning. Return False if the bot has not been
+        tagged yet, else consider the max configured time in the remote config. Also takes into an account the
+        present channel. """
 
-    def reset(self, user_id: int):
-        """ Put or reset the user data in the memory. """
-        self._timestamps[user_id] = time.time()
+        try:
+            msg: Message = self._user_ids[user.id].message
+        except KeyError:
+            return False
 
-    def remove(self, user_id: int) -> Optional[float]:
-        """ Remove the user from the memory. Return his last timestamp. """
-        return self._timestamps.pop(user_id, None)
+        if msg.channel != ctx.channel:
+            return False
+
+        created_at = msg.created_at
+        now = datetime.datetime.utcnow()
+        max_diff = datetime.timedelta(seconds=RemoteConfig.chatbot_memory_seconds)
+
+        return now - created_at < max_diff
+
+    def update(self, user: User, context: Context):
+        """ Update the user's context. Use to reset the timer. """
+        self._user_ids[user.id] = context
+
+    def remove(self, user: User):
+        """ Forget the user last context. """
+        self._user_ids.pop(user.id)
+
+    def is_stored(self, user: User):
+        """ Whether the context of the user is stored or not. """
+        return user.id in self._user_ids
 
 
 class Cleverbot(Cog, name='Chatting'):
     bot: Marvin
     memory: Memory
-    driver: Chrome = None
+    driver: PhantomJS = None
     context: Context = None
     _input_box: WebElement
 
@@ -49,15 +68,11 @@ class Cleverbot(Cog, name='Chatting'):
         self.memory = Memory()
 
     def _setup_driver(self):
-        # Initialize options
-        logger.debug('Initializing driver options ...')
-        options = ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--log-level=3')  # fatal
-
         # Initialize the browser
         logger.debug('Initializing browser ...')
-        self.driver = Chrome(options=options)
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=UserWarning)
+            self.driver = PhantomJS()
 
         # Get the url
         logger.debug('Loading cleverbot ...')
@@ -69,12 +84,10 @@ class Cleverbot(Cog, name='Chatting'):
             '//*[@id="avatarform"]/input[1]')
 
     async def communicate(self, string: str):
-        # Initialize if needed
+        # Warn if not initialized
         if not self.driver:
-            _msg = await self.context.send('I am waking up. Please wait a little ... 🥱')
-            await self.context.trigger_typing()
-            self._setup_driver()
-            await _msg.delete()
+            logger.error('Driver not initialized!')
+            return 'I cannot get up. Help me! Tell the developers please. :frowning:'
 
         # Type the input in
         self._input_box.send_keys(string + '\n')
@@ -100,10 +113,10 @@ class Cleverbot(Cog, name='Chatting'):
             return
 
         # Skip if not mentioned or the bot does not remember chatting with the user
-        if self.bot.user not in msg.mentions and not self.memory.remembers(msg.author.id):
+        if self.bot.user not in msg.mentions and not self.memory.should_respond(msg.author, self.context):
             return
 
-        self.memory.reset(msg.author.id)
+        self.memory.update(msg.author, self.context)
 
         # Clean content up, remove html since that causes errors
         # content = msg.clean_content
@@ -115,7 +128,13 @@ class Cleverbot(Cog, name='Chatting'):
         # Log
         logger.debug(f'Received message input: *{content}*')
 
-        # Trigger typing
+        # Init driver
+        if not self.driver:
+            _msg = await self.context.send('I am waking up. Please wait a little ... 🥱')
+            await msg.channel.trigger_typing()
+            self._setup_driver()
+            await _msg.delete()
+
         await msg.channel.trigger_typing()
 
         # Get the reply
@@ -135,12 +154,17 @@ class Cleverbot(Cog, name='Chatting'):
     @shut.command()
     async def up(self, ctx: Context):
         """ Make the bot not respond to your messages until you tag him again. """
-        if not self.memory.remove(ctx.author.id):
+        if not self.driver:
+            await ctx.send("We weren't even talking. Were we?")
+            return
+
+        if not self.memory.is_stored(ctx.author):
             await ctx.send("We weren't even talking!")
             return
 
         await ctx.trigger_typing()
         await ctx.send(await self.communicate('shut up') + ' I am quiet now. 😢')
+        self.memory.remove(ctx.author)
 
 
 def setup(bot: Marvin):
