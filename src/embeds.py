@@ -386,13 +386,16 @@ class EmbedBuilder:
         both.
         """
 
-        # Ask the field index
-        index = await self._request_input('field index', regex=common.Re.INDEX)
-        index = int(index)
+        # Pick the field index automatically if there's only one field
+        if len(self.preview_embed.fields) == 1:
+            index = 0
+        else:
+            # Ask the field index
+            index = await self._request_input('field index', regex=common.Re.INDEX)
+            index = int(index)
 
         if index >= len(self.preview_embed.fields):
-            await TimeoutMessage(self.ctx,
-                                 5).send(embed=common.Embed.INVALID_INDEX)
+            await TimeoutMessage(self.ctx).send(embed=common.Embed.INVALID_INDEX)
             return self
 
         # Ask what to edit
