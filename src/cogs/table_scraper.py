@@ -331,7 +331,7 @@ class TableScraper(Cog, name='Substitutions'):
         # to ensure that they match
         Cache.cache(self.CACHE_KEY, (self.data, self.data_date))
 
-    @command(aliases=['supl', 'suply'])
+    @command(aliases=['supl', 'suply', 'sub'])
     @del_invoc
     async def substits(self, ctx: Context, target=None):
         """
