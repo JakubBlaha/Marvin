@@ -66,7 +66,6 @@ class LocalConfig(ConfigBase):
     guild_id: int = EmptyValue
 
     # Optional values
-    presences: List[Tuple[str, str]] = []
     loglevel: int = logging.WARNING
     modulelog: bool = False
     remote_config_channel_name: str = 'config'

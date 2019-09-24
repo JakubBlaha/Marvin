@@ -5,7 +5,6 @@ from discord.ext.commands import Cog
 from discord.ext.tasks import loop
 
 from client import Marvin
-from config import Config
 from remote_config import RemoteConfig
 
 
@@ -22,7 +21,6 @@ class PresenceCycler(Cog):
     async def restart(self):
         # We are gonna retrieve the presence list here
         self.presences = RemoteConfig.presences
-        self.presences.extend(Config.presences)
 
         # Restart the loop
         self.loop.start()

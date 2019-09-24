@@ -54,7 +54,6 @@ There needs to be a `config.yaml` file in the root folder with some critical inf
 ```yaml
 token: ...  # The discord app API token
 guild_id: ...  # The id of your guild
-presences: [['Hello world!', online]]  # Additional presences that will be added after the presences in the remote config
 
 # Logging
 loglevel: 30  # warning (default)
@@ -73,7 +72,7 @@ The remote config feature allows to add the bot configuration in a separate disc
 ```yaml
 # General
 locale: en-us  # The locale that will be used for various purposes
-presences: [['!help', idle]]  # A list of presence the bot will cycle through. One for 10 seconds. The format is [name, Status[online, idle, invisible, dnd]]. Additional presences can be added using the local config.
+presences: [['!help', idle]]  # A list of presence the bot will cycle through. One for 10 seconds. The format is [name, Status[online, idle, invisible, dnd]].
 
 # The Command Panel
 command_panel_channel_id: ...
