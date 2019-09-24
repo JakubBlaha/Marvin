@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import asyncio
-import inspect
 import re
 from copy import deepcopy
 from typing import Callable, Optional
 
 from discord import Embed, Message
-from discord.ext.commands import Bot, Cog
+from discord.ext.commands import Bot, Cog, Converter
 from discord.ext.commands import ColourConverter as ColorConverter
 from discord.ext.commands import Context, group
 
@@ -502,6 +501,21 @@ class EmbedBuilder:
         return self
 
 
+class EmbedIndexMessageConverter(Converter):
+    async def convert(self, ctx: Context, argument: str):
+        index = int(argument)
+
+        # Get the embed
+        async for msg in ctx.history():
+            if msg.embeds:
+                index -= 1
+
+                if index == 0:
+                    return msg
+        else:
+            await TimeoutMessage(ctx).send(embed=common.Embed.INVALID_INDEX)
+
+
 class EmbedCog(Cog, name='Embed Builder'):
     """ Build and edit embeds. """
 
@@ -515,8 +529,6 @@ class EmbedCog(Cog, name='Embed Builder'):
         Available subcommands:
             new, edit
         """
-
-        pass
 
     @embed.command()
     async def new(self, ctx: Context):
@@ -539,132 +551,108 @@ class EmbedCog(Cog, name='Embed Builder'):
 
     @embed.group()
     @list_subcommands
-    async def edit(self, ctx: Context, index=0):
+    async def edit(self, ctx: Context):
         """
         Edit an embed.
 
-        An index of the embed needs to be given. The last sent embed has the
-        index 0. The following example takes the last sent embed and edits its
-        title. A subcommand and the actual argument needs to follow.
+        An index of the embed needs to be given to each and every subcommand. The last sent embed is considered
+        to be of index `0`. The following example takes the last sent embed and edits its
+        title. The actual value needs to follow after the embed index.
 
         Example:
-            !embed edit 0 title MyAwesomeTitle
-
-        Available subcommands:
-            title, desc, footer, fields
+        ```
+        !embed edit title 0 MyAwesomeTitle
+        ```
         """
 
-        # Convert index
-        index = int(index)
-
-        # Get the embed
-        async for msg in ctx.history():
-            if msg.embeds:
-                index -= 1
-
-                if index < 0:
-                    # Make sure the bot will be able to edit this message
-                    if ctx.bot.user != msg.author:
-                        await TimeoutMessage(ctx).send('> ⚠ I have not created this embed, therefore I cannot edit it.')
-                        return
-
-                    # Add the embed, msg to the context, so subcommands can use it
-                    ctx.msg = msg
-                    break
-        else:
-            await TimeoutMessage(ctx).send(embed=common.Embed.INVALID_INDEX)
-            return
-
-    # noinspection PyMethodParameters
-    # TODO ctx.message?
-    def require_msg(fn: Callable):
-        # A decorator aborting the command execution if ctx.msg attr is missing
-        async def wrapper(self, ctx: Context, *args, **kw):
-            if not hasattr(ctx, 'msg'):
-                return
-
-            await fn(self, ctx, *args, **kw)
-
-        wrapper.__name__ = fn.__name__
-        wrapper.__doc__ = fn.__doc__
-        wrapper.__signature__ = inspect.signature(fn)
-
-        return wrapper
-
     @edit.command(aliases=['t'])
-    @require_msg
-    async def title(self, ctx, *, title):
+    async def title(self, ctx, msg_index: EmbedIndexMessageConverter, *, title):
         """
         Edit the embed title.
 
         Example:
-            !embed edit 0 title MyAwesomeTitle
+        ```
+        !embed edit title 0 MyAwesomeTitle
+        ```
         """
 
-        await EmbedBuilder(ctx, ctx.msg).set_title(title)
+        # noinspection PyTypeChecker
+        await EmbedBuilder(ctx, msg_index).set_title(title)
 
     @edit.command(aliases=['u'])
-    @require_msg
-    async def url(self, ctx, *, url):
+    async def url(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, url):
         """
         Edit the embed url.
 
         Example:
-            !embed edit 0 url https://example.com
+        ```
+        !embed edit url 0 https://example.com
+        ```
         """
 
-        await EmbedBuilder(ctx, ctx.msg).set_url(url)
+        # noinspection PyTypeChecker
+        await EmbedBuilder(ctx, msg_index).set_url(url)
 
     @edit.command(aliases=['d'])
-    @require_msg
-    async def desc(self, ctx, *, description):
+    async def desc(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, description):
         # We cannot use `description` here, because it interferes with the cog.description property.
         """
         Edit the embed description.
 
         Example:
-            !embed edit 0 desc MyAwesomeDescription
+        ```
+        !embed edit desc 0 MyAwesomeDescription
+        ```
         """
 
-        await EmbedBuilder(ctx, ctx.msg).set_description(description)
+        # noinspection PyTypeChecker
+        await EmbedBuilder(ctx, msg_index).set_description(description)
 
     @edit.command(aliases=['c'])
-    @require_msg
-    async def color(self, ctx, *, color):
+    async def color(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, color):
         """
         Edit the embed color.
 
         Example:
-            !embed edit 0 color green
-            !embed edit 0 color 00ff00
-            !embed edit 0 color #00ff00
-            !embed edit 0 color 0x00ff00
-            !embed edit 0 color 0x#00ff00
+        ```
+        !embed edit color 0 green
+        !embed edit color 0 00ff00
+        !embed edit color 0 #00ff00
+        !embed edit color 0 0x00ff00
+        !embed edit color 0 0x#00ff00
+        ```
         """
 
-        await EmbedBuilder(ctx, ctx.msg).set_color(color)
+        # noinspection PyTypeChecker
+        await EmbedBuilder(ctx, msg_index).set_color(color)
 
     @edit.command(aliases=['foo'])
-    @require_msg
-    async def footer(self, ctx, *, footer):
+    async def footer(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, footer):
         """
         Edit the embed footer.
 
         Example:
-            !embed edit 0 footer MyAwesomeFooter
+        ```
+        !embed edit footer 0 MyAwesomeFooter
+        ```
         """
-        await EmbedBuilder(ctx, ctx.msg).set_footer(footer)
+
+        # noinspection PyTypeChecker
+        await EmbedBuilder(ctx, msg_index).set_footer(footer)
 
     @edit.command(aliases=['f', 'field'])
-    @require_msg
-    async def fields(self, ctx):
+    async def fields(self, ctx: Context, msg_index: EmbedIndexMessageConverter):
         """
         Edit the fields using reaction. Further guide will be given.
 
         Example:
-            !embed edit 0 fields
+        ```
+        !embed edit fields 0
+        ```
         """
-        await EmbedBuilder(ctx, ctx.msg).start_field_query()
+
+        # noinspection PyTypeChecker
+        await EmbedBuilder(ctx, msg_index).start_field_query()
 
 
 def setup(bot: Bot):
