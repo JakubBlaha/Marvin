@@ -1,19 +1,19 @@
 import datetime
 import logging
 import re
-import warnings
 from typing import Dict
 
 from discord import Message, User
 from discord.ext.commands import Cog, Context, group
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver import PhantomJS
+from selenium.webdriver import PhantomJS, Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 
 from client import Marvin
+from config import Config
 from decorators import list_subcommands
 from remote_config import RemoteConfig
 
@@ -70,9 +70,12 @@ class Cleverbot(Cog, name='Chatting'):
     def _setup_driver(self):
         # Initialize the browser
         logger.debug('Initializing browser ...')
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', category=UserWarning)
-            self.driver = PhantomJS()
+        opts = ChromeOptions()
+        if Config.headless_chrome:
+            opts.add_argument('headless')
+            opts.add_argument('disable-gpu')
+
+        self.driver = Chrome(options=opts)
 
         # Get the url
         logger.debug('Loading cleverbot ...')
@@ -119,7 +122,6 @@ class Cleverbot(Cog, name='Chatting'):
         self.memory.update(msg.author, self.context)
 
         # Clean content up, remove html since that causes errors
-        # content = msg.clean_content
         content = msg.clean_content
         content = content.replace(f'@{self.context.me.display_name}', '')
         content = content.encode('ascii', 'ignore').decode('ascii')

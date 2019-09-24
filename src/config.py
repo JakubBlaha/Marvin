@@ -71,6 +71,7 @@ class LocalConfig(ConfigBase):
     remote_config_channel_name: str = 'config'
     command_prefix: str = '!'
     load_dev_config: bool = False
+    headless_chrome: bool = True
 
 
 # Config: LocalConfig
