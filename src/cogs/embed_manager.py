@@ -88,7 +88,7 @@ class EmbedManager(Cog):
 
         # Do the marking
         async for embed in self.embeds:
-            if utils.EmbedUtils.is_outdated(embed):
+            if embed < datetime.datetime.now().date():
                 await embed.msg.add_reaction(self.REACTION_OUTDATED)
             else:
                 # Remove X reactions from all users, cause people like adding
@@ -116,8 +116,7 @@ class EmbedManager(Cog):
         # Create the topic string outta the embeds
         topic = '**Upcoming:** '
         async for embed in self.embeds:
-            if not utils.EmbedUtils.is_outdated(embed):
-                topic += embed.title + ', '
+            topic += embed.title + ', '
         topic = topic[:-2]
 
         # Get the channel

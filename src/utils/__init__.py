@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import calendar
 import datetime
 from typing import List
@@ -53,7 +55,11 @@ class Datetime:
                 break
 
         try:
-            return datetime.datetime.strptime(string, '%d. %b').date()
+            date = datetime.datetime.strptime(string, '%d. %b').date()
+            date = date.replace(year=datetime.datetime.now().year)
+
+            return date
+
         except ValueError:
             return fallback
 
@@ -70,21 +76,6 @@ class Datetime:
 
 
 class EmbedUtils:
-    @staticmethod
-    def is_outdated(embed: Embed) -> bool:
-        """
-        Whether an embed is outdated. Only the embed description is considered
-        :param embed: The embed with a date in it's description.
-        :return: Whether the embed is outdated.
-        """
-
-        now = datetime.datetime.now()
-
-        date = Datetime.from_string(embed.description)  # Convert
-        date = date.replace(year=now.year)  # Set the current year
-
-        return date < now.date()
-
     @staticmethod
     async def channel_summary(channel: TextChannel, **kw) -> Embed:
         """
