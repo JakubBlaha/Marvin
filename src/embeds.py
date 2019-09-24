@@ -563,11 +563,16 @@ class EmbedCog(Cog, name='Embed Builder'):
                 index -= 1
 
                 if index < 0:
+                    # Make sure the bot will be able to edit this message
+                    if ctx.bot.user != msg.author:
+                        await TimeoutMessage(ctx).send('> ⚠ I have not created this embed, therefore I cannot edit it.')
+                        return
+
                     # Add the embed, msg to the context, so subcommands can use it
                     ctx.msg = msg
                     break
         else:
-            await TimeoutMessage(ctx, 5).send(embed=common.Embed.INVALID_INDEX)
+            await TimeoutMessage(ctx).send(embed=common.Embed.INVALID_INDEX)
             return
 
     # noinspection PyMethodParameters
