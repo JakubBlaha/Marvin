@@ -12,6 +12,7 @@ from discord.ext.commands import Cog, command, Context
 import utils
 from client import Marvin
 from decorators import del_invoc, start_when_needed
+from timeout_message import TimeoutMessage
 
 logger = logging.getLogger('EmbedManager')
 
@@ -107,6 +108,7 @@ class EmbedManager(Cog):
     async def mark_embeds(self, ctx: Context):
         """ Put the `❌` emoji over outdated events immediately. """
         await self.mark_loop.coro()
+        await TimeoutMessage(ctx).send('> ✅ Marked embeds successfully.')
 
     # noinspection PyCallingNonCallable
     @start_when_needed()
