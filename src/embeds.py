@@ -6,7 +6,7 @@ from copy import deepcopy
 from typing import Callable, Optional
 
 from discord import Embed, Message
-from discord.ext.commands import Bot, Cog, Converter
+from discord.ext.commands import Bot, Cog, Converter, BadArgument
 from discord.ext.commands import ColourConverter as ColorConverter
 from discord.ext.commands import Context, group
 
@@ -336,8 +336,12 @@ class EmbedBuilder:
     @async_update_preview
     async def set_color(self, color: str = None) -> EmbedBuilder:
         """ Request the user to enter the embed color or use the given one. """
-        self.preview_embed.colour = await ColorConverter().convert(
-            self.ctx, color or await self._request_input('color'))
+        try:
+            self.preview_embed.colour = await ColorConverter().convert(
+                self.ctx, color or await self._request_input('color'))
+        except BadArgument:
+            await TimeoutMessage(self.ctx).send('> ⚠ Bad color! Default one will be used.')
+            self.preview_embed.colour = Embed.Empty
 
         return self
 
@@ -503,7 +507,7 @@ class EmbedBuilder:
 
 class EmbedIndexMessageConverter(Converter):
     async def convert(self, ctx: Context, argument: str):
-        index = int(argument)
+        index = int(argument) + 1
 
         # Get the embed
         async for msg in ctx.history():
