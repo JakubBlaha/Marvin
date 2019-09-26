@@ -93,12 +93,15 @@ class Commands(Cog, name='General'):
         # Subtract
         out_subjs = [i for i in passed_day.subjs if i not in pending_day.subjs]
         in_subjs = [i for i in pending_day.subjs if i not in passed_day.subjs]
+        keep_subjs = [i for i in passed_day.subjs if i in pending_day.subjs]
 
         # Build string
         string = '**Out:**\n ▸ '
         string += '\n ▸ '.join(map(lambda x: x.name, out_subjs))
         string += '\n\n**In:**\n ▸ '
         string += '\n ▸ '.join(map(lambda x: x.name, in_subjs))
+        string += '\n\n**Keep:**\n ▸ '
+        string += '\n ▸ '.join(map(lambda x: x.name, keep_subjs))
 
         await CommandOutput(ctx, description=string).send()
 
