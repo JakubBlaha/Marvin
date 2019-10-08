@@ -61,6 +61,7 @@ class RemoteConfig_(ConfigBase):
     # Optional entries
     locale: str = 'en-US'
     command_panel_channel_id: int = None
+    command_panel_timeout: int = 3600
     auto_reactor_channel_ids: List[int] = []
     auto_reactor_reaction_ids: List[int] = []
     timetable_url: str = 'https://example.com'

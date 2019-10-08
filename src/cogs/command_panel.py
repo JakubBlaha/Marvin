@@ -137,7 +137,7 @@ class CommandPanel(Cog):
             pass
 
         # Sleep
-        await sleep(60)
+        await sleep(RemoteConfig.command_panel_timeout)
 
         # Delete the message
         try:

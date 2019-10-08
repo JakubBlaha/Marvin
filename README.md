@@ -80,6 +80,7 @@ presences: [['!help', idle]]  # A list of presence the bot will cycle through. O
 
 # The Command Panel
 command_panel_channel_id: ...
+command_panel_timeout: 3600  # All messages sent to this channel will be deleted after this period (in seconds).
 
 # The auto Reactor
 auto_reactor_channel_ids: [...]
@@ -175,7 +176,7 @@ chatbot_memory_seconds: 120
 >Pretty need, heh?
 
 ### The Command panel
-The Command panel is a feature, which provides the ability to execute commands more easily. That is done clicking the reaction. All the messages generated in this channel will be deleted after one minute.
+The Command panel is a feature, which provides the ability to execute commands more easily. That is done clicking the reaction. All the messages generated in this channel will be deleted after the period specified in the remote config entry `command_panel_timeout`.
 
 ![command_panel](res/demo/command_panel.png)
 >Access your timetable more easily
