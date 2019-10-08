@@ -1,5 +1,5 @@
 import logging
-from calendar import day_abbr
+from calendar import day_name
 from random import randint, random
 from typing import Optional
 
@@ -64,9 +64,7 @@ class Commands(Cog, name='General'):
         subjs = set(day.without_dupes)
         names = list(map(lambda x: x.name, subjs))
 
-        prefix = day_abbr[day_index]
-
-        string = f'**{prefix}:**' + '\n ▸ '.join([''] + names)
+        string = f'**{day_name[day_index].capitalize()}**' + '\n ▸ '.join([''] + names)
 
         await CommandOutput(ctx, description=string).send()
 
