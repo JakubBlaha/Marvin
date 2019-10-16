@@ -1,5 +1,4 @@
 import io
-import locale
 import logging
 import sys
 
@@ -9,7 +8,6 @@ from discord.ext.commands import Bot, Context
 from config import Config
 from errors import ErrorHandler
 from help import CustomHelpCommand
-from remote_config import RemoteConfig
 
 # Logging
 log_format = '[%(levelname)-8s] [%(name)-16s] %(message)s'
@@ -57,7 +55,6 @@ class Marvin(Bot):
 
     # noinspection PyMethodMayBeStatic
     async def on_ready(self):
-        locale.setlocale(locale.LC_ALL, RemoteConfig.locale)
         logger.info(f'Client: Ready!')
 
     async def on_command_error(self, ctx: Context, exception):

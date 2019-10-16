@@ -75,7 +75,6 @@ The remote config feature allows to add the bot configuration in a separate disc
 
 ```yaml
 # General
-locale: en-us  # The locale that will be used for various purposes
 presences: [['!help', idle]]  # A list of presence the bot will cycle through. One for 10 seconds. The format is [name, Status[online, idle, invisible, dnd]].
 
 # The Command Panel
