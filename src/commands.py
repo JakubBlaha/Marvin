@@ -60,6 +60,8 @@ class Commands(Cog, name='General'):
         if day_index is None:
             day_index = utils.Datetime.shifted_weekday()
 
+        day_index = min(day_index, 5) % 5  # Omit weekend
+
         day = RemoteConfig.timetable[day_index]
         subjs = set(day.without_dupes)
         names = list(map(lambda x: x.name, subjs))
