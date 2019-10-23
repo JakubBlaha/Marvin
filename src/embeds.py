@@ -539,8 +539,8 @@ class EmbedCog(Cog, name='Embed Builder'):
         """
         Build an embed with the help of Marvin.
 
-        You will be asked to enter a title, descriptions, color and embed
-        fields. The available colors are listed at the discord API
+        You will be asked to enter a title, description, color and embed
+        fields. The available colors are listed in the discord API
         documentation.
         """
 
