@@ -20,6 +20,8 @@ CHARS: dict = {
     'z': 'y'
 }
 NO_TRIGGER = {'y', 'z'}
+REJECT_REACTION = '❌'
+ACCEPT_REACTION = '✔'
 
 
 def clean_iter(string: str) -> tuple:
@@ -49,7 +51,6 @@ def fix_content(s: str) -> str:
 
 
 class MessageFixer(Cog):
-    REACTION = '\u274c'
     bot: Marvin
 
     def __init__(self, bot: Marvin):
@@ -75,23 +76,40 @@ class MessageFixer(Cog):
         if msg.content == fixed_content:
             return
 
-        await msg.add_reaction(self.REACTION)
+        # Create an embed as a preview and add reactions to it
+        embed = Embed(title=fixed_content)
+        embed.set_author(name=msg.author.display_name)
+        preview: Message = await msg.channel.send(embed=embed)
+        await preview.add_reaction(REJECT_REACTION)
+        await preview.add_reaction(ACCEPT_REACTION)
 
-        def check(reaction, user):
-            return reaction.message == msg and reaction.emoji == self.REACTION and user == msg.author
+        def check(reaction_, user_):
+            return reaction_.message.id == preview.id and reaction_.emoji in (
+                REJECT_REACTION, ACCEPT_REACTION) and user_ == msg.author
 
         try:
-            await self.bot.wait_for('reaction_add', timeout=5, check=check)
+            reaction, user = await self.bot.wait_for('reaction_add', timeout=5, check=check)
         except asyncio.TimeoutError:
-            try:
-                await msg.remove_reaction(self.REACTION, self.bot.user)
-            except NotFound:
-                pass
+            pass
+        # Using pass-else statement because we want the message to get deleted on timeout
         else:
-            embed = Embed(description=fixed_content)
-            embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
-            await msg.channel.send(embed=embed)
-            await msg.delete()
+            # Remove the reactions from the preview and delete the original message
+            if reaction.emoji == ACCEPT_REACTION:
+                # Delete original message
+                await msg.delete()
+
+                # Remove reactions
+                try:
+                    await preview.clear_reactions()
+                except NotFound:
+                    pass
+                return
+
+        # Delete the message if not accepted
+        try:
+            await preview.delete()
+        except NotFound:
+            pass
 
 
 def setup(bot: Marvin):
