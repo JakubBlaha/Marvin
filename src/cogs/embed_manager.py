@@ -11,7 +11,7 @@ from discord.ext.commands import Cog, command, Context
 
 import utils
 from client import Marvin
-from decorators import del_invoc, start_when_needed
+from decorators import del_invoc
 from timeout_message import TimeoutMessage
 
 logger = logging.getLogger('EmbedManager')
@@ -82,7 +82,6 @@ class EmbedManager(Cog):
                     yield DatedEmbed(utils.Datetime.from_string(embed.description or ''), msg, embed)
 
     # noinspection PyCallingNonCallable
-    @start_when_needed()
     @tasks.loop(minutes=10)
     async def mark_loop(self):
         await self.bot.wait_until_ready()
@@ -111,7 +110,6 @@ class EmbedManager(Cog):
         await TimeoutMessage(ctx).send('> ✅ Marked embeds successfully.')
 
     # noinspection PyCallingNonCallable
-    @start_when_needed()
     @tasks.loop(minutes=10)
     async def update_upcoming_loop(self):
         """ List the upcoming embeds in the `#general` channel topic. """
@@ -137,7 +135,6 @@ class EmbedManager(Cog):
         await self.update_upcoming_loop.coro()
 
     # noinspection PyCallingNonCallable
-    @start_when_needed()  # *args and **kwargs can be put here.
     @tasks.loop(minutes=10)
     async def sync_calendar_loop(self):
         # TODO Put the sync code here. See below.
