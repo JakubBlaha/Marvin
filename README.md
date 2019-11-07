@@ -41,7 +41,7 @@ Command|Action
 `!table`|Send the timetable.
 `!subj`|Output the subjects to prepare for.
 `!bag`|Output which subjects to take out and put in your bag.
-`!substits`|Output the coming substitutions.
+`!substits`|Output the upcoming substitutions.
 `!exam`|Output exams from the `exam_channel_id` channel.
 `!hw`|Output homeworks from the `homework_channel_id` channel.
 `!del`|Delete a number of messages.
@@ -100,11 +100,9 @@ timetable:
   - ...
 
 # The !substits command
-substits_col_indexes: [...]       # Considered columns
-substits_headers: [...]           # Custom table headers
-substits_replace_contents: {...}  # Pairs of original -> replaced keywords in the table
 moodle_username: ...  # The username to your moodle account
 moodle_password: ...  # The password to your moodle account encrypted with the !encrypt command
+substits_pdf_bbox: [0, 0, 1, 1]  # A four-item tuple defining the bounding box of the important contents of the pdf. All of these are numbers relative to the image size. The sides are in order left, top, right, bottom.
 substits_kwargs:
  login_url: ...  # The url to the moodle login form
  course_url: ...  # The url to the substits course
@@ -183,7 +181,7 @@ The Command panel is a feature, which provides the ability to execute commands m
 *The Command panel is a channel-specific feature, so use it in a dedicated channel only.*
 
 ### The `!substits` command
-The table scraper is a sort of a personal feature, but can be easily modified if needed. The scraper downloads a pdf file from moodle, extracts a table from it and sends the data as a set of constructed images. All of the configuration but the *username* and *password*, which are stored in the *local config*, are stored in the *remote config*.
+The command downloads a pdf file from moodle, takes a couple of picture of it, changes the colors a bit and sends final art piece to the channel. All of the configuration is stored in the remote config.
 
 ![substitutions](res/demo/substits.png)
 >Never have to go through the long process of downloading the pdf again. Have it nice and easy here!

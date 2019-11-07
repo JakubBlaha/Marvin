@@ -38,7 +38,7 @@ class Marvin(Bot):
         self.load_extension('remote_config')
         self.load_extension('secure_config')
         self.load_extension('commands')
-        self.load_extension('cogs.table_scraper')
+        self.load_extension('cogs.substits')
         self.load_extension('embeds')
         self.load_extension('cogs.embed_manager')
         self.load_extension('cogs.emotes')

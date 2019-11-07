@@ -4,6 +4,8 @@ import calendar
 import datetime
 from typing import List
 
+import PIL.Image
+import PIL.ImageOps
 from discord import Embed, TextChannel, Color, Message
 from discord.embeds import EmptyEmbed
 
@@ -100,14 +102,15 @@ class EmbedUtils:
             _embed.add_field(name=f'**{embed.title}**, {embed.description}',
                              value=', '.join(f.name for f in embed.fields) or '...',
                              inline=False)
-        if not _embed.fields:
-            _embed.title = 'Nothing to see here!'
-            _embed.description = r'\(￣︶￣*\))'
-            _embed.color = Color.green()
-        else:
+        if _embed.fields:
             _embed.color = Color.red()
             _embed.description = _embed.description or ''
             _embed.description = f'More information can be found in {channel.mention}.'
+
+        else:
+            _embed.title = 'Nothing to see here!'
+            _embed.description = r'\(￣︶￣*\))'
+            _embed.color = Color.green()
 
         return _embed
 
@@ -138,3 +141,20 @@ class MessageUtils:
     def age(msg: Message):
         """ Return a timedelta saying how old the message is. """
         return datetime.datetime.now() - msg.created_at
+
+
+class ImageUtils:
+    @staticmethod
+    def invert_colors(img: PIL.Image.Image) -> PIL.Image.Image:
+        """ Return a new image with the color replaced. Supports RGBA images. """
+        if img.mode == 'RGB':
+            return PIL.ImageOps.invert(img)
+
+        r, g, b, a = img.split()
+        rgb_image = PIL.Image.merge('RGB', (r, g, b))
+
+        inverted_image = PIL.ImageOps.invert(rgb_image)
+
+        r2, g2, b2 = inverted_image.split()
+
+        return PIL.Image.merge('RGBA', (r2, g2, b2, a))

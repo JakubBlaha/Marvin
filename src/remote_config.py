@@ -64,11 +64,8 @@ class RemoteConfig_(ConfigBase):
     auto_reactor_channel_ids: List[int] = []
     auto_reactor_reaction_ids: List[int] = []
     timetable_url: str = 'https://example.com'
-    substits_col_indexes: List[int] = []
-    substits_headers: List[str] = []
-    substits_replace_contents: Dict[str, str] = {}
     substits_kwargs: Dict[str, str] = {}
-    default_substits_target: str = '.'
+    substits_pdf_bbox: Tuple[float, float, float, float] = (0, 0, 1, 1)  # left, top, right, bottom
     exam_channel_id: int = None
     homework_channel_id: int = None
     timetable: Timetable = None
@@ -76,8 +73,6 @@ class RemoteConfig_(ConfigBase):
     moodle_username: str = ''
     moodle_password: EncryptedString = ''
     chatbot_memory_seconds: int = 120
-    chart_studio_username: str = ''
-    chart_studio_token: EncryptedString = ''
 
 
 # TEMPORARY

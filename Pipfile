@@ -6,17 +6,14 @@ name = "pypi"
 [packages]
 pyyaml = "*"
 simpleeval = "*"
-pandas = "*"
 discord-py = "*"
 selenium = "*"
 pillow = "*"
 "bs4" = "*"
 requests = "*"
 cryptography = "*"
-tabula-py = "*"
-plotly = "*"
 psutil = "*"
-chart-studio = "*"
+pdf2image = "*"
 
 [dev-packages]
 
