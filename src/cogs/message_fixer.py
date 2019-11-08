@@ -78,7 +78,7 @@ class MessageFixer(Cog):
 
         # Create an embed as a preview and add reactions to it
         embed = Embed(title=fixed_content)
-        embed.set_author(name=msg.author.display_name)
+        embed.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
         preview: Message = await msg.channel.send(embed=embed)
         await preview.add_reaction(REJECT_REACTION)
         await preview.add_reaction(ACCEPT_REACTION)
