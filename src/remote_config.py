@@ -33,7 +33,7 @@ async def config_from_channel(ch: TextChannel, load_dev: bool = False) -> dict:
             logger.debug(f'Loaded message {content[:50]}')
 
         # Clean up
-        content = content.replace('```yaml', '').replace('```', '').replace('dev', '')
+        content = content.replace('```yaml', '').replace('```', '').replace('dev', '', 1)
 
         # Convert
         # noinspection PyBroadException
