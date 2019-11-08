@@ -30,7 +30,7 @@ async def config_from_channel(ch: TextChannel, load_dev: bool = False) -> dict:
         if _is_dev and not load_dev:
             continue
         elif _is_dev:
-            logger.debug(f'Loaded message {content[:50]}')
+            logger.debug('Loaded message ' + msg.content.replace('\n', '\\n'))
 
         # Clean up
         content = content.replace('```yaml', '').replace('```', '').replace('dev', '', 1)
