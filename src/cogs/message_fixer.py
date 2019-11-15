@@ -58,16 +58,13 @@ class MessageFixer(Cog):
 
     @Cog.listener()
     async def on_message(self, msg: Message):
-        # don't fix own messages
-        if msg.author == self.bot.user:
-            return
-
-        # don't fix commands
-        if msg.content.startswith(self.bot.command_prefix):
-            return
-
-        # don't fix messages directed to the bot
-        if (await self.bot.get_context(msg)).me.display_name in msg.clean_content:
+        if any((
+                not msg.content,
+                msg.author == self.bot.user,
+                msg.content.startswith(self.bot.command_prefix),
+                (await self.bot.get_context(msg)).me.display_name in msg.clean_content,
+                not msg.content[0].isalpha()
+        )):
             return
 
         fixed_content = fix_content(msg.content)
