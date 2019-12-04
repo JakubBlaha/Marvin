@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-import asyncio
-import re
 from copy import deepcopy
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 
-from discord import Embed, Message
+from discord import Embed, Message, HTTPException
 from discord.ext.commands import Bot, Cog, Converter, BadArgument
 from discord.ext.commands import ColourConverter as ColorConverter
 from discord.ext.commands import Context, group
 
 import common
 from decorators import del_invoc, list_subcommands
-from reaction_callback_manager import ReactionCallbackManager, CancelCallback
+from reaction_callback_manager import ReactionCallbackManager
 from timeout_message import TimeoutMessage
+from utils import UserInput
 
 
 class EmbedHistory:
@@ -85,10 +84,6 @@ class EmbedBuilder:
     """
     ctx: Context
 
-    # Instructions for the user
-    _info_msg: Optional[Message] = None
-    _info_embed: Embed = None
-
     # A preview of the actual embed
     _preview_msg: Optional[Message] = None
     _preview_embed: Embed = None
@@ -109,6 +104,7 @@ class EmbedBuilder:
     EDIT_REACTION = '✏'
     REMOVE_REACTION = '➖'
     SAVE_REACTION = '✅'
+    HELP_REACTION = '❔'
 
     def __init__(self,
                  ctx: Context,
@@ -130,19 +126,20 @@ class EmbedBuilder:
         # Builder state
         self._alive = True
 
-    @property
-    async def info_msg(self) -> Message:
-        if not self._info_msg:
-            self._info_msg = await self.ctx.send(embed=self.info_embed)
+    async def _send_help(self):
+        """ Send a help embed with an info about the reactions and their callbacks. """
+        embed = Embed(title='Use the reactions for further modifications')
 
-        return self._info_msg
+        embed.description = (
+            f'{self.ADD_REACTION} - Add a field\n'
+            f'{self.EDIT_REACTION} - Edit a field\n'
+            f'{self.REMOVE_REACTION} - Remove a field\n'
+            f'{self.UNDO_REACTION} - Undo\n'
+            f'{self.REDO_REACTION} - Redo\n'
+            f'{self.SAVE_REACTION} - Save\n'
+            f'{self.HELP_REACTION} - Invoke this help')
 
-    @property
-    def info_embed(self) -> Embed:
-        if not self._info_embed:
-            self._info_embed = Embed()
-
-        return self._info_embed
+        await TimeoutMessage(self.ctx, 10).send(embed=embed)
 
     @property
     async def preview_msg(self) -> Message:
@@ -158,46 +155,16 @@ class EmbedBuilder:
 
         return self._preview_embed
 
-    # Decorators
     # noinspection PyMethodParameters
     def async_update_preview(fn: Callable):
-        # Asynchronously update the embed preview
-        # Use with async functions only
+        """ Update the embed after the function finishes. """
+
         async def wrapper(self, *args, **kw):
             res = await fn(self, *args, **kw)
 
             await self._update_preview_msg()
 
             return res
-
-        return wrapper
-
-    # noinspection PyMethodParameters
-    def restore_info(fn: Callable):
-        # Save and then restore the info message embed after completed
-        # Use with async functions only
-        async def wrapper(self, *args, **kw):
-            _embed_data = self.info_embed.to_dict()
-
-            res = await fn(self, *args, **kw)
-
-            self._info_embed = Embed.from_dict(_embed_data)
-            await self._update_info_msg()
-
-            return res
-
-        return wrapper
-
-    # noinspection PyMethodParameters
-    def stack_to_history(fn: Callable):
-        # Add the current embed to the history before applying any changes
-        async def wrapper(self: EmbedBuilder, *args, **kw):
-            ret = await fn(self, *args, **kw)
-
-            await self._rcm.listen_for(self.UNDO_REACTION, self.undo)
-            self._history.stack(self.preview_embed)
-
-            return ret
 
         return wrapper
 
@@ -215,178 +182,110 @@ class EmbedBuilder:
         return wrapper
 
     # Message management
-    async def _update_info_msg(self) -> EmbedBuilder:
-        # Update the input message remotely
-        await (await self.info_msg).edit(embed=self.info_embed)
+    async def stack_to_history(self):
+        """ Add the current embed state to the history. """
+        self._history.stack(self.preview_embed)
+        await self._rcm.listen_for(self.UNDO_REACTION, self.undo)
 
-        return self
-
-    async def _delete_info_msg(self) -> EmbedBuilder:
-        # Delete the input message remotely
-        await (await self.info_msg).delete()
-        self._info_msg = None
-
-        return self
-
-    async def _update_preview_msg(self) -> EmbedBuilder:
+    async def _update_preview_msg(self):
         # Update the preview message remotely
         await (await self.preview_msg).edit(embed=self.preview_embed)
 
-        return self
-
-    async def _delete_preview_msg(self) -> EmbedBuilder:
-        # Delete the preview message remotely
-        await (await self.preview_msg).delete()
-        self._preview_msg = None
-
-        return self
-
     # noinspection PyArgumentList
     @update_rcm
     @async_update_preview
-    async def undo(self) -> EmbedBuilder:
+    async def undo(self):
         """ Undo the last change to the preview embed. """
         self._preview_embed = self._history.undo()
-        return self
 
     # noinspection PyArgumentList
     @update_rcm
     @async_update_preview
-    async def redo(self) -> EmbedBuilder:
+    async def redo(self):
         """ Redo the undid chane to the preview embed. """
         self._preview_embed = self._history.redo()
-        return self
-
-    # User input
-    async def _dismiss_reply(self, msg: Message) -> EmbedBuilder:
-        # Add a reaction and delete the message
-        await msg.add_reaction('❌')
-        await asyncio.sleep(1)
-        await msg.delete()
-
-        return self
-
-    async def _accept_reply(self, msg: Message) -> EmbedBuilder:
-        # Add a reaction and delete the message
-        await msg.add_reaction('✅')
-        await asyncio.sleep(1)
-        await msg.delete()
-
-        return self
-
-    def _check_input_message(self, msg: Message, regex: str):
-        # Cancel input if builder should not be alive anymore
-        if not self._alive:
-            raise CancelCallback
-
-        # Check author and channel
-        if msg.author != self.ctx.author or msg.channel != self.ctx.channel:
-            return False
-
-        # Check regex
-        if not re.match(regex, msg.clean_content):
-            self.ctx.bot.loop.create_task(self._dismiss_reply(msg))
-            return False
-
-        self.ctx.bot.loop.create_task(self._accept_reply(msg))
-        return True
-
-    async def _request_input(self,
-                             title: str,
-                             description: str = '',
-                             regex: str = ''):
-        # Update the info embed
-        self.info_embed.title = f'Enter the **{title}** ...'
-        self.info_embed.description = description + f'\n\n*Regex:* `{regex}`' * bool(
-            regex)
-        await self._update_info_msg()
-
-        # Wait for reply from the user
-        _msg = await self.ctx.bot.wait_for(
-            'message', check=lambda msg: self._check_input_message(msg, regex))
-
-        return _msg.content
 
     # Embed building
     # noinspection PyArgumentList
     @async_update_preview
-    async def set_title(self, title: str = None) -> EmbedBuilder:
-        """ Request the user to enter the embed title or use the given one. """
-        self.preview_embed.title = title or await self._request_input('title')
+    async def set_title(self, title: str):
+        """ Set the title of the embed. """
+        self.preview_embed.title = title
 
-        return self
-
-    # noinspection PyArgumentList
-    @async_update_preview
-    async def set_url(self, url: str = None) -> EmbedBuilder:
-        """ Request the user to enter the embed url or use the given one. """
-        self.preview_embed.url = url or await self._request_input('url')
-        return self
+    async def ask_title(self):
+        await self.set_title(await UserInput(self.ctx).ask('title') or self.preview_embed.title)
 
     # noinspection PyArgumentList
     @async_update_preview
-    async def set_description(self, description: str = None) -> EmbedBuilder:
-        """ Request the user to enter the embed description or use the given one. """
-        self.preview_embed.description = description or await self._request_input(
-            'description')
+    async def set_url(self, url: str):
+        """ Set the url of the embed. """
+        self.preview_embed.url = url
 
-        return self
+    async def ask_url(self):
+        await self.set_url(await UserInput(self.ctx).ask('url', regex=common.Re.URL) or self.preview_embed.url)
 
     # noinspection PyArgumentList
     @async_update_preview
-    async def set_color(self, color: str = None) -> EmbedBuilder:
-        """ Request the user to enter the embed color or use the given one. """
+    async def set_description(self, description: str):
+        """ Set the description of the embed. """
+        self.preview_embed.description = description
+
+    async def ask_description(self):
+        await self.set_description(await UserInput(self.ctx).ask('description') or self.preview_embed.description)
+
+    # noinspection PyArgumentList
+    @async_update_preview
+    async def set_color(self, color: str):
+        """ Convert and set the color of the embed. """
+        self.preview_embed.colour = await ColorConverter().convert(self.ctx, color)
+
+    async def ask_color(self):
         try:
-            self.preview_embed.colour = await ColorConverter().convert(
-                self.ctx, color or await self._request_input('color'))
+            color: str = await UserInput(self.ctx).ask('color')
+            if color:
+                await self.set_color(color)
         except BadArgument:
             await TimeoutMessage(self.ctx).send('> ⚠ Bad color! Default one will be used.')
             self.preview_embed.colour = Embed.Empty
 
-        return self
+    # noinspection PyArgumentList
+    @async_update_preview
+    async def set_footer(self, footer: str):
+        """ Set the footer of the embed. """
+        self.preview_embed.set_footer(text=footer)
+
+    async def ask_footer(self):
+        await self.set_footer(await UserInput(self.ctx).ask('footer text') or self.preview_embed.footer.text)
 
     # noinspection PyArgumentList
     @async_update_preview
-    async def set_footer(self, footer: str = None) -> EmbedBuilder:
-        """ Request the user to enter the footer text or use the given one. """
-        self.preview_embed.set_footer(
-            text=footer or await self._request_input('footer'))
-
-        return self
-
-    # noinspection PyArgumentList
-    @async_update_preview
-    async def set_ctx_author(self) -> EmbedBuilder:
+    async def set_ctx_author(self):
         """ Set the embed author automatically based on the context. """
         self.preview_embed.set_author(name=self.ctx.author.display_name,
                                       icon_url=self.ctx.author.avatar_url)
 
-        return self
+    # noinspection PyArgumentList
+    @update_rcm
+    @async_update_preview
+    async def ask_add_field(self):
+        """ Add a field. """
+        field_name = await UserInput(self.ctx).ask('field name')
+        if field_name is None:
+            return
+
+        self.preview_embed.add_field(name=field_name,
+                                     value=await UserInput(self.ctx).ask('field value') or '(￣o￣) . z Z', inline=False)
+
+        await self.stack_to_history()
 
     # noinspection PyArgumentList
     @update_rcm
     @async_update_preview
-    @restore_info
-    @stack_to_history
-    async def add_field(self) -> EmbedBuilder:
-        """ Request the user to add a field. """
-        self.preview_embed.add_field(name=await self._request_input('field name'),
-                                     value=await
-                                     self._request_input('field value'),
-                                     inline=False)
-
-        return self
-
-    # noinspection PyArgumentList
-    @update_rcm
-    @async_update_preview
-    @restore_info
-    @stack_to_history
-    async def edit_field(self) -> EmbedBuilder:
+    async def edit_field(self):
         """
-        Request the user to edit an embed field at the given index. The user
-        will be given option to edit either only the name or only the value or
-        both.
+        Request the user to edit an embed field at the given index. The user will be asked to enter
+        both the field name and the field value, but the user can reject to type in the new text by pressing
+        on the cross reaction. In that case, the current values will be preserved.
         """
 
         # Pick the field index automatically if there's only one field
@@ -394,24 +293,20 @@ class EmbedBuilder:
             index = 0
         else:
             # Ask the field index
-            index = await self._request_input('field index', regex=common.Re.INDEX)
+            index = await UserInput(self.ctx).ask('field index', regex=common.Re.INDEX)
+
+            if index is None:
+                return
+
             index = int(index)
 
         if index >= len(self.preview_embed.fields):
             await TimeoutMessage(self.ctx).send(embed=common.Embed.INVALID_INDEX)
-            return self
-
-        # Ask what to edit
-        _option = await self._request_input('digit saying what to edit',
-                                            '0 = both, 1 = name, 2 = value',
-                                            '^(0|1|2){1}$')
-        _option = int(_option)
+            return
 
         # Ask the values
-        _name = await self._request_input('field name') if _option in (
-            0, 1) else self.preview_embed.fields[index].name
-        _value = await self._request_input('field value') if _option in (
-            0, 2) else self.preview_embed.fields[index].value
+        _name = await UserInput(self.ctx).ask('field name') or self.preview_embed.fields[index].name
+        _value = await UserInput(self.ctx).ask('field value') or self.preview_embed.fields[index].value
 
         # Modify the embed
         self.preview_embed.set_field_at(index,
@@ -419,44 +314,33 @@ class EmbedBuilder:
                                         value=_value,
                                         inline=False)
 
-        return self
+        await self.stack_to_history()
 
     # noinspection PyArgumentList
     @update_rcm
     @async_update_preview
-    @restore_info
-    @stack_to_history
-    async def remove_field(self) -> EmbedBuilder:
+    async def remove_field(self):
         """ Remove an embed field at the user-specified index. """
-        self.preview_embed.remove_field(
-            int(await self._request_input('index of the field to remove',
-                                          regex=common.Re.INDEX)))
+        if len(self.preview_embed.fields) == 1:
+            index = 0
+        else:
+            index = await UserInput(self.ctx).ask('index of the field to remove', regex=common.Re.INDEX)
 
-        return self
+        # User has cancelled the input
+        if index is None:
+            return
 
-    async def start_field_query(self) -> EmbedBuilder:
-        """
-        Provide reactions for the user in order to add/edit/remove fields.
-        """
+        self.preview_embed.remove_field(int(index))
 
+        await self.stack_to_history()
+
+    async def start_field_query(self):
+        """ Provide reactions for the user in order to add/edit/remove fields. """
         # Save the embed to history
         self._history.stack(self.preview_embed)
 
         # Init the reaction trigger manager
         await self._update_rcm()
-
-        # Inform the user about reactions and their callbacks
-        self.info_embed.title = 'Use the reactions for further modifications'
-        self.info_embed.description = (
-            f'{self.ADD_REACTION} - Add field\n'
-            f'{self.EDIT_REACTION} - Edit field\n'
-            f'{self.REMOVE_REACTION} - Remove field\n'
-            f'{self.UNDO_REACTION} - Undo\n'
-            f'{self.REDO_REACTION} - Redo\n'
-            f'{self.SAVE_REACTION} - Save\n')
-        await self._update_info_msg()
-
-        return self
 
     async def _update_rcm(self):
         # Update the reactions so it matches the possibilities of
@@ -465,8 +349,9 @@ class EmbedBuilder:
         if not self._rcm:
             self._rcm = ReactionCallbackManager(
                 self.ctx, await self.preview_msg, {
-                    self.ADD_REACTION: self.add_field,
-                    self.SAVE_REACTION: self.cleanup
+                    self.ADD_REACTION: self.ask_add_field,
+                    self.SAVE_REACTION: self.cleanup,
+                    self.HELP_REACTION: self._send_help
                 })
             await self._rcm.asyncinit()
 
@@ -490,7 +375,7 @@ class EmbedBuilder:
         else:
             await self._rcm.remove_listen_for(self.REDO_REACTION)
 
-    async def cleanup(self) -> EmbedBuilder:
+    async def cleanup(self):
         """ Cleanup. Should be used after the embed is created. """
         # Cancel user input
         self._alive = False
@@ -499,22 +384,17 @@ class EmbedBuilder:
         if self._rcm:
             await self._rcm.cleanup()
 
-        # Clean up instructions message
-        self.ctx.bot.loop.create_task(self._delete_info_msg())
-
-        return self
-
 
 class EmbedIndexMessageConverter(Converter):
-    async def convert(self, ctx: Context, argument: str):
-        index = int(argument) + 1
+    async def convert(self, ctx: Context, argument: Union[str, int]):
+        index = int(argument)
 
         # Get the embed
         async for msg in ctx.history():
             if msg.embeds:
                 index -= 1
 
-                if index == 0:
+                if index == -1:
                     return msg
         else:
             await TimeoutMessage(ctx).send(embed=common.Embed.INVALID_INDEX)
@@ -546,9 +426,9 @@ class EmbedCog(Cog, name='Embed Builder'):
 
         builder = EmbedBuilder(ctx)
         await builder.set_ctx_author()
-        await builder.set_title()
-        await builder.set_description()
-        await builder.set_color()
+        await builder.ask_title()
+        await builder.ask_description()
+        await builder.ask_color()
         await builder.start_field_query()
         # From this point on, the builder will keep care of itself and doesn't
         # have to be cleaned up manually
@@ -570,7 +450,7 @@ class EmbedCog(Cog, name='Embed Builder'):
         """
 
     @edit.command(aliases=['t'])
-    async def title(self, ctx, msg_index: EmbedIndexMessageConverter, *, title):
+    async def title(self, ctx, msg_index: EmbedIndexMessageConverter, *, title=None):
         """
         Edit the embed title.
 
@@ -581,10 +461,11 @@ class EmbedCog(Cog, name='Embed Builder'):
         """
 
         # noinspection PyTypeChecker
-        await EmbedBuilder(ctx, msg_index).set_title(title)
+        b = EmbedBuilder(ctx, msg_index)
+        await (b.set_title(title) if title else b.ask_title())
 
     @edit.command(aliases=['u'])
-    async def url(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, url):
+    async def url(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, url=None):
         """
         Edit the embed url.
 
@@ -595,10 +476,14 @@ class EmbedCog(Cog, name='Embed Builder'):
         """
 
         # noinspection PyTypeChecker
-        await EmbedBuilder(ctx, msg_index).set_url(url)
+        b = EmbedBuilder(ctx, msg_index)
+        try:
+            await (b.set_url(url) if url else b.ask_url())
+        except HTTPException:
+            await TimeoutMessage(ctx).send('> Not well formed url!')
 
     @edit.command(aliases=['d'])
-    async def desc(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, description):
+    async def desc(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, description=None):
         # We cannot use `description` here, because it interferes with the cog.description property.
         """
         Edit the embed description.
@@ -610,10 +495,11 @@ class EmbedCog(Cog, name='Embed Builder'):
         """
 
         # noinspection PyTypeChecker
-        await EmbedBuilder(ctx, msg_index).set_description(description)
+        b = EmbedBuilder(ctx, msg_index)
+        await (b.set_description(description) if description else b.ask_description())
 
     @edit.command(aliases=['c'])
-    async def color(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, color):
+    async def color(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, color=None):
         """
         Edit the embed color.
 
@@ -628,10 +514,11 @@ class EmbedCog(Cog, name='Embed Builder'):
         """
 
         # noinspection PyTypeChecker
-        await EmbedBuilder(ctx, msg_index).set_color(color)
+        b = EmbedBuilder(ctx, msg_index)
+        await (b.set_color(color) if color else b.ask_color())
 
     @edit.command(aliases=['foo'])
-    async def footer(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, footer):
+    async def footer(self, ctx: Context, msg_index: EmbedIndexMessageConverter, *, footer=None):
         """
         Edit the embed footer.
 
@@ -642,21 +529,24 @@ class EmbedCog(Cog, name='Embed Builder'):
         """
 
         # noinspection PyTypeChecker
-        await EmbedBuilder(ctx, msg_index).set_footer(footer)
+        b = EmbedBuilder(ctx, msg_index)
+        await (b.set_footer(footer) if footer else b.ask_footer())
 
     @edit.command(aliases=['f', 'field'])
-    async def fields(self, ctx: Context, msg_index: EmbedIndexMessageConverter):
+    async def fields(self, ctx: Context, msg_index=0):
         """
-        Edit the fields using reaction. Further guide will be given.
+        Edit the fields using reactions.
+
+        The `msg_index` argument may be omitted. In that case, the most recent embed in the
+        channel will be edited.
 
         Example:
         ```
         !embed edit fields 0
         ```
         """
-
-        # noinspection PyTypeChecker
-        await EmbedBuilder(ctx, msg_index).start_field_query()
+        embed = await EmbedIndexMessageConverter().convert(ctx, msg_index)
+        await EmbedBuilder(ctx, embed).start_field_query()
 
 
 def setup(bot: Bot):

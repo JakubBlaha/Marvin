@@ -1,15 +1,112 @@
 from __future__ import annotations
 
+import asyncio
 import calendar
 import datetime
+import re
+import time
 from typing import List
 
 import PIL.Image
 import PIL.ImageOps
-from discord import Embed, TextChannel, Color, Message
+from discord import Embed, TextChannel, Color, Message, NotFound, Reaction, User
 from discord.embeds import EmptyEmbed
+from discord.ext.commands import Context
 
 from .list_to_image import FontMap, ListToImageBuilder
+
+
+async def silent_delete(msg: Message) -> bool:
+    """
+    Delete a message and ignore the NotFound exception.
+
+    :param msg: The message to be deleted
+    :return: True if the message was deleted by this function successfully. False if the message could not be deleted.
+    """
+
+    try:
+        await msg.delete()
+    except NotFound:
+        return False
+    return True
+
+
+class UserInput:
+    context: Context
+    question_msg: Message
+
+    def __init__(self, ctx):
+        self.context = ctx
+
+    async def ask(self, title: str, description: str = '', regex: str = '') -> [str, None]:
+        """
+        Ask the user for an input. This function will send an embed informing the user about
+        the questioned value criteria and a button to cancel this input.
+
+        :param title: The title of the questioning embed.
+        :param description: The description of the questioning embed.
+        :param regex: The regex that will be used during the validating of the input. This regex will
+            also be shown in the embed description.
+        :return: The content of the user sent message or None if cancelled.
+        """
+        # Create the embed
+        embed = Embed(title=f'Enter the **{title}** ...',
+                      description=description + f'\n\n*Regex:* `{regex}`' * bool(regex))
+
+        # send the message
+        self.question_msg = await self.context.send(embed=embed)
+
+        # Add the cancel reaction
+        await self.question_msg.add_reaction('❌')
+
+        def msg_check(msg_):
+            # Terminate the waiting if the question was cancelled
+            res = True
+
+            # Check author and channel
+            if msg_.author != self.context.author or msg_.channel != self.context.channel:
+                res = False
+
+            # Check regex
+            if not re.match(regex, msg_.clean_content):
+                res = False
+
+            # Accept/dismiss reply
+            self.context.bot.loop.create_task(msg_.add_reaction('✅' if res else '❌'))
+
+            if not res:
+                self.context.bot.loop.create_task(self._delayed_del(msg_))
+
+            return res
+
+        def react_check(reaction: Reaction, user: User):
+            return reaction.emoji == '❌' and user == self.context.author and reaction.message.id == self.question_msg.id
+
+        done, pending = await asyncio.wait([
+            self.context.bot.wait_for('message', check=msg_check),
+            self.context.bot.wait_for('reaction_add', check=react_check)], return_when=asyncio.FIRST_COMPLETED
+        )
+
+        # Cancel pending tasks
+        for task in pending:
+            task.cancel()
+
+        # Delete the question message
+        await silent_delete(self.question_msg)
+
+        stuff: [Reaction, Message] = done.pop().result()
+
+        if isinstance(stuff, Message):
+            await self._delayed_del(stuff)
+            return stuff.content
+
+        return None
+
+    @staticmethod
+    async def _delayed_del(msg: Message):
+        """ Delete a message after one second. """
+        time.sleep(1)
+        await silent_delete(msg)
 
 
 class String:
