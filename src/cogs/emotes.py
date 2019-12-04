@@ -137,13 +137,13 @@ class EmoteCog(Cog, name='Emotes'):
 
         builder = ListToImageBuilder(tabular_data)
 
-        await CommandOutput(ctx, invoc=False, title='List of all available emotes:', wide=True).send(register=False)
+        await CommandOutput(ctx, invoc=False, title='List of all available emotes:').send(register=False)
 
         for img in builder.generate(convert_to_file=True):
             await ctx.send(file=img)
 
         # We only send the invocation message here
-        await CommandOutput(ctx, description=f'Listed **{len(emotes)}** emotes.', author=False, wide=True).send(
+        await CommandOutput(ctx, description=f'Listed **{len(emotes)}** emotes.', author=False).send(
             register=False)
 
 

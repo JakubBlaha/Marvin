@@ -207,8 +207,7 @@ class Substits(Cog, name='Substitutions'):
         await ctx.trigger_typing()
 
         # Send header
-        await CommandOutput(ctx, wide=True,
-                            title=f'The substitution list for the day **{self._date}**').send(register=False)
+        await CommandOutput(ctx, title=f'The substitution list for the day **{self._date}**').send(register=False)
 
         for img in self._images:
             await send_image(ctx, img)

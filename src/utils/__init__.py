@@ -10,7 +10,6 @@ from typing import List
 import PIL.Image
 import PIL.ImageOps
 from discord import Embed, TextChannel, Color, Message, NotFound, Reaction, User
-from discord.embeds import EmptyEmbed
 from discord.ext.commands import Context
 
 from .list_to_image import FontMap, ListToImageBuilder
@@ -210,27 +209,6 @@ class EmbedUtils:
             _embed.color = Color.green()
 
         return _embed
-
-
-class WideEmbed(Embed):
-    """
-    A subclass of Discord.Embed, which makes the embed fill the whole message window.
-    Modifies the title it contains extra unbreakable spaces to widen the embed.
-    """
-
-    _title = EmptyEmbed
-
-    @property
-    def title(self):
-        return self._title
-
-    @title.setter
-    def title(self, value):
-        title = value or ''
-        title = title.replace(' ', '\u2007')  # Replace spaces with digit-wide unbreakable space.
-        title = title.replace('-', '\u2011')  # Replace dashes with unbreakable dashes
-        title += '\u2800' * 100
-        self._title = title
 
 
 class MessageUtils:

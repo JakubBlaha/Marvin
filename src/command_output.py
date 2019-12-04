@@ -6,7 +6,6 @@ from discord import Embed, User, Message
 from discord.ext.commands import Context
 
 from client import Marvin
-from utils import WideEmbed
 
 
 class CommandOutputManager:
@@ -30,8 +29,7 @@ class CommandOutput:
     embed: Embed = None
     msg: Message = None
 
-    def __init__(self, ctx: Context, invoc: Union[bool, str] = True, author: Union[bool, User] = True, wide=False,
-                 **kw):
+    def __init__(self, ctx: Context, invoc: Union[bool, str] = True, author: Union[bool, User] = True, **kw):
         """
         Create a command output, which will be stored in the CommandOutputManager for later use.
 
@@ -46,10 +44,7 @@ class CommandOutput:
         self.ctx = ctx
 
         # Build embed
-        if wide:
-            self.embed = WideEmbed.from_dict(kw)
-        else:
-            self.embed = Embed.from_dict(kw)
+        self.embed = Embed.from_dict(kw)
         # Add the invocation message to the end of the description
         invoc = invoc if isinstance(invoc, str) else invoc and ctx.message.clean_content
         if invoc:
