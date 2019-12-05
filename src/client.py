@@ -2,6 +2,7 @@ import io
 import logging
 import sys
 
+from aiohttp import ClientSession
 from discord import Guild
 from discord.ext.commands import Bot, Context
 
@@ -30,6 +31,7 @@ logger = logging.getLogger('Client')
 class Marvin(Bot):
     guild: Guild
     error_handler = ErrorHandler()
+    session: ClientSession
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
@@ -50,6 +52,9 @@ class Marvin(Bot):
         self.load_extension('cogs.cleverbot')
 
     async def on_connect(self):
+        # Create an aiohttp session
+        self.session = ClientSession()
+
         # Get guild
         self.guild = self.get_guild(Config.guild_id)
 

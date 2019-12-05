@@ -1,6 +1,5 @@
 import json
 import logging
-from urllib.request import urlopen
 
 from bs4 import BeautifulSoup
 from discord import Embed, Message
@@ -49,16 +48,16 @@ class EmoteCog(Cog, name='Emotes'):
         self.emotes.clear()
 
         # twitchemotes
-        response = await self.bot.loop.run_in_executor(None, urlopen, 'https://twitchemotes.com/')
-        soup = BeautifulSoup(response.read(), 'html.parser')
+        response = await self.bot.session.get('https://twitchemotes.com/')
+        soup = BeautifulSoup(await response.text(), 'html.parser')
         for a in soup.find_all('img', {'class': 'emote expandable-emote'}):
             name, url = a.attrs['data-regex'], a.attrs['src']
             url = url.replace('1.0', '3.0')  # get the largest possible size
             self.emotes[name] = url
 
         # BTTV
-        response = await self.bot.loop.run_in_executor(None, urlopen, 'https://api.betterttv.net/1/emotes')
-        for emote in json.loads(response.read())['emotes']:
+        response = await self.bot.session.get('https://api.betterttv.net/1/emotes')
+        for emote in json.loads(await response.text())['emotes']:
             name, url = emote['regex'], 'https:' + emote['url']
             url = url.replace('1x', '3x')  # get the largest possible size
             self.emotes[name] = url
