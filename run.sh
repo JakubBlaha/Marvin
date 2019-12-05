@@ -1,0 +1,1 @@
+pipenv run python3 ./src/client.py
