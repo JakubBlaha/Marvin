@@ -36,6 +36,8 @@ class EmoteCog(Cog, name='Emotes'):
     # noinspection PyCallingNonCallable
     @tasks.loop(seconds=CACHE_SECONDS)
     async def reload_emotes_loop(self, force=False):
+        await self.bot.wait_until_ready()
+
         # TODO use walrus operator in 3.8
         cached = Cache.load(self.CACHE_KEY, self.CACHE_SECONDS)
         if not force and cached:
