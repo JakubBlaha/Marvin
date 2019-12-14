@@ -3,7 +3,8 @@ import traceback
 from typing import Iterable
 
 from discord import Embed, DiscordException
-from discord.ext.commands import Context, MissingRole, MissingRequiredArgument, CommandNotFound, BadArgument, Bot
+from discord.ext.commands import Context, MissingRole, MissingRequiredArgument, CommandNotFound, BadArgument, Bot, \
+    CommandOnCooldown
 
 from timeout_message import TimeoutMessage
 
@@ -75,6 +76,14 @@ class BadArgumentHandler(DiscordExceptionHandler):
         await ctx.bot.help_command.send_command_help(ctx.command)
 
 
+class CommandOnCooldownHandler(DiscordExceptionHandler):
+    @staticmethod
+    async def handle(ctx: Context, exception: CommandOnCooldown):
+        await ctx.message.delete()
+        await TimeoutMessage(ctx, min(5, exception.retry_after)).send(
+            f'> Command `{ctx.command}` is on cooldown! Try again in **{int(exception.retry_after)}** seconds.')
+
+
 class ErrorHandler:
     # Put the error handlers in a order, the top ones will be processed first and have a chance
     # of stopping other handlers to being processed. Putting subclasses before baseclass
@@ -82,6 +91,7 @@ class ErrorHandler:
     handlers: Iterable[DiscordExceptionHandler] = (
         CommandNotFoundHandler,
         MissingRoleHandler,
+        CommandOnCooldownHandler,
         MissingRequiredArgumentHandler,
         BadArgumentHandler,
         DiscordExceptionHandler

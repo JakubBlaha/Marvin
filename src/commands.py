@@ -4,7 +4,7 @@ from random import randint, random
 from typing import Optional
 
 from discord import NotFound
-from discord.ext.commands import Context, Cog, command, has_role
+from discord.ext.commands import Context, Cog, command, has_role, cooldown, BucketType
 from simpleeval import simple_eval
 
 import common
@@ -174,6 +174,7 @@ class Commands(Cog, name='General'):
 
         await CommandOutput(ctx, description=f'```python\n{res}```').send()
 
+    @cooldown(rate=1, per=5, type=BucketType.channel)
     @command(hidden=True, aliases=['del'])
     @has_role('moderator')
     async def delete(self, ctx: Context, n: int = 1):
