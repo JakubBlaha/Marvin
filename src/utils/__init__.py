@@ -62,9 +62,9 @@ class UserInput:
             # Terminate the waiting if the question was cancelled
             res = True
 
-            # Check author and channel
-            if msg_.author != self.context.author or msg_.channel != self.context.channel:
-                res = False
+            # Ignore non-context channels and users
+            if msg_.channel != self.context.channel or msg_.author != self.context.author:
+                return False
 
             # Check regex
             if not re.match(regex, msg_.clean_content):
