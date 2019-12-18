@@ -13,13 +13,15 @@ from googleapiclient import discovery
 from oauthlib.oauth2 import InvalidGrantError
 
 from client import Marvin
+from cogs.config import GuildConfig
 from decorators import del_invoc
 from timeout_message import TimeoutMessage
 from utils import UserInput
-from cogs.config import GuildConfig
 
-logger = logging.getLogger('EmbedManager')
+logger = logging.getLogger('CalendarIntegration')
 logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
+
+SECRET_FILENAME = 'secret.json'
 
 
 @dataclass
@@ -49,6 +51,11 @@ class Event:
 class CalendarIntegration(Cog):
     def __init__(self, bot: Marvin):
         self.bot = bot
+
+        # Check for the secret file
+        if not os.path.isfile(SECRET_FILENAME):
+            logger.critical('Google API client secret file not found!')
+            raise FileNotFoundError(f'Google API client secret file {SECRET_FILENAME} not found!')
 
         # Connect DB
         self.conn = sqlite3.connect('sqlite.db')
