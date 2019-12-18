@@ -111,14 +111,10 @@ class CalendarIntegration(Cog):
 
     @staticmethod
     def _get_service(guild_id: int):
-        """ Get the google calendar service. Raise FileNotFound error if the creds file was not found. """
+        """ Get the google calendar service. Raise FileNotFound error if the credentials file is not found. """
         # Get the credentials
-        try:
-            with open(f'creds/calendar/{guild_id}', 'rb') as f:
-                creds = pickle.load(f)
-        except FileNotFoundError:
-            logger.info(f'Calendar was not set up for the guild {guild_id}')
-            raise
+        with open(f'creds/calendar/{guild_id}', 'rb') as f:
+            creds = pickle.load(f)
 
         # Create the service
         return discovery.build('calendar', 'v3', credentials=creds)
@@ -167,9 +163,14 @@ class CalendarIntegration(Cog):
 
         calendar_id = GuildConfig.get_by_guild_id(msg.guild.id, 'calendar_id')
 
+        try:
+            service = self._get_service(msg.guild.id)
+        except FileNotFoundError:
+            logger.info(f'Credentials file for the guild {msg.guild.id} not found!')
+            return
+
         if not event_id:
-            event = self._get_service(msg.guild.id).events().insert(calendarId=calendar_id,
-                                                                    body=event.to_dict()).execute()
+            event = service.events().insert(calendarId=calendar_id, body=event.to_dict()).execute()
             logger.info('Event created: ' + event.get('htmlLink'))
 
             # Add the event into the database
@@ -177,8 +178,6 @@ class CalendarIntegration(Cog):
                 self.cursor.execute('insert into events values (?, ?)', (msg.id, event['id']))
 
         else:
-            service = self._get_service(msg.guild.id)
-
             event_data = service.events().get(calendarId=calendar_id, eventId=event_id).execute()
             event_data.update(event.to_dict())
 
@@ -191,8 +190,14 @@ class CalendarIntegration(Cog):
         _, event_id = self.cursor.fetchone() or (None, None)  # message_id, event_id
 
         if event_id:
+            try:
+                service = self._get_service(payload.guild_id)
+            except FileNotFoundError:
+                logger.info(f'Credentials file for the guild {payload.guild_id} not found!')
+                return
+
             calendar_id = GuildConfig.get_by_guild_id(payload.guild_id, 'calendar_id')
-            self._get_service(payload.guild_id).events().delete(calendarId=calendar_id, eventId=event_id).execute()
+            service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
 
 
 def setup(bot: Marvin):
