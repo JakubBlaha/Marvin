@@ -116,16 +116,12 @@ dmypy.json
 # IDE
 .vscode/
 
-# application
-config.yaml
-downloads/
-logs/
-*/cache/*
-
 # idea
 .idea/
 /cache/cache.yaml
 /secret.json
 /creds/
 /cache/
+/logs/
 /sqlite.db
+config.yaml
