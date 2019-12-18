@@ -1,12 +1,12 @@
 import logging
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
 
 import yaml
-from discord import utils, TextChannel
-from discord.ext.commands import Cog, group, Context
+from discord import TextChannel, utils
+from discord.ext.commands import Cog, Context, group
 
-from config import ConfigBase, Config
-from decorators import list_subcommands, del_invoc
+from config import Config, ConfigBase
+from decorators import del_invoc, list_subcommands
 from secure_config import EncryptedString
 from timeout_message import TimeoutMessage
 from timetable import Timetable

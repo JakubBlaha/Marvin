@@ -2,7 +2,7 @@ import logging
 from typing import Dict
 
 from discord import Message, User
-from discord.ext.commands import Cog, command, Context
+from discord.ext.commands import Cog, Context, command
 
 import common
 from client import Marvin

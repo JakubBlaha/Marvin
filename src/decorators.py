@@ -1,6 +1,6 @@
 import inspect
 
-from discord import Embed, NotFound, Forbidden
+from discord import Embed, Forbidden, NotFound
 from discord.ext.commands import Context
 
 from timeout_message import TimeoutMessage

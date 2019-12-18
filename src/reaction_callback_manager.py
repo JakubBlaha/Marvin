@@ -1,7 +1,7 @@
 import logging
 from typing import Coroutine
 
-from discord import Message, RawReactionActionEvent, NotFound
+from discord import Message, NotFound, RawReactionActionEvent
 from discord.ext.commands import Context
 
 logger = logging.getLogger('ReactCallbackMng')

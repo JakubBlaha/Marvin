@@ -1,4 +1,9 @@
+import datetime
+from typing import Final
+
 import discord
+
+MAX_DATETIME: Final = datetime.datetime(datetime.MAXYEAR, 1, 1)
 
 
 class Re:

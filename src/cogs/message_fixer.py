@@ -1,6 +1,6 @@
 import asyncio
 
-from discord import Message, Embed, NotFound
+from discord import Embed, Message, NotFound
 from discord.ext.commands import Cog
 
 from client import Marvin

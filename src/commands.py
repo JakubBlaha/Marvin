@@ -4,7 +4,7 @@ from random import randint, random
 from typing import Optional
 
 from discord import NotFound
-from discord.ext.commands import Context, Cog, command, has_role, cooldown, BucketType
+from discord.ext.commands import BucketType, Cog, Context, command, cooldown, has_role
 from simpleeval import simple_eval
 
 import common

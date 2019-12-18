@@ -4,7 +4,7 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-from discord.ext.commands import Cog, command, Context
+from discord.ext.commands import Cog, Context, command
 
 from config import Config
 from timeout_message import TimeoutMessage

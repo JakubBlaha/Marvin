@@ -1,6 +1,6 @@
 import asyncio
 
-from discord import NotFound, Message
+from discord import Message, NotFound
 from discord.ext.commands import Context
 
 

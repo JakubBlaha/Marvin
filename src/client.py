@@ -7,6 +7,7 @@ from discord import Guild
 from discord.ext.commands import Bot, Context
 
 from config import Config
+from cogs.config import GuildConfig
 from errors import ErrorHandler
 from help import CustomHelpCommand
 
@@ -42,7 +43,6 @@ class Marvin(Bot):
         self.load_extension('commands')
         self.load_extension('cogs.substits')
         self.load_extension('embeds')
-        self.load_extension('cogs.embed_manager')
         self.load_extension('cogs.emotes')
         self.load_extension('cogs.console_behavior')
         self.load_extension('cogs.presence')
@@ -50,6 +50,8 @@ class Marvin(Bot):
         self.load_extension('cogs.command_panel')
         self.load_extension('cogs.message_fixer')
         self.load_extension('cogs.cleverbot')
+        self.load_extension('cogs.config')
+        self.load_extension('cogs.calendar_integration')
 
     async def on_connect(self):
         # Create an aiohttp session
@@ -57,6 +59,9 @@ class Marvin(Bot):
 
         # Get guild
         self.guild = self.get_guild(Config.guild_id)
+
+        # Populate config db for each guild
+        GuildConfig.add_guilds([guild.id for guild in self.guilds])
 
     # noinspection PyMethodMayBeStatic
     async def on_ready(self):

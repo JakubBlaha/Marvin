@@ -14,6 +14,10 @@ requests = "*"
 cryptography = "*"
 psutil = "*"
 pdf2image = "*"
+dateparser = "*"
+google-api-python-client = "*"
+google-auth-httplib2 = "*"
+google-auth-oauthlib = "*"
 
 [dev-packages]
 

@@ -1,7 +1,7 @@
-from typing import List, Dict, Iterable, Optional, Union
+from typing import Dict, Iterable, List, Optional, Union
 
-from discord import Embed, Color
-from discord.ext.commands import DefaultHelpCommand, Cog, Command, Group
+from discord import Color, Embed
+from discord.ext.commands import Cog, Command, DefaultHelpCommand, Group
 
 from timeout_message import TimeoutMessage
 

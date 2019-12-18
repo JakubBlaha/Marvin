@@ -1,5 +1,5 @@
 import io
-from typing import Union, Generator
+from typing import Generator, Union
 
 import discord
 from PIL import Image, ImageDraw, ImageFont

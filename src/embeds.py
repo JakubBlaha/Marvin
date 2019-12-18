@@ -3,10 +3,8 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Callable, Optional, Union
 
-from discord import Embed, Message, HTTPException
-from discord.ext.commands import Bot, Cog, Converter, BadArgument
-from discord.ext.commands import ColourConverter as ColorConverter
-from discord.ext.commands import Context, group
+from discord import Embed, HTTPException, Message
+from discord.ext.commands import BadArgument, Bot, Cog, ColourConverter as ColorConverter, Context, Converter, group
 
 import common
 from decorators import del_invoc, list_subcommands

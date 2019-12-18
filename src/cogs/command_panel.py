@@ -1,7 +1,7 @@
 import logging
 from asyncio import sleep
 
-from discord import TextChannel, Message, Embed, RawReactionActionEvent
+from discord import Embed, Message, RawReactionActionEvent, TextChannel
 from discord.errors import NotFound
 from discord.ext.commands import Cog
 

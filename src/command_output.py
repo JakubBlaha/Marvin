@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Union, Dict
+from typing import Dict, Union
 
-from discord import Embed, User, Message
+from discord import Embed, Message, User
 from discord.ext.commands import Context
 
 from client import Marvin

@@ -125,3 +125,7 @@ logs/
 # idea
 .idea/
 /cache/cache.yaml
+/secret.json
+/creds/
+/cache/
+/sqlite.db

@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import asyncio
-import calendar
 import datetime
 import re
 import time
-from typing import List
 
 import PIL.Image
 import PIL.ImageOps
-from discord import Embed, TextChannel, Color, Message, NotFound, Reaction, User
+import dateparser
+from discord import Color, Embed, Message, NotFound, Reaction, TextChannel, User
 from discord.ext.commands import Context
 
+import common
 from .list_to_image import FontMap, ListToImageBuilder
 
 
@@ -108,59 +108,7 @@ class UserInput:
         await silent_delete(msg)
 
 
-class String:
-    @staticmethod
-    def contains_scattered(string: str, substring: str) -> bool:
-        """
-        Check if  string contains a substring even if scattered.
-
-        :param string: The string to search in.
-        :param substring: The scattered substring.
-        :return: Whether the full scattered substring is contained
-            in the string.
-        """
-
-        return len([ch for ch in substring if ch in string]) == len(substring)
-
-
 class Datetime:
-    # noinspection PyTypeChecker
-    @staticmethod
-    def from_string(string: str, fallback: datetime.date = None, month_abbrs: List[str] = None) -> datetime.date:
-        """
-        Get a date object from a localized string. The format of the string
-        should be `%d. %b`.
-
-        :param string: The considered string.
-        :param fallback: The date that will be returned in case the conversion
-            fails. Default is a date with datetime.MAXYEAR
-        :param month_abbrs: A list of the month names. If None, the
-            calendar.month_abbr will be used.
-        :return: An instance of the inbuilt datetime.date object.
-        """
-
-        fallback = fallback or datetime.date(datetime.MAXYEAR, 1, 1)
-        month_abbrs = month_abbrs or calendar.month_abbr
-
-        string = string.lower()
-        month_abbrs = filter(bool, month_abbrs)
-
-        # Replace month name with their abbr
-        month_substring = string.split()[-1]
-        for abbr in reversed(list(month_abbrs)):
-            if String.contains_scattered(month_substring, abbr):
-                string = string.replace(month_substring, abbr)
-                break
-
-        try:
-            date = datetime.datetime.strptime(string, '%d. %b').date()
-            date = date.replace(year=datetime.datetime.now().year)
-
-            return date
-
-        except ValueError:
-            return fallback
-
     @staticmethod
     def shifted_weekday(timedelta: datetime.timedelta = datetime.timedelta(hours=12)) -> int:
         """
@@ -189,7 +137,7 @@ class EmbedUtils:
         _embeds = [msg.embeds[0] async for msg in channel.history() if msg.embeds]
 
         # Sort by date
-        _embeds.sort(key=lambda x: Datetime.from_string(x.description),
+        _embeds.sort(key=lambda x: (dateparser.parse(x.description or '') or common.MAX_DATETIME).date(),
                      reverse=True)
 
         # Build the embed

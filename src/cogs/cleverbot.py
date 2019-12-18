@@ -6,7 +6,7 @@ from typing import Dict
 from discord import Message, User
 from discord.ext.commands import Cog, Context, group
 from selenium.common.exceptions import TimeoutException
-from selenium.webdriver import PhantomJS, Chrome, ChromeOptions
+from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions
@@ -59,7 +59,7 @@ class Memory:
 class Cleverbot(Cog, name='Chatting'):
     bot: Marvin
     memory: Memory
-    driver: PhantomJS = None
+    driver: Chrome = None
     context: Context = None
     _input_box: WebElement
 

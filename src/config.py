@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple, Any
+from typing import Any, List, Tuple
 
 import yaml
 

@@ -6,6 +6,8 @@ Marvin is a simple discord bot made for personal purposes in python using [disco
 *Note: Marvin is still called freefbot in some places. This is because the bot was renamed.*
 
 ## Setup
+**This setup guide is deprecated. The bot will be soon hosted.**
+
 There is no public server hosting this bot, therefore you need to run it yourself on your RPi or something. Follow the instructions below.
 
  - Register your discord bot and get a API token at https://discordapp.com/developers/applications/
@@ -43,7 +45,7 @@ Command|Action
 `!bag`|Output which subjects to take out and put in your bag.
 `!substits`|Output the upcoming substitutions.
 `!exam`|Output exams from the `exam_channel_id` channel.
-`!hw`|Output homeworks from the `homework_channel_id` channel.
+`!hw`|Output homework from the `homework_channel_id` channel.
 `!del`|Delete a number of messages.
 `!embed`|Build/edit an embed.
 more ..| 🎆 🌟 🎇 ⭐ ✨
@@ -154,15 +156,6 @@ We can also use aliases for the subcommands. For example `t` will become `title`
 ![building_using_reactions](res/demo/embed_builder2.png)
 >At least creating the embed is fun!
 
-### The Embed Manager
-At the moment, the bot can add ❌ reactions to seemingly outdated embeds in channels with the 🔔 emoji in their topic and list the upcoming events in the `#general`channel topic. We will implement more features soon!
-
-![embed_with_an_x_mark](res/demo/embed_excluder.png)
->Pretty late to remove the embed actually. ☺
-
-![event_notifier](res/demo/event_notifier.png)
->I would forget, if my bot haven't told me.
-
 ### The Cleverbot integration
 This feature is just for fun, anything else. Simply tag the bot in your message and tell him something dumb. The remote config allows to set how long the bot should act like it was tagged in a message even it he was not. This will be reset with every message. The default is `120` seconds. The command `!shut up` can be used in order to suspend the conversation with the bot immediately.
 ```yaml
@@ -190,7 +183,36 @@ The command downloads a pdf file from moodle, takes a couple of picture of it, c
 The twitch client watches for messages with emote names in them and replaces them with their actual images using discord embeds. If the emoji names is the only content of the message, the message will be deleted.
 
 ![twitch_client](res/demo/twitch.png)
->What would be the point of our gamer lifes without them?
+>What would be the point of our gamer lives without them?
 
 ### The console-like behavior
 The bot does execute commands as you would expect, but in addition to that, messages, that are edited and contain commands, invoke the commands either. This behavior is useful in situations when the user miss-types a command. The bot also offers the `!re` command, which re-executes the last command respectively to the user who uses it. The new command output overwrites the output before for some commands.
+
+### Google Calendar integration
+Marvin supports adding embeds built with EmbedBuilder or other embeds to a google calendar.
+Only those embeds with a date in their description will be considered as events to be added to the calendar.
+Various date formats and over 200 languages are supported.
+
+To setup the calendar integration, you will need to grant Marvin the required permissions to your calendar.
+First, run the following command.
+```
+!calendar setup
+```
+You will be sent a link taking you to the google app authentication screen.
+Complete the authentication process, copy the code and **send the code back to Marvin**.
+
+The default calendar the events will be put in is your primary calendar.
+If you want to change this, you will need to **create a new calendar**,
+go to its settings > Integration > Calendar ID. Copy the ID of the calendar
+and run the following command.
+```
+!conf calendar id calendar_id_goes_here
+```
+If you want to make sure the configuration worked or you just simply want
+to see what is the calendar ID configured to, you will need to run the same command,
+just without the ID pasted in.
+```
+!conf calendar id
+```
+Similarly to when an event is created after building an embed, the events
+will also be edited and deleted accordingly. 

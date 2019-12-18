@@ -2,9 +2,9 @@ import io
 import traceback
 from typing import Iterable
 
-from discord import Embed, DiscordException
-from discord.ext.commands import Context, MissingRole, MissingRequiredArgument, CommandNotFound, BadArgument, Bot, \
-    CommandOnCooldown
+from discord import DiscordException, Embed
+from discord.ext.commands import BadArgument, Bot, CommandNotFound, CommandOnCooldown, Context, MissingRequiredArgument, \
+    MissingRole
 
 from timeout_message import TimeoutMessage
 
