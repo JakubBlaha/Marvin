@@ -271,8 +271,16 @@ class EmbedBuilder:
         if field_name is None:
             return
 
-        self.preview_embed.add_field(name=field_name,
-                                     value=await UserInput(self.ctx).ask('field value') or '(￣o￣) . z Z', inline=False)
+        self.preview_embed.add_field(
+            name=field_name,
+            value='...'
+        )
+
+        await self._update_preview_msg()
+        await self.stack_to_history()
+
+        field_value = await UserInput(self.ctx).ask('field value') or '(￣o￣) . z Z'
+        self.preview_embed.set_field_at(-1, name=field_name, value=field_value)
 
         await self.stack_to_history()
 
