@@ -10,7 +10,7 @@ Marvin is a simple discord bot made for personal purposes in python using [disco
 
 There is no public server hosting this bot, therefore you need to run it yourself on your RPi or something. Follow the instructions below.
 
- - Register your discord bot and get a API token at https://discordapp.com/developers/applications/
+ - Register your discord bot and get an API token at https://discordapp.com/developers/applications/
  - Install **Python 3.7** and `pipenv` if you haven't already.
  - Clone the project.
 ```bash
