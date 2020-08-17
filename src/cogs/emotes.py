@@ -1,12 +1,14 @@
+from typing import Dict
+
 import json
 import logging
 
+import requests_async as requests
 from bs4 import BeautifulSoup
 from discord import Embed, Message
 from discord.ext import tasks
 from discord.ext.commands import Cog, Context, group
 
-from cache import Cache
 from client import Marvin
 from command_output import CommandOutput
 from decorators import del_invoc
@@ -16,70 +18,73 @@ from utils import ListToImageBuilder
 logger = logging.getLogger('EmoteCog')
 
 
+async def _get_emotes_twitchemotes() -> Dict[str, str]:
+    url = 'https://twitchemotes.com/'
+    emotes = {}
+
+    response = await requests.get(url)
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    for a in soup.find_all('img', {'class': 'emote expandable-emote'}):
+        name, url = a.attrs['data-regex'], a.attrs['src'].replace('1.0', '3.0')
+        emotes[name] = url
+
+    return emotes
+
+
+async def _get_emotes_bttv() -> Dict[str, str]:
+    url = 'https://api.betterttv.net/1/emotes'
+    emotes = {}
+
+    response = await requests.get(url)
+
+    for emote in json.loads(response.text)['emotes']:
+        name, url = emote['regex'], 'https://' + emote['url'].replace('1x', '3x')
+        emotes[name] = url
+
+    return emotes
+
+
 class EmoteCog(Cog, name='Emotes'):
     """ Watch emote names in messages of guild members and send emotes according to them. """
 
     bot: Marvin
-    emotes: dict
-
-    CACHE_KEY = 'emotes'
-    CACHE_SECONDS = 600
 
     def __init__(self, bot: Marvin):
         self.bot = bot
-        self.emotes = {}
+        self.emotes: Dict[str, str] = {}
 
         self.bot.add_listener(self.on_message)
 
         self.reload_emotes_loop.start()
 
     # noinspection PyCallingNonCallable
-    @tasks.loop(seconds=CACHE_SECONDS)
+    @tasks.loop(minutes=60)
     async def reload_emotes_loop(self, force=False):
-        await self.bot.wait_until_ready()
+        logger.info('Loading emotes ...')
 
-        # TODO use walrus operator in 3.8
-        cached = Cache.load(self.CACHE_KEY, self.CACHE_SECONDS)
-        if not force and cached:
-            self.emotes = cached
-            logger.info('Retrieved cached emotes.')
-            return
+        # Emotes from remote servers
+        functions = [
+            _get_emotes_twitchemotes,
+            _get_emotes_bttv
+        ]
 
-        logger.info('Reloading emotes ...')
+        for function in functions:
+            try:
+                emotes = await function()
+            except Exception:
+                logger.error(f'Failed to load emotes using function {function}.')
+            else:
+                self.emotes.update(emotes)
 
-        self.emotes.clear()
-
-        # twitchemotes
-        response = await self.bot.session.get('https://twitchemotes.com/')
-        soup = BeautifulSoup(await response.text(), 'html.parser')
-        for a in soup.find_all('img', {'class': 'emote expandable-emote'}):
-            name, url = a.attrs['data-regex'], a.attrs['src']
-            url = url.replace('1.0', '3.0')  # get the largest possible size
-            self.emotes[name] = url
-
-        # BTTV
-        response = await self.bot.session.get('https://api.betterttv.net/1/emotes')
-        for emote in json.loads(await response.text())['emotes']:
-            name, url = emote['regex'], 'https:' + emote['url']
-            url = url.replace('1x', '3x')  # get the largest possible size
-            self.emotes[name] = url
-
-        # guild custom emotes
+        # Custom guild emotes
         await self.bot.wait_until_ready()
 
         for emoji in self.bot.guild.emojis:
-            # noinspection PyProtectedMember
             self.emotes[emoji.name] = emoji.url._url
 
-        logger.info('Done')
-
-        # We can still use the cached value if new data could not be retrieved
-        cached = Cache.load(self.CACHE_KEY, 0)
-        if self.emotes:
-            # Cache
-            Cache.cache(self.CACHE_KEY, self.emotes)
-        elif cached:  # TODO change to walrus in 3.8
-            self.emotes = cached
+        logger.info(f'Loaded {len(self.emotes)} emotes.')
 
     async def on_message(self, msg: Message):
         if any([not msg.content, msg.author == self.bot.user]):
