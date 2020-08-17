@@ -11,6 +11,7 @@ from discord.ext.commands import Cog, Context, group, has_role
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient import discovery
 from oauthlib.oauth2 import InvalidGrantError
+import click
 
 from client import Marvin
 from cogs.config import GuildConfig
@@ -55,7 +56,9 @@ class CalendarIntegration(Cog):
         # Check for the secret file
         if not os.path.isfile(SECRET_FILENAME):
             logger.critical('Google API client secret file not found!')
-            raise FileNotFoundError(f'Google API client secret file {SECRET_FILENAME} not found!')
+            click.secho(f'Google API client secret file {SECRET_FILENAME} not found!', fg='red')
+            
+            raise FileNotFoundError
 
         # Connect DB
         self.conn = sqlite3.connect('sqlite.db')

@@ -2,14 +2,35 @@ import io
 import logging
 import sys
 
+import click
 from aiohttp import ClientSession
 from discord import Guild
-from discord.ext.commands import Bot, Context
+from discord.ext.commands import Bot, Context, ExtensionFailed
 
 from config import Config
 from cogs.config import GuildConfig
 from errors import ErrorHandler
 from help import CustomHelpCommand
+from exceptions import MarvinInitializeException
+
+
+EXTENSIONS = [
+    'remote_config',
+    'secure_config',
+    'commands',
+    'cogs.substits',
+    'embeds',
+    'cogs.emotes',
+    'cogs.console_behavior',
+    'cogs.presence',
+    'cogs.auto_reactor',
+    'cogs.command_panel',
+    'cogs.message_fixer',
+    'cogs.cleverbot',
+    'cogs.config',
+    'cogs.calendar_integration',
+]
+
 
 # Logging
 log_format = '[%(levelname)-8s] [%(name)-16s] %(message)s'
@@ -38,20 +59,12 @@ class Marvin(Bot):
         super().__init__(*args, **kw)
 
         # Load extensions
-        self.load_extension('remote_config')
-        self.load_extension('secure_config')
-        self.load_extension('commands')
-        self.load_extension('cogs.substits')
-        self.load_extension('embeds')
-        self.load_extension('cogs.emotes')
-        self.load_extension('cogs.console_behavior')
-        self.load_extension('cogs.presence')
-        self.load_extension('cogs.auto_reactor')
-        self.load_extension('cogs.command_panel')
-        self.load_extension('cogs.message_fixer')
-        self.load_extension('cogs.cleverbot')
-        self.load_extension('cogs.config')
-        self.load_extension('cogs.calendar_integration')
+        for extension in EXTENSIONS:
+            try:
+                self.load_extension(extension)
+            except Exception:
+                click.secho(f'Failed to laod the extension [{extension}]!', fg='red')
+                raise MarvinInitializeException
 
     async def on_connect(self):
         # Create an aiohttp session
@@ -73,5 +86,9 @@ class Marvin(Bot):
 
 if __name__ == '__main__':
     # Client
-    client = Marvin(command_prefix=Config.command_prefix, help_command=CustomHelpCommand())
-    client.run(Config.token)
+    try:
+        client = Marvin(command_prefix=Config.command_prefix, help_command=CustomHelpCommand())
+    except MarvinInitializeException:
+        click.secho('Marvin could not be initialized and must exit.', fg='red')
+    else:
+        client.run(Config.token)
