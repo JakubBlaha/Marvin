@@ -67,8 +67,7 @@ class EmoteCog(Cog, name='Emotes'):
         await self.bot.wait_until_ready()
 
         for emoji in self.bot.guild.emojis:
-            print(emoji.name)
-            self.emotes[emoji.name] = emoji.url._url
+            self.emotes[emoji.name] = emoji.url
 
         logger.info(f'Loaded {len(self.emotes)} emotes.')
 
