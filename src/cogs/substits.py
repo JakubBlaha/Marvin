@@ -21,6 +21,7 @@ from command_output import CommandOutput
 from decorators import del_invoc
 from remote_config import RemoteConfig
 from utils import ImageUtils
+from config import Config
 
 BG_COLOR = (35, 39, 42)
 CACHE_KEY = 'substits'
@@ -114,7 +115,11 @@ class Substits(Cog, name='Substitutions'):
         self._date = 'Yet to load'
 
         # Start loop
-        self.bot.add_listener(self.on_ready)
+        if Config.moodle_username and Config.moodle_password:
+            self.bot.add_listener(self.on_ready)
+        else:
+            logger.info(
+                'Skipping substitutions scraping as no valid moodle credentials are provided.')
 
     async def on_ready(self):
         self.reload_data.start()
@@ -136,7 +141,7 @@ class Substits(Cog, name='Substitutions'):
         # Download
         kwargs = RemoteConfig.substits_kwargs
         args = kwargs['login_url'], kwargs['course_url'], kwargs[
-            'link_regex'], RemoteConfig.moodle_username, RemoteConfig.moodle_password
+            'link_regex'], Config.moodle_username, Config.moodle_password
         result = await self.bot.loop.run_in_executor(None, get_pdf_data, *args)
 
         if result.succeeded:
@@ -152,7 +157,8 @@ class Substits(Cog, name='Substitutions'):
 
         # Convert pdf to images
         logger.debug('Converting to images...')
-        ims = pdf2image.convert_from_bytes(result.data, fmt='png', transparent=True)
+        ims = pdf2image.convert_from_bytes(
+            result.data, fmt='png', transparent=True)
         logger.debug(f'Conversion done: {ims}')
 
         # Crop the images as defined in RemoteConfig
@@ -199,7 +205,8 @@ class Substits(Cog, name='Substitutions'):
         fp.seek(0)
 
         # Create an embed
-        out = CommandOutput(ctx, title=f'The substitution list for the day **{self._date}**')
+        out = CommandOutput(
+            ctx, title=f'The substitution list for the day **{self._date}**')
         out.embed.set_image(url=f'attachment://{ATTACHMENT_FILENAME}')
 
         # Send the embed and the attachment

@@ -70,8 +70,6 @@ class RemoteConfig_(ConfigBase):
     homework_channel_id: int = None
     timetable: Timetable = None
     presences: List[Tuple[str, str]] = []
-    moodle_username: str = ''
-    moodle_password: EncryptedString = ''
     chatbot_memory_seconds: int = 120
 
 
