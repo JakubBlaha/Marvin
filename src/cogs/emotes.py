@@ -1,6 +1,5 @@
 from typing import Dict
 
-import json
 import logging
 
 import requests_async as requests
