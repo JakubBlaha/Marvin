@@ -1,0 +1,8 @@
+.vscode/
+**/__pycache__/**
+.gitignore
+.gitattributes
+LICENSE
+README.md
+cache
+sqlite.db
