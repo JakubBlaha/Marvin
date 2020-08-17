@@ -1,6 +1,7 @@
 import io
 import logging
 import sys
+from traceback import format_exc
 
 import click
 from aiohttp import ClientSession
@@ -63,6 +64,7 @@ class Marvin(Bot):
                 self.load_extension(extension)
             except Exception:
                 click.secho(f'Failed to laod the extension [{extension}]!', fg='red')
+                logger.error(format_exc())
                 raise MarvinInitializeException
 
     async def on_connect(self):
