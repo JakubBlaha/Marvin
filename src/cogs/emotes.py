@@ -67,6 +67,7 @@ class EmoteCog(Cog, name='Emotes'):
         await self.bot.wait_until_ready()
 
         for emoji in self.bot.guild.emojis:
+            print(emoji.name)
             self.emotes[emoji.name] = emoji.url._url
 
         logger.info(f'Loaded {len(self.emotes)} emotes.')
@@ -82,12 +83,14 @@ class EmoteCog(Cog, name='Emotes'):
         # Ignore punctuation
         content = content.translate(str.maketrans('', '', '.,!?'))
 
+        words = content.split()
+
         # Send emotes
         for emote, url in self.emotes.items():
             emote = emote.lower()
             if emote in recognized:
                 continue
-            if emote in content.split():
+            if emote in words:
                 recognized.append(emote)
                 _e = Embed()
                 _e.set_author(name=msg.author.display_name, icon_url=msg.author.avatar_url)
