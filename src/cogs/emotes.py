@@ -33,19 +33,6 @@ async def _get_emotes_twitchemotes() -> Dict[str, str]:
     return emotes
 
 
-async def _get_emotes_bttv() -> Dict[str, str]:
-    url = 'https://api.betterttv.net/1/emotes'
-    emotes = {}
-
-    response = await requests.get(url)
-
-    for emote in json.loads(response.text)['emotes']:
-        name, url = emote['regex'], 'https://' + emote['url'].replace('1x', '3x')
-        emotes[name] = url
-
-    return emotes
-
-
 class EmoteCog(Cog, name='Emotes'):
     """ Watch emote names in messages of guild members and send emotes according to them. """
 
@@ -66,8 +53,7 @@ class EmoteCog(Cog, name='Emotes'):
 
         # Emotes from remote servers
         functions = [
-            _get_emotes_twitchemotes,
-            _get_emotes_bttv
+            _get_emotes_twitchemotes
         ]
 
         for function in functions:
