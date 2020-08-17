@@ -73,8 +73,8 @@ class LocalConfig(ConfigBase):
     command_prefix: str = '!'
     load_dev_config: bool = False
     headless_chrome: bool = True
-    moodle_username: Optional[str] = None
-    moodle_password: Optional[str] = None
+    moodle_username: str = ''
+    moodle_password: str = ''
 
 
 # Config: LocalConfig
