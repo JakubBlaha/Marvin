@@ -5,12 +5,11 @@ import sys
 import click
 from aiohttp import ClientSession
 from discord import Guild
-from discord.ext.commands import Bot, Context, ExtensionFailed
+from discord.ext.commands import Bot, Context
 
 from config import Config
 from cogs.config import GuildConfig
 from errors import ErrorHandler
-from help import CustomHelpCommand
 from exceptions import MarvinInitializeException
 
 
@@ -82,13 +81,3 @@ class Marvin(Bot):
 
     async def on_command_error(self, ctx: Context, exception):
         await self.error_handler.handle(ctx, exception)
-
-
-if __name__ == '__main__':
-    # Client
-    try:
-        client = Marvin(command_prefix=Config.command_prefix, help_command=CustomHelpCommand())
-    except MarvinInitializeException:
-        click.secho('Marvin could not be initialized and must exit.', fg='red')
-    else:
-        client.run(Config.token)
