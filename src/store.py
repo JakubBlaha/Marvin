@@ -21,9 +21,9 @@ class Store:
                 data: dict = json.load(f)
         except FileNotFoundError:
             logger.info(f'{STORE_PATH} not found. Will not load any stored data.')
-            return False
+            data = {}
 
-        logger.info('Loaded stored data.')
+        logger.info('Loadeding data.')
         logger.debug(data)
 
         # Set attributes
