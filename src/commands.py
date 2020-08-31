@@ -41,7 +41,7 @@ class Commands(Cog, name='General'):
     @del_invoc
     async def timetable(self, ctx):
         """ Send an image of our timetable. """
-        await CommandOutput(ctx, image={'url': RemoteConfig.timetable_url}).send()
+        await CommandOutput(ctx, image={'url': self.bot.store.table_url}).send()
 
     @command()
     @del_invoc

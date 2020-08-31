@@ -62,7 +62,6 @@ class RemoteConfig_(ConfigBase):
     command_panel_timeout: int = 3600
     auto_reactor_channel_ids: List[int] = []
     auto_reactor_reaction_ids: List[int] = []
-    timetable_url: str = 'https://example.com'
     substits_kwargs: Dict[str, str] = {}
     substits_pdf_bbox: Tuple[float, float, float, float] = (0, 0, 1, 1)  # left, top, right, bottom
     exam_channel_id: int = None

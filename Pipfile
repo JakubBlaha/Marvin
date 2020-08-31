@@ -21,6 +21,7 @@ google-auth-oauthlib = "*"
 click = "*"
 colorama = "*"
 requests-async = "*"
+validators = "*"
 
 [dev-packages]
 

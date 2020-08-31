@@ -11,6 +11,7 @@ logger = logging.getLogger('Store')
 
 class Store:
     command_panel_channel_id: int
+    table_url: str
 
     def load(self) -> bool:
         """ Load stored data. Return whether successful. """
