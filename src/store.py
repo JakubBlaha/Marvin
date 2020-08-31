@@ -30,6 +30,9 @@ class Store:
         for key, value in data.items():
             setattr(self, key, value)
 
+        for attr, _ in self.__annotations__.items():
+            setattr(self, attr, data.get(attr, None))
+
         return True
 
     def save(self):
