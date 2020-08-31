@@ -2,3 +2,6 @@ version: "3.7"
 services:
     bot:
         build: .
+        volumes:
+            - ./config.yaml:/usr/app/config.yaml
+            - ./secret.json:/usr/app/secret.json

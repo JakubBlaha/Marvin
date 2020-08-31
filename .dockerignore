@@ -6,3 +6,5 @@ LICENSE
 README.md
 cache
 sqlite.db
+/config.yaml
+/secret.json
