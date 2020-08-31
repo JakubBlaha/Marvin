@@ -39,14 +39,12 @@ class CommandPanel(Cog):
         # Build the embed
         embed = self._generate_embed(EMOJI_COMMAND_MAP)
 
-        # Adopt the embed, delete other messages
+        # Adopt the embed
         async for msg in self._channel.history():
             if msg.embeds and msg.embeds[0].to_dict() == embed.to_dict():
                 self._msg = await self._channel.fetch_message(msg.id)
                 logger.debug(f'Adopted message {msg.id}')
                 break
-            else:
-                await msg.delete()
         else:
             # Send the message if no matching one was found
             logger.debug('Could not find a message that could be adopted. Will send a new one ...')
