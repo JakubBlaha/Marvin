@@ -13,6 +13,7 @@ from discord.ext.commands import Context
 
 import common
 from .list_to_image import FontMap, ListToImageBuilder
+from timeout_message import TimeoutMessage
 
 
 async def silent_delete(msg: Message) -> bool:

@@ -123,5 +123,8 @@ dmypy.json
 /creds/
 /cache/
 /logs/
+
+# App
 /sqlite.db
-config.yaml
+/config.yaml
+/store.json

@@ -12,6 +12,7 @@ from config import Config
 from cogs.config import GuildConfig
 from errors import ErrorHandler
 from exceptions import MarvinInitializeException
+from store import Store
 
 
 EXTENSIONS = [
@@ -29,6 +30,7 @@ EXTENSIONS = [
     'cogs.cleverbot',
     'cogs.config',
     'cogs.calendar_integration',
+    'cogs.new_config',
 ]
 
 
@@ -57,6 +59,11 @@ class Marvin(Bot):
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
+
+        # Load store
+        self.store = Store()
+        self.store.load()
+        self.store.save()
 
         # Load extensions
         for extension in EXTENSIONS:

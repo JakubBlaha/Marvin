@@ -33,7 +33,8 @@ class CommandPanel(Cog):
     @Cog.listener()
     async def on_ready(self):
         # Get the channel
-        self._channel = self.bot.get_channel(RemoteConfig.command_panel_channel_id)
+        channel_id = self.bot.store.command_panel_channel_id
+        self._channel = self.bot.get_channel(channel_id)
 
         # Build the embed
         embed = self._generate_embed(EMOJI_COMMAND_MAP)
