@@ -63,7 +63,6 @@ class Marvin(Bot):
         # Load store
         self.store = Store()
         self.store.load()
-        self.store.save()
 
         # Load extensions
         for extension in EXTENSIONS:
