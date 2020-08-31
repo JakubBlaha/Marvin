@@ -24,7 +24,7 @@ class Config(Cog, name='Config'):
             self.bot.store.command_panel_channel_id = ctx.channel.id
             self.bot.store.save()
 
-            await TemporaryMessage(ctx).send('This is not the Command Panel channel.')
+            await TemporaryMessage(ctx).send('This is now the Command Panel channel.')
 
         else:
             channel = self.bot.get_channel(self.bot.store.command_panel_channel_id)
