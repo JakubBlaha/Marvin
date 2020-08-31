@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from io import BytesIO
@@ -157,8 +158,14 @@ class Substits(Cog, name='Substitutions'):
 
         # Convert pdf to images
         logger.debug('Converting to images...')
-        ims = pdf2image.convert_from_bytes(
-            result.data, fmt='png', transparent=True)
+        try:
+            ims = pdf2image.convert_from_bytes(
+                result.data, fmt='png', transparent=True)
+        except Exception:
+            logger.error('Failed to convert PDF to PNG.')
+            logger.error(traceback.format_exc())
+            return
+
         logger.debug(f'Conversion done: {ims}')
 
         # Crop the images as defined in RemoteConfig
