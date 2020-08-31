@@ -31,6 +31,7 @@ EXTENSIONS = [
     'cogs.config',
     'cogs.calendar_integration',
     'cogs.new_config',
+    'cogs.ok',
 ]
 
 
