@@ -14,6 +14,7 @@ from command_output import CommandOutput
 from decorators import del_invoc
 from remote_config import RemoteConfig
 from timeout_message import TimeoutMessage
+from utils.error import send_error
 
 logger = logging.getLogger('Commands')
 
@@ -41,6 +42,12 @@ class Commands(Cog, name='General'):
     @del_invoc
     async def timetable(self, ctx):
         """ Send an image of our timetable. """
+        image_url = self.bot.store.table_url
+
+        if not image_url:
+            await send_error(ctx, 'Timetable image is not set.')
+            return
+
         await CommandOutput(ctx, image={'url': self.bot.store.table_url}).send()
 
     @command()
