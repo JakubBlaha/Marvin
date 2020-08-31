@@ -13,6 +13,7 @@ from cogs.config import GuildConfig
 from errors import ErrorHandler
 from exceptions import MarvinInitializeException
 from store import Store
+from data import ensure_data_dir
 
 
 EXTENSIONS = [
@@ -60,6 +61,8 @@ class Marvin(Bot):
 
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
+
+        ensure_data_dir()
 
         # Load store
         self.store = Store()

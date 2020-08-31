@@ -5,3 +5,7 @@ services:
         volumes:
             - ./config.yaml:/usr/app/config.yaml
             - ./secret.json:/usr/app/secret.json
+            - store:/usr/app/data
+
+volumes:
+    store:

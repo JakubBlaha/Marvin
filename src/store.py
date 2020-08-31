@@ -1,10 +1,10 @@
-from typing import Optional
-
 import json
 import logging
 
+from data import DATA_DIR
 
-STORE_PATH = 'store.json'
+
+STORE_PATH = DATA_DIR + 'store.json'
 
 logger = logging.getLogger('Store')
 
