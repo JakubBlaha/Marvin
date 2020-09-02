@@ -127,4 +127,4 @@ dmypy.json
 # App
 /sqlite.db
 /config.yaml
-/store.json
+/data/
