@@ -3,6 +3,7 @@ from discord.ext.commands.cog import Cog
 from discord.ext.commands import group, Context
 
 from client import Marvin
+from utils import send_internal_error, send_error, send_success
 from utils.temporary_message import TemporaryMessage
 from utils.error import send_error
 from utils.message import error, success
@@ -46,7 +47,7 @@ class Config(Cog, name='Config'):
     @con.command()
     async def table_img(self, ctx: Context, url: str):
         if not validators.url(url):
-            await send_error(ctx, 'Not a valid url.')
+            await send_error(ctx.channel, 'Not a valid url.')
             return
 
         self.bot.store.table_url = url
