@@ -55,7 +55,7 @@ class Config(Cog, name='Config'):
         await ctx.send(f'Table image has been set to this:\n{url}')
 
     @con.command(name='set.channel.id.as')
-    async def set_channel_as(self, ctx: Context, key: str):
+    async def set_channel_id_as(self, ctx: Context, key: str):
         """
         Set this channel as something...
 
