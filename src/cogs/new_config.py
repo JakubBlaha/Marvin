@@ -12,10 +12,12 @@ HERE = 'here'
 USER_FRIENDLY_KEYS = {
     'counting.channel.id': 'counting_channel_id',
     'ok.channel.id': 'ok_channel_id',
+    'command.panel.channel.id': 'command_panel_channel_id'
 }
 CHANNEL_ID_KEYS = [
     'counting.channel.id',
     'ok.channel.id',
+    'command.panel.channel.id',
 ]
 
 
@@ -28,19 +30,6 @@ class Config(Cog, name='Config'):
     @group()
     async def con(self, ctx: Context):
         """ Bot configuration commands. """
-
-    @con.command()
-    async def command_panel(self, ctx: Context, here: str = None):
-        if here == HERE:
-            self.bot.store.command_panel_channel_id = ctx.channel.id
-            self.bot.store.save()
-
-            await TemporaryMessage(ctx).send('This is now the Command Panel channel.')
-
-        else:
-            channel = self.bot.get_channel(self.bot.store.command_panel_channel_id)
-            await ctx.send(f'The Command Panel channel is: `#{channel}`')
-
     
     @con.command()
     async def table_img(self, ctx: Context, url: str):
@@ -57,13 +46,10 @@ class Config(Cog, name='Config'):
     async def set_channel_id_as(self, ctx: Context, key: str):
         """
         Set this channel as something...
-
-        **Available keys:**
-            `counting.channel.id`
         """
 
         if key not in CHANNEL_ID_KEYS:
-            await ctx.send(error(f'Invalid key. Valid keys are `{CHANNEL_ID_KEYS}`.'))
+            await send_error(ctx.channel, f'Invalid key. Valid keys are `{CHANNEL_ID_KEYS}`.')
             return
 
         store_key = USER_FRIENDLY_KEYS.get(key)
@@ -76,7 +62,7 @@ class Config(Cog, name='Config'):
         setattr(self.bot.store, store_key, channel_id)
         self.bot.store.save()
 
-        await ctx.send(success(f'Key `{key}` successfully set to `{channel_id}`'))
+        await send_success(ctx.channel, f'Key `{key}` successfully set to `{channel_id}`')
 
     @con.command(name='set.default.for.key')
     async def set_default_for_key(self, ctx: Context, key: str):
