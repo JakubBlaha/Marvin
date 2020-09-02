@@ -41,6 +41,24 @@ async def send_internal_error(channel):
     await channel.send(embed=e)
 
 
+async def send_error(channel, message: str):
+    e = Embed()
+    e.title = 'Error'
+    e.description = message
+    e.color = Color.red()
+
+    await channel.send(embed=e)
+
+
+async def send_success(channel, message: str):
+    e = Embed()
+    e.title = 'Success'
+    e.description = message
+    e.color = Color.green()
+
+    await channel.send(embed=e)
+
+
 class UserInput:
     context: Context
     question_msg: Message
