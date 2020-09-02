@@ -33,6 +33,7 @@ EXTENSIONS = [
     'cogs.calendar_integration',
     'cogs.new_config',
     'cogs.ok',
+    'cogs.counting_channel',
 ]
 
 
