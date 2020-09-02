@@ -10,7 +10,8 @@ from utils.message import error, success
 
 HERE = 'here'
 SET_CHANNEL_AS_KEYS = {
-    'counting.channel.id': 'counting_channel_id'
+    'counting.channel.id': 'counting_channel_id',
+    'ok.channel.id': 'ok_channel_id',
 }
 
 
