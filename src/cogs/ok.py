@@ -38,10 +38,8 @@ class OkValidation(Cog):
 
         if msg.content != 'ok':
             await msg.add_reaction('❌')
-
-        await asyncio.sleep(3)
-
-        await msg.delete()
+            await asyncio.sleep(3)
+            await msg.delete()
 
 
 def setup(bot: Marvin):
