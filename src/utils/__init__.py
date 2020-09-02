@@ -31,6 +31,16 @@ async def silent_delete(msg: Message) -> bool:
     return True
 
 
+async def send_internal_error(channel):
+    """ Tell the user that there was an internal error. """
+    e = Embed()
+    e.title = 'Internal error'
+    e.description = 'I ran into an error. Sorry.'
+    e.color = Color.red()
+
+    await channel.send(embed=e)
+
+
 class UserInput:
     context: Context
     question_msg: Message
