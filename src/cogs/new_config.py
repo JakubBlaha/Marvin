@@ -14,6 +14,11 @@ SET_CHANNEL_AS_KEYS = {
     'ok.channel.id': 'ok_channel_id',
 }
 
+USER_FRIENDLY_KEYS = {
+    'counting.channel.id': 'counting_channel_id',
+    'ok.channel.id': 'ok_channel_id',
+}
+
 
 class Config(Cog, name='Config'):
     def __init__(self, bot: Marvin):
@@ -70,6 +75,19 @@ class Config(Cog, name='Config'):
         self.bot.store.save()
 
         await ctx.send(success(f'Key `{key}` successfully set to `{channel_id}`'))
+
+    @con.command(name='set.default.for.key')
+    async def set_default_for_key(self, ctx: Context, key: str):
+        if key not in USER_FRIENDLY_KEYS:
+            valid_keys_str = ', '.join(USER_FRIENDLY_KEYS)
+            await ctx.send(error(f'Invalid key. Valid keys are: `[{valid_keys_str}]`'))
+            return
+
+        actual_key = USER_FRIENDLY_KEYS[key]
+        setattr(self.bot.store, actual_key, None)
+        self.bot.store.save()
+
+        await ctx.send(success(f'Key `{key}` was reset.'))
 
 
 def setup(bot: Marvin):
