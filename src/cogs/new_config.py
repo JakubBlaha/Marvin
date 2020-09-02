@@ -5,20 +5,18 @@ from discord.ext.commands import group, Context
 from client import Marvin
 from utils import send_internal_error, send_error, send_success
 from utils.temporary_message import TemporaryMessage
-from utils.error import send_error
 from utils.message import error, success
 
 
 HERE = 'here'
-SET_CHANNEL_AS_KEYS = {
-    'counting.channel.id': 'counting_channel_id',
-    'ok.channel.id': 'ok_channel_id',
-}
-
 USER_FRIENDLY_KEYS = {
     'counting.channel.id': 'counting_channel_id',
     'ok.channel.id': 'ok_channel_id',
 }
+CHANNEL_ID_KEYS = [
+    'counting.channel.id',
+    'ok.channel.id',
+]
 
 
 class Config(Cog, name='Config'):
@@ -63,12 +61,15 @@ class Config(Cog, name='Config'):
         **Available keys:**
             `counting.channel.id`
         """
-        
-        store_key = SET_CHANNEL_AS_KEYS.get(key, None)
 
+        if key not in CHANNEL_ID_KEYS:
+            await ctx.send(error(f'Invalid key. Valid keys are `{CHANNEL_ID_KEYS}`.'))
+            return
+
+        store_key = USER_FRIENDLY_KEYS.get(key)
+        
         if store_key is None:
-            valid_keys_str = ', '.join(SET_CHANNEL_AS_KEYS.keys())
-            await ctx.send(error(f'Invalid key. Valid keys are [ `{valid_keys_str}` ].'))
+            await send_internal_error(ctx.channel)
             return
 
         channel_id: int = ctx.channel.id
