@@ -80,14 +80,14 @@ class Config(Cog, name='Config'):
     async def set_default_for_key(self, ctx: Context, key: str):
         if key not in USER_FRIENDLY_KEYS:
             valid_keys_str = ', '.join(USER_FRIENDLY_KEYS)
-            await ctx.send(error(f'Invalid key. Valid keys are: `[{valid_keys_str}]`'))
+            await send_error(ctx.channel, f'Invalid key. Valid keys are: `[{valid_keys_str}]`')
             return
 
         actual_key = USER_FRIENDLY_KEYS[key]
         setattr(self.bot.store, actual_key, None)
         self.bot.store.save()
 
-        await ctx.send(success(f'Key `{key}` was reset.'))
+        await send_success(ctx.channel, f'Key `{key}` was reset.')
 
 
 def setup(bot: Marvin):
