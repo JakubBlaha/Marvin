@@ -27,7 +27,6 @@ EXTENSIONS = [
     'cogs.presence',
     'cogs.auto_reactor',
     'cogs.command_panel',
-    'cogs.message_fixer',
     'cogs.cleverbot',
     'cogs.config',
     'cogs.calendar_integration',
