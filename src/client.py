@@ -33,6 +33,7 @@ EXTENSIONS = [
     'cogs.new_config',
     'cogs.ok',
     'cogs.counting_channel',
+    'cogs.embed_datetime_formatter',
 ]
 
 
