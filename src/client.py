@@ -5,7 +5,7 @@ from traceback import format_exc
 
 import click
 from aiohttp import ClientSession
-from discord import Guild
+from discord import Guild, Message
 from discord.ext.commands import Bot, Context
 
 from config import Config
@@ -27,7 +27,6 @@ EXTENSIONS = [
     'cogs.presence',
     'cogs.auto_reactor',
     'cogs.command_panel',
-    'cogs.cleverbot',
     'cogs.config',
     'cogs.calendar_integration',
     'cogs.new_config',
@@ -94,3 +93,12 @@ class Marvin(Bot):
 
     async def on_command_error(self, ctx: Context, exception):
         await self.error_handler.handle(ctx, exception)
+
+    async def on_message(self, msg: Message):
+        # Skip if it's a command
+        if msg.content.startswith(self.command_prefix):
+            return
+
+        # Reply if mentioend
+        if self.user in msg.mentions:
+            await msg.channel.send("Sorry, I am not smart enough to chat with you ATM. :frowning:")

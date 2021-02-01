@@ -69,7 +69,6 @@ load_dev_config: False  # Whether messages starting with `dev` in the config cha
 
 # Other
 command_prefix: "!"
-headless_chrome: True  # Whether to run chrome in the headless mode when using selenium.
 ```
 
 ### The remote config
@@ -111,9 +110,6 @@ substits_kwargs:
  login_url: ...  # The url to the moodle login form
  course_url: ...  # The url to the substits course
  link_regex: .*\.pdf  # The regex used to get the latest pdf link
-
-# Cleverbot/chatbot
-chatbot_memory_seconds: 120  # How long should be the bot able to respond to messages it is not tagged in after the last valid message
 ```
 
 ### The embed builder
@@ -157,15 +153,6 @@ We can also use aliases for the subcommands. For example `t` will become `title`
 
 ![building_using_reactions](res/demo/embed_builder2.png)
 >At least creating the embed is fun!
-
-### The Cleverbot integration
-This feature is just for fun, anything else. Simply tag the bot in your message and tell him something dumb. The remote config allows to set how long the bot should act like it was tagged in a message even it he was not. This will be reset with every message. The default is `120` seconds. The command `!shut up` can be used in order to suspend the conversation with the bot immediately.
-```yaml
-chatbot_memory_seconds: 120
-```
-
-![cleverbot_integration](res/demo/cleverbot.png)
->Pretty need, heh?
 
 ### The Command panel
 The Command panel is a feature, which provides the ability to execute commands more easily. That is done clicking the reaction. All the messages generated in this channel will be deleted after the period specified in the remote config entry `command_panel_timeout`.
