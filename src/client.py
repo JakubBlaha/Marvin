@@ -94,11 +94,11 @@ class Marvin(Bot):
     async def on_command_error(self, ctx: Context, exception):
         await self.error_handler.handle(ctx, exception)
 
-    async def on_message(self, msg: Message):
-        # Skip if it's a command
-        if msg.content.startswith(self.command_prefix):
-            return
+    # async def on_message(self, msg: Message):
+    #     # Skip if it's a command
+    #     if msg.content.startswith(self.command_prefix):
+    #         return
 
-        # Reply if mentioend
-        if self.user in msg.mentions:
-            await msg.channel.send("Sorry, I am not smart enough to chat with you ATM. :frowning:")
+    #     # Reply if mentioend
+    #     if self.user in msg.mentions:
+    #         await msg.channel.send("Sorry, I am not smart enough to chat with you ATM. :frowning:")
