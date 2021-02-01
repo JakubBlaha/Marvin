@@ -1,6 +1,7 @@
 import logging
+import string
 from calendar import day_name
-from random import randint, random
+from random import randint, random, shuffle
 from typing import Optional
 
 from discord import NotFound
@@ -24,6 +25,24 @@ class Commands(Cog, name='General'):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @command()
+    async def dada(self, ctx, *, article: str):
+        """
+        Create a poem for Ležatka.
+
+        Paste in an article as an argument. I will create a dadaism poem.
+        """
+
+        article = article.translate(str.maketrans("", "", string.punctuation))
+        words = article.split()
+        shuffle(words)
+        words = [word + ("\n" if i % 5 == 0 else "") for i, word in enumerate(words)]
+        lines = " ".join(words).split("\n")
+        lines = [line + ("\n" if i % 4 == 0 else "") for i, line in enumerate(lines)]
+        poem = "\n".join(lines)
+
+        await CommandOutput(ctx, invoc=False, description=poem).send(register=False)
 
     @command()
     @del_invoc
