@@ -36,6 +36,10 @@ class CommandPanel(Cog):
         channel_id = self.bot.store.command_panel_channel_id
         self._channel = self.bot.get_channel(channel_id)
 
+        if not self._channel:
+            logger.error("Couldn't load command panel channel.")
+            return
+
         # Build the embed
         embed = self._generate_embed(EMOJI_COMMAND_MAP)
 
